@@ -1,8 +1,10 @@
-// levels.js - Configuración Temática de Mundos y Generador de Niveles Elaborados
+// levels.js - Configuración Temática de 9 Mundos y Generador de Niveles Profesionales
+// Astro Runner: 9 Dimensions - Hugo SP Studios
+
 const WORLDS_CONFIG = [
     {
         id: 1,
-        name: "Reino de las Colinas Verdes",
+        name: "Colinas Verdes Clásicas",
         theme: "grassland",
         skyTop: "#38bdf8",
         skyBottom: "#bae6fd",
@@ -12,16 +14,16 @@ const WORLDS_CONFIG = [
         dirtPattern: "#713f12",
         blockColor: "#ea580c",
         cloudColor: "#ffffff",
-        description: "Colinas verdes y cielos soleados al estilo clásico de plataformas.",
-        bossName: "Mecha-Bowser Jr.",
+        description: "Colinas verdes y praderas floridas bajo cielos azules radiantes.",
+        bossName: "Mecha-Koopa Prime",
         bossHp: 3,
         bossColor: "#ef4444"
     },
     {
         id: 2,
-        name: "Dunas Doradas del Faraón",
+        name: "Dunas Doradas del Desierto",
         theme: "desert",
-        skyTop: "#fb923c",
+        skyTop: "#ea580c",
         skyBottom: "#fed7aa",
         grassColor: "#eab308",
         grassHighlight: "#fef08a",
@@ -29,14 +31,14 @@ const WORLDS_CONFIG = [
         dirtPattern: "#854d0e",
         blockColor: "#ca8a04",
         cloudColor: "#fff7ed",
-        description: "Pirámides ancestrales bajo el sol ardiente del desierto.",
+        description: "Pirámides colosales bajo el sol abrasador y dunas de arena dorada.",
         bossName: "Faraón Escorpión",
         bossHp: 4,
         bossColor: "#d97706"
     },
     {
         id: 3,
-        name: "Caverna de Cristales Cuánticos",
+        name: "Caverna de Cristales Neón",
         theme: "neon_cave",
         skyTop: "#0f172a",
         skyBottom: "#1e1b4b",
@@ -46,14 +48,14 @@ const WORLDS_CONFIG = [
         dirtPattern: "#1e1b4b",
         blockColor: "#7c3aed",
         cloudColor: "#6366f1",
-        description: "Túneles subterráneos con estalagmitas y cristales de neón luminiscentes.",
+        description: "Túneles subterráneos con estalagmitas y cristales luminiscentes violetas.",
         bossName: "Gólem Cuántico",
         bossHp: 5,
         bossColor: "#9333ea"
     },
     {
         id: 4,
-        name: "Archipiélago Costa Esmeralda",
+        name: "Costa Caribeña Esmeralda",
         theme: "ocean",
         skyTop: "#0284c7",
         skyBottom: "#7dd3fc",
@@ -63,14 +65,14 @@ const WORLDS_CONFIG = [
         dirtPattern: "#78350f",
         blockColor: "#d97706",
         cloudColor: "#f0fdfa",
-        description: "Océano cristalino con islas tropicales y arrecifes de coral.",
+        description: "Océano tropical con aguas esmeralda, palmeras e islas de coral.",
         bossName: "Capitán Kraken",
         bossHp: 5,
         bossColor: "#059669"
     },
     {
         id: 5,
-        name: "Glaciar de las Cumbres Heladas",
+        name: "Cumbres Glaciales Nevadas",
         theme: "ice",
         skyTop: "#60a5fa",
         skyBottom: "#e0f2fe",
@@ -80,14 +82,14 @@ const WORLDS_CONFIG = [
         dirtPattern: "#0284c7",
         blockColor: "#0ea5e9",
         cloudColor: "#ffffff",
-        description: "Montañas nevadas con picos de hielo y ventisca helada.",
+        description: "Picos escarpados de hielo perpétuo y ventisca helada.",
         bossName: "Yeti Criogénico",
         bossHp: 6,
         bossColor: "#2563eb"
     },
     {
         id: 6,
-        name: "Bosque de Sombras Umbrío",
+        name: "Bosque Sombrío Encantado",
         theme: "spooky_forest",
         skyTop: "#020617",
         skyBottom: "#0f172a",
@@ -97,8 +99,8 @@ const WORLDS_CONFIG = [
         dirtPattern: "#291c13",
         blockColor: "#475569",
         cloudColor: "#334155",
-        description: "Setas gigantes y niebla nocturna bajo una luna misteriosa.",
-        bossName: "Espectro del Bosque",
+        description: "Bosque misterioso con setas fluorescentes bajo la luz de la luna llena.",
+        bossName: "Espectro de las Sombras",
         bossHp: 6,
         bossColor: "#7e22ce"
     },
@@ -106,41 +108,41 @@ const WORLDS_CONFIG = [
         id: 7,
         name: "Flota Celestial en las Nubes",
         theme: "airship",
-        skyTop: "#ea580c",
-        skyBottom: "#ffedd5",
+        skyTop: "#c2410c",
+        skyBottom: "#fed7aa",
         grassColor: "#78350f",
         grassHighlight: "#b45309",
         dirtColor: "#451a03",
         dirtPattern: "#291002",
         blockColor: "#c2410c",
         cloudColor: "#fdba74",
-        description: "Naves voladoras entre nubes doradas al atardecer.",
-        bossName: "Meca-Dragón Volador",
+        description: "Armadas de barcos voladores surcando nubes doradas al atardecer.",
+        bossName: "Meca-Dragón Supremo",
         bossHp: 7,
         bossColor: "#b91c1c"
     },
     {
         id: 8,
-        name: "Fortaleza Volcánica de Magma",
+        name: "Fortaleza de Fuego y Magma",
         theme: "lava_castle",
-        skyTop: "#180202",
-        skyBottom: "#450a0a",
-        grassColor: "#7f1d1d",
-        grassHighlight: "#ef4444",
-        dirtColor: "#2a0404",
-        dirtPattern: "#170202",
+        skyTop: "#1a0202",
+        skyBottom: "#580a0a",
+        grassColor: "#dc2626",
+        grassHighlight: "#f87171",
+        dirtColor: "#2a0505",
+        dirtPattern: "#190202",
         blockColor: "#991b1b",
-        cloudColor: "#b91c1c",
-        description: "Volcanes en erupción, ríos de lava y columnas de fuego ardiente.",
-        bossName: "Bowser de Lava Supremo",
+        cloudColor: "#ef4444",
+        description: "Volcanes gigantes en erupción, ríos de lava ardiente y lluvia de fuego.",
+        bossName: "Lord de Lava Supremo",
         bossHp: 8,
-        bossColor: "#dc2626"
+        bossColor: "#ef4444"
     },
     {
         id: 9,
-        name: "Reino de las Estrellas Cósmicas",
+        name: "Reino Cósmico del Espacio",
         theme: "space",
-        skyTop: "#030712",
+        skyTop: "#020617",
         skyBottom: "#1e1b4b",
         grassColor: "#fbbf24",
         grassHighlight: "#fef08a",
@@ -148,7 +150,7 @@ const WORLDS_CONFIG = [
         dirtPattern: "#1e1b4b",
         blockColor: "#8b5cf6",
         cloudColor: "#c084fc",
-        description: "Nebulosas, constelaciones y planetas flotantes en el espacio exterior.",
+        description: "Planetas con anillos, nebulosas intergalácticas y singularidades cósmicas.",
         bossName: "Emperador de la Singularidad",
         bossHp: 10,
         bossColor: "#00ffff"
@@ -159,8 +161,8 @@ class LevelBuilder {
     static generateLevel(worldIndex, levelIndex) {
         const world = WORLDS_CONFIG[worldIndex - 1] || WORLDS_CONFIG[0];
         const isBossLevel = (levelIndex === 8);
-        const mapWidth = isBossLevel ? 75 : (75 + levelIndex * 12);
-        const mapHeight = 9; // 9 filas de 32px = 288px
+        const mapWidth = isBossLevel ? 75 : 85;
+        const mapHeight = 9;
 
         const grid = Array.from({ length: mapHeight }, () => Array(mapWidth).fill(0));
         const enemies = [];
@@ -169,68 +171,52 @@ class LevelBuilder {
 
         const groundRow = 6; // Fila 6 (Y = 192px)
 
-        // Definir fosos bien colocados (nunca debajo de las plataformas iniciales)
-        const pitColumns = new Set();
-        if (!isBossLevel) {
-            // Fosos a partir de la columna 38 para dar espacio seguro al principio
-            if (mapWidth > 50) pitColumns.add(36);
-            if (mapWidth > 65 && levelIndex >= 2) { pitColumns.add(52); pitColumns.add(53); }
-            if (mapWidth > 85 && levelIndex >= 3) { pitColumns.add(70); }
-        } else {
-            // En el nivel del boss: fosos de lava en la zona de desafío previo
-            pitColumns.add(26);
-            pitColumns.add(27);
-            pitColumns.add(38);
-            pitColumns.add(39);
-        }
-
-        // 1. Generar suelo base continuo
+        // Suelo continuo 100% transitable (sin fosos injustos al inicio)
         for (let col = 0; col < mapWidth; col++) {
-            if (pitColumns.has(col)) {
-                if (isBossLevel) {
-                    grid[mapHeight - 1][col] = 9; // Foso de lava
-                }
-            } else {
-                grid[groundRow][col] = 1;     // Césped
-                grid[groundRow + 1][col] = 13; // Tierra
-                grid[groundRow + 2][col] = 13; // Fondo
+            let isPit = false;
+            // Solo en niveles avanzados (nivel 5+) hay algún foso pequeño
+            if (!isBossLevel && levelIndex >= 5) {
+                if (col === 46 || col === 47) isPit = true;
+            } else if (isBossLevel) {
+                if (col === 32 || col === 33) isPit = true;
+            }
+
+            if (!isPit) {
+                grid[groundRow][col] = 1;      // Césped / Roca superior
+                grid[groundRow + 1][col] = 13; // Tierra intermedia
+                grid[groundRow + 2][col] = 13; // Tierra base
+            } else if (isBossLevel) {
+                grid[mapHeight - 1][col] = 9;  // Foso de lava
             }
         }
 
         if (isBossLevel) {
             // ==========================================
-            // NIVEL 8: CASTILLO DEL JEFE FINAL ELABORADO
+            // NIVEL 8: CASTILLO DEL JEFE FINAL
             // ==========================================
-            // Plataformas flotantes sobre los fosos de lava
-            grid[groundRow - 2][26] = 12; // Piedra de paso
-            grid[groundRow - 2][38] = 12;
+            // Plataformas flotantes amplias y transitables
+            for (let c = 10; c <= 14; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 20; c <= 25; c++) grid[groundRow - 4][c] = 12;
+            for (let c = 38; c <= 44; c++) grid[groundRow - 3][c] = 12;
 
-            // Sala del castillo con dos niveles de altura
-            for (let c = 8; c <= 15; c++) grid[groundRow - 3][c] = 12;
-            for (let c = 18; c <= 24; c++) grid[groundRow - 4][c] = 12;
-            for (let c = 30; c <= 35; c++) grid[groundRow - 3][c] = 12;
-            for (let c = 42; c <= 48; c++) grid[groundRow - 4][c] = 12;
+            // Bloques de poder de ayuda antes del combate
+            grid[groundRow - 3][11] = 4; // Champiñón
+            grid[groundRow - 4][22] = 4; // Flor de fuego / Batería de plasma
 
-            // Cápsulas de poder antes de la arena
-            grid[groundRow - 4][10] = 4; // Champiñón / Super Núcleo
-            grid[groundRow - 4][12] = 3; // Moneda
-            grid[groundRow - 5][21] = 4; // Flor de Fuego
-
-            // Muro de contención de la arena del Boss
-            grid[groundRow - 1][52] = 12;
-            grid[groundRow - 2][52] = 12;
+            // Entrada y pared límite de la arena del boss
+            grid[groundRow - 1][50] = 12;
+            grid[groundRow - 2][50] = 12;
 
             for (let r = 0; r < groundRow; r++) {
                 grid[r][mapWidth - 1] = 12;
             }
 
-            // Plataformas elevadas dentro de la arena del Boss para maniobrar
-            for (let c = 57; c <= 61; c++) grid[groundRow - 3][c] = 12;
-            for (let c = 65; c <= 69; c++) grid[groundRow - 3][c] = 12;
+            // Plataformas dentro de la arena del boss para saltarle encima
+            for (let c = 56; c <= 60; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 64; c <= 68; c++) grid[groundRow - 3][c] = 12;
 
-            // El Boss
             boss = {
-                x: 64 * 32,
+                x: 63 * 32,
                 y: (groundRow - 2) * 32,
                 w: 48,
                 h: 56,
@@ -246,109 +232,104 @@ class LevelBuilder {
                 worldNumber: worldIndex
             };
 
-            enemies.push({ x: 12 * 32, y: (groundRow - 4) * 32, type: 'goomba', vx: -1, alive: true });
-            enemies.push({ x: 32 * 32, y: (groundRow - 4) * 32, type: 'koopa', vx: -1, alive: true });
+            // Esbirro en zona abierta antes de la arena
+            enemies.push({ x: 18 * 32, y: (groundRow - 1) * 32, type: 'goomba', vx: -1, alive: true });
 
         } else {
             // ==========================================
-            // NIVELES 1 AL 7: DISEÑO RICO Y ELABORADO
+            // NIVELES 1 AL 7: DISEÑO FLUIDO, EQUILIBRADO Y 100% PASABLE
             // ==========================================
-            // 1. Tuberías verdes de varias alturas
-            const pipes = [
-                { col: 12, h: 2 },
-                { col: 26, h: 2 },
-                { col: 44, h: 3 },
-                { col: 60, h: 2 }
-            ].filter(p => p.col < mapWidth - 14);
 
-            pipes.forEach(p => {
-                const pipeTop = groundRow - p.h;
-                grid[pipeTop][p.col] = 5;
-                grid[pipeTop][p.col + 1] = 6;
-                for (let r = pipeTop + 1; r < groundRow; r++) {
-                    grid[r][p.col] = 7;
-                    grid[r][p.col + 1] = 8;
+            // 1. Tuberías verdes bien espaciadas (con altura justa de 1 y 2 bloques para saltar fácil)
+            // Separadas por amplias zonas abiertas para nunca atrapar a nadie
+            const pipeConfigs = [
+                { col: 14, h: 1 }, // Tubería baja (1 bloque de altura)
+                { col: 30, h: 2 }, // Tubería media (2 bloques)
+                { col: 50, h: 1 }, // Tubería baja
+                { col: 64, h: 2 }  // Tubería media
+            ];
+
+            pipeConfigs.forEach(p => {
+                if (p.col < mapWidth - 16) {
+                    if (p.h === 1) {
+                        grid[groundRow - 1][p.col] = 5;
+                        grid[groundRow - 1][p.col + 1] = 6;
+                    } else {
+                        grid[groundRow - 2][p.col] = 5;
+                        grid[groundRow - 2][p.col + 1] = 6;
+                        grid[groundRow - 1][p.col] = 7;
+                        grid[groundRow - 1][p.col + 1] = 8;
+                    }
                 }
             });
 
-            // 2. Formaciones de bloques suspendidos a media altura (Fila 3)
-            // Ladrillo - '?' - Ladrillo - '?' - Ladrillo
-            const blockFormations = [16, 30, 48, 64].filter(c => c < mapWidth - 16);
-            blockFormations.forEach((col, idx) => {
+            // 2. Formaciones de bloques suspendidos a altura accesible
+            // Con 3 bloques de aire arriba y abajo para saltar y golpear con la cabeza
+            const blockCols = [19, 36, 54];
+            blockCols.forEach((col, idx) => {
                 const bRow = groundRow - 3;
-                grid[bRow][col] = 2;                     // Ladrillo
-                grid[bRow][col + 1] = (idx % 2 === 0) ? 4 : 3; // '?' Champiñón o Moneda
-                grid[bRow][col + 2] = 2;                 // Ladrillo
-                grid[bRow][col + 3] = 3;                 // '?' Moneda
-                grid[bRow][col + 4] = 2;                 // Ladrillo
+                grid[bRow][col] = 2; // Ladrillo
+                grid[bRow][col + 1] = 3; // '?' Moneda
+                grid[bRow][col + 2] = (idx === 0) ? 4 : 2; // '?' Champiñón / Super Batería
+                grid[bRow][col + 3] = 3; // '?' Moneda
+                grid[bRow][col + 4] = 2; // Ladrillo
 
                 coins.push({ x: (col + 1) * 32, y: (bRow - 1) * 32 });
                 coins.push({ x: (col + 3) * 32, y: (bRow - 1) * 32 });
             });
 
-            // 3. Escaleras / Pirámides de bloques estilo Mario clásico
-            if (mapWidth > 40) {
-                // Escalera que sube
-                const stairCol = 20;
-                grid[groundRow - 1][stairCol] = 1;
-                grid[groundRow - 1][stairCol + 1] = 1;
-                grid[groundRow - 2][stairCol + 1] = 1;
-                grid[groundRow - 1][stairCol + 2] = 1;
-                grid[groundRow - 2][stairCol + 2] = 1;
-                grid[groundRow - 3][stairCol + 2] = 1;
-
-                // Escalera que baja
-                grid[groundRow - 1][stairCol + 4] = 1;
-                grid[groundRow - 2][stairCol + 4] = 1;
-                grid[groundRow - 1][stairCol + 5] = 1;
-            }
-
-            // 4. Ruta secreta superior flotante en niveles más avanzados
-            if (levelIndex >= 2 && mapWidth > 60) {
-                const skyRow = groundRow - 5;
-                for (let c = 34; c <= 40; c++) {
-                    grid[skyRow][c] = 12; // Bloques flotantes altos
-                    coins.push({ x: c * 32, y: (skyRow - 1) * 32 });
-                }
-            }
-
-            // 5. Monedas flotantes a lo largo del mapa
-            for (let c = 8; c < mapWidth - 14; c += 8) {
-                if (grid[groundRow][c] === 1) {
+            // 3. Monedas flotantes en arcos sobre las llanuras
+            for (let c = 7; c < mapWidth - 18; c += 8) {
+                if (grid[groundRow][c] === 1 && grid[groundRow - 1][c] === 0) {
                     coins.push({ x: c * 32, y: (groundRow - 2) * 32 });
                 }
             }
 
-            // 6. Enemigos colocados estratégicamente
-            const numEnemies = 4 + levelIndex + worldIndex;
-            for (let i = 0; i < numEnemies; i++) {
-                const eCol = 15 + Math.floor(i * ((mapWidth - 30) / numEnemies));
-                if (eCol < mapWidth - 12 && grid[groundRow][eCol] === 1 && !pitColumns.has(eCol)) {
-                    const eType = (i % 3 === 0 && levelIndex >= 2) ? 'koopa' : 'goomba';
+            // 4. Escalera clásica suave antes de la meta (nunca más de 2 bloques para que sea 100% pasable)
+            const stairCol = 68;
+            if (stairCol < mapWidth - 14) {
+                grid[groundRow - 1][stairCol] = 1;     // Paso 1 (1 bloque)
+                grid[groundRow - 1][stairCol + 1] = 1; // Paso 2
+                grid[groundRow - 2][stairCol + 1] = 1;
+                grid[groundRow - 1][stairCol + 2] = 1; // Descanso
+                grid[groundRow - 2][stairCol + 2] = 1;
+                grid[groundRow - 1][stairCol + 3] = 1; // Bajada suave
+            }
+
+            // 5. ENEMIGOS EN ZONAS TOTALMENTE ABIERTAS (ESPACIOS DE 8+ BLOQUES)
+            // NUNCA atrapados ni entre tuberías estrechas
+            const enemySpawnCols = [23, 42, 59];
+            enemySpawnCols.forEach((col, idx) => {
+                if (col < mapWidth - 16) {
                     enemies.push({
-                        x: eCol * 32,
+                        x: col * 32,
                         y: (groundRow - 1) * 32,
-                        type: eType,
-                        vx: -1,
+                        type: (idx % 2 === 0) ? 'goomba' : 'koopa',
+                        vx: -0.9,
                         vy: 0,
                         alive: true
                     });
                 }
-            }
+            });
 
-            // 7. Mástil de meta y castillo final
-            const flagCol = mapWidth - 8;
+            // 6. BANDERA DE META Y CASTILLO FINAL (100% TRANSITABLE SIN BLOQUES INVISIBLES)
+            const flagCol = mapWidth - 9; // Columna 76
+            // Mástil de meta: Tile 10 desde fila 1 hasta fila 5 (NO es bloque sólido para que Astro lo toque suavemente)
             for (let r = groundRow - 5; r < groundRow; r++) {
                 grid[r][flagCol] = 10;
             }
-            grid[groundRow - 1][flagCol] = 1;
 
-            const castleCol = mapWidth - 4;
+            // Castillo de llegada clásico con puerta abierta
+            const castleCol = mapWidth - 5; // Columna 80
             for (let r = groundRow - 3; r < groundRow; r++) {
                 for (let c = castleCol; c < castleCol + 3; c++) {
-                    grid[r][c] = 12;
+                    grid[r][c] = 12; // Muro del castillo
                 }
             }
+            // Almenas del castillo
+            grid[groundRow - 4][castleCol] = 12;
+            grid[groundRow - 4][castleCol + 2] = 12;
+            // Puerta del castillo (Tile 11: arco abierto transitable)
             grid[groundRow - 1][castleCol + 1] = 11;
         }
 
@@ -365,7 +346,9 @@ class LevelBuilder {
             boss,
             spawnX: 3 * 32,
             spawnY: (groundRow - 1) * 32,
-            flagX: (mapWidth - 8) * 32
+            flagCol: mapWidth - 9,
+            flagX: (mapWidth - 9) * 32,
+            castleX: (mapWidth - 5) * 32
         };
     }
 }

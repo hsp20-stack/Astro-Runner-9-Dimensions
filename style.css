@@ -368,7 +368,21 @@ body, html {
     color: #ffffff;
     border: 2px solid #86efac;
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
-    font-size: 18px;
+    font-size: 17px;
+}
+
+.highlight-btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+    color: #ffffff;
+    border: 2px solid #fef08a;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    font-size: 16px;
+    animation: pulseHighlight 2s infinite ease-in-out;
+}
+
+@keyframes pulseHighlight {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 16px rgba(245, 158, 11, 0.4); }
+    50% { transform: scale(1.02); box-shadow: 0 0 26px rgba(245, 158, 11, 0.8); }
 }
 
 .secondary-btn {
