@@ -5,33 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0e17">
+    <meta name="theme-color" content="#000000">
     <title>Astro Runner - Hugo SP Studios</title>
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="gameContainer">
-        <!-- PANTALLA DE INTRO: HUGO SP STUDIOS (Estilo Unity / PlayStation) -->
-        <div id="studioSplashScreen" class="studio-splash">
-            <div class="studio-content">
-                <div class="studio-emblem">
-                    <div class="emblem-shield">
-                        <span class="emblem-letter">H</span>
-                    </div>
-                    <div class="emblem-glow"></div>
+    <!-- PANTALLA COMPLETA DE INTRO: HUGO SP STUDIOS (A PANTALLA COMPLETA 100% INDEPENDIENTE) -->
+    <div id="studioSplashScreen" class="studio-splash">
+        <div class="studio-bg-glow"></div>
+        <div class="studio-content">
+            <div class="studio-emblem">
+                <div class="emblem-shield">
+                    <span class="emblem-letter">H</span>
                 </div>
-                <h1 class="studio-title">HUGO SP STUDIOS</h1>
-                <p class="studio-subtitle">P R E S E N T A</p>
-                <div class="studio-loader">
-                    <div class="loader-bar"></div>
-                </div>
-                <span class="studio-tap-hint">Toca la pantalla para saltar</span>
+                <div class="emblem-ring"></div>
+                <div class="emblem-ring ring-delayed"></div>
             </div>
+            <div class="studio-text-wrap">
+                <h1 class="studio-title">HUGO SP STUDIOS</h1>
+                <div class="studio-shimmer"></div>
+            </div>
+            <p class="studio-subtitle">P R E S E N T A</p>
+            <div class="studio-loader">
+                <div class="loader-bar"></div>
+            </div>
+            <span class="studio-tap-hint">Toca la pantalla para entrar</span>
         </div>
+    </div>
 
-        <!-- HUD LIMPIO Y ESPACIADO EN LAS ESQUINAS (No todo amontonado) -->
+    <!-- CONTENEDOR DEL JUEGO (Se revela solo tras la intro) -->
+    <div id="gameContainer">
+        <!-- HUD LIMPIO Y ESPACIADO EN LAS ESQUINAS -->
         <div id="hudTopLeft" class="hud-pill">
             <div class="hud-badge world-badge">
                 <span class="badge-icon">🚩</span>

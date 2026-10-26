@@ -1504,14 +1504,16 @@ function setupStudioSplashScreen() {
 
         setTimeout(() => {
             splash.classList.add('fade-out');
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 800);
             window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
-        }, 2200);
+        }, 2400);
     };
 
-    // Auto-iniciar tras cargar o con un toque/clic
     splash.addEventListener('click', startAdventure);
     splash.addEventListener('touchstart', startAdventure, { passive: true });
-    setTimeout(startAdventure, 1000);
+    setTimeout(startAdventure, 400);
 }
 
 window.addEventListener('load', () => {

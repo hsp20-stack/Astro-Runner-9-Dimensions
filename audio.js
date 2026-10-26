@@ -52,7 +52,7 @@ class SoundManager {
             osc.frequency.setValueAtTime(note.f, now);
 
             gain.gain.setValueAtTime(0.01, now);
-            gain.gain.linearRampToValueAtTime(0.18, now + 0.3);
+            gain.gain.linearRampToValueAtTime(0.35, now + 0.35); // Sonido de intro nítido y potente
             gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
 
             osc.connect(gain);
@@ -349,29 +349,29 @@ class SoundManager {
             const note = sequence[index % sequence.length];
             const now = this.ctx.currentTime;
 
-            // Voz principal (Square Wave / Nintendo Lead)
+            // Voz principal (Zelda Lead - Volumen Alto y Nítido)
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
 
             osc.type = isBoss ? 'sawtooth' : 'triangle';
             osc.frequency.setValueAtTime(note.f, now);
 
-            gain.gain.setValueAtTime(0.08, now);
-            gain.gain.exponentialRampToValueAtTime(0.005, now + note.d * 0.9);
+            gain.gain.setValueAtTime(0.24, now); // Volumen de música subido
+            gain.gain.exponentialRampToValueAtTime(0.015, now + note.d * 0.9);
 
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
             osc.stop(now + note.d * 0.95);
 
-            // Línea de bajo rítmico (Bassline en octava baja)
+            // Línea de bajo rítmico (Bassline con buen cuerpo)
             if (!isBoss && index % 2 === 0) {
                 const bassOsc = this.ctx.createOscillator();
                 const bassGain = this.ctx.createGain();
                 bassOsc.type = 'triangle';
                 bassOsc.frequency.setValueAtTime(note.f / 4, now);
-                bassGain.gain.setValueAtTime(0.06, now);
-                bassGain.gain.exponentialRampToValueAtTime(0.002, now + note.d * 0.8);
+                bassGain.gain.setValueAtTime(0.18, now); // Bajo sonoro
+                bassGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.8);
                 bassOsc.connect(bassGain);
                 bassGain.connect(this.ctx.destination);
                 bassOsc.start(now);
