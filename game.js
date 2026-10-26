@@ -1502,6 +1502,11 @@ function setupStudioSplashScreen() {
         window.sounds.init();
         window.sounds.playStudioIntroChime();
 
+        // Solicitar orientación horizontal en dispositivos compatibles
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+
         setTimeout(() => {
             splash.classList.add('fade-out');
             setTimeout(() => {
