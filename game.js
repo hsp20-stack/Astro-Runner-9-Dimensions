@@ -1003,11 +1003,23 @@ function render() {
         drawBossHealthBarModern();
     }
 
-    // Proyectiles boss
+    // Proyectiles boss (Bolas de fuego y magma del jefe)
     for (let bp of bossProjectiles) {
-        ctx.fillStyle = bp.color;
+        const pbx = bp.x - cameraX + 6;
+        const pby = bp.y + 6;
+        const fireGrad = ctx.createRadialGradient(pbx, pby, 1, pbx, pby, 7);
+        fireGrad.addColorStop(0, '#fef08a');
+        fireGrad.addColorStop(0.5, '#f97316');
+        fireGrad.addColorStop(1, '#dc2626');
+        ctx.fillStyle = fireGrad;
         ctx.beginPath();
-        ctx.arc(bp.x - cameraX + 6, bp.y + 6, 6, 0, Math.PI * 2);
+        ctx.arc(pbx, pby, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Estela ardiente dinámica
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+        ctx.beginPath();
+        ctx.arc(pbx - (bp.vx > 0 ? 6 : -6), pby, 4, 0, Math.PI * 2);
         ctx.fill();
     }
 
@@ -1035,6 +1047,132 @@ function render() {
 function renderThemedBackdrop() {
     const theme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
     const bgOffset = cameraX * 0.25;
+
+    // === CASTILLO CON LAVA (NIVEL FINAL CONTRA EL BOSS) ===
+    if (levelData && levelData.isBossLevel) {
+        // Cielo de tormenta volcánica y tinieblas del castillo
+        const bossSky = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+        bossSky.addColorStop(0, '#0a0204');
+        bossSky.addColorStop(0.35, '#1e0508');
+        bossSky.addColorStop(0.7, '#450a0a');
+        bossSky.addColorStop(1, '#7f1d1d');
+        ctx.fillStyle = bossSky;
+        ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+        // Muros de piedra gótica con almenas y aspilleras
+        ctx.fillStyle = '#140407';
+        for (let i = 0; i < 6; i++) {
+            const bx = ((i * 105) - bgOffset * 0.3) % (VIEW_WIDTH + 110);
+            ctx.fillRect(bx, 36, 64, 156);
+            // Almenas superiores del castillo
+            ctx.fillRect(bx - 4, 26, 20, 16);
+            ctx.fillRect(bx + 24, 26, 20, 16);
+            ctx.fillRect(bx + 48, 26, 20, 16);
+            // Ventanas góticas estrechas con resplandor carmesí
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(bx + 16, 56, 8, 24);
+            ctx.fillRect(bx + 38, 56, 8, 24);
+            ctx.fillStyle = '#140407';
+        }
+
+        // Gran rosetón / vitral gótico central de Bowser con calavera y fuego
+        const portalX = (VIEW_WIDTH / 2 - bgOffset * 0.15) % VIEW_WIDTH;
+        ctx.fillStyle = '#260408';
+        ctx.beginPath();
+        ctx.arc(portalX, 68, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#991b1b';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Ojos ardientes en el vitral
+        const eyeGlow = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(249, 115, 22, ${eyeGlow})`;
+        ctx.beginPath();
+        ctx.ellipse(portalX - 11, 66, 6, 9, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(portalX + 11, 66, 6, 9, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Columnas góticas de piedra en el salón del jefe
+        for (let i = 0; i < 4; i++) {
+            const cx = ((i * 135 + 20) - bgOffset * 0.55) % (VIEW_WIDTH + 140);
+            ctx.fillStyle = '#1b0609';
+            ctx.fillRect(cx, 0, 24, VIEW_HEIGHT);
+            // Capiteles de piedra
+            ctx.fillStyle = '#2b090e';
+            ctx.fillRect(cx - 4, 16, 32, 10);
+            ctx.fillRect(cx - 2, 26, 28, 6);
+
+            // Antorchas con fuego animado montadas en las columnas
+            const torchY = 72;
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(cx + 8, torchY + 8, 8, 12);
+            ctx.fillRect(cx + 4, torchY + 16, 16, 4);
+
+            // Llamas de la antorcha (flicker realista con Math.sin)
+            const flameW = 8 + Math.sin(Date.now() * 0.02 + i) * 2;
+            const flameH = 15 + Math.cos(Date.now() * 0.025 + i) * 3;
+            const torchGrad = ctx.createRadialGradient(cx + 12, torchY, 2, cx + 12, torchY, 14);
+            torchGrad.addColorStop(0, '#fef08a');
+            torchGrad.addColorStop(0.4, '#f97316');
+            torchGrad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+            ctx.fillStyle = torchGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx + 12, torchY, flameW, flameH, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Cadenas de hierro colgando del techo con oscilación
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+            const chainX = ((i * 85 + 35) - bgOffset * 0.45) % (VIEW_WIDTH + 80);
+            const sway = Math.sin(Date.now() * 0.002 + i * 1.5) * 5;
+            ctx.beginPath();
+            ctx.moveTo(chainX, 0);
+            ctx.quadraticCurveTo(chainX + sway * 0.5, 45, chainX + sway, 90);
+            ctx.stroke();
+
+            // Eslabones metálicos
+            for (let linkY = 8; linkY <= 88; linkY += 12) {
+                const linkX = chainX + (sway * (linkY / 90));
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(linkX - 2, linkY, 4, 6);
+            }
+        }
+
+        // Foso de lava hirviente en la base del castillo
+        const lavaLakeGrad = ctx.createLinearGradient(0, 184, 0, VIEW_HEIGHT);
+        lavaLakeGrad.addColorStop(0, '#fbbf24');
+        lavaLakeGrad.addColorStop(0.3, '#f97316');
+        lavaLakeGrad.addColorStop(0.7, '#dc2626');
+        lavaLakeGrad.addColorStop(1, '#450a0a');
+        ctx.fillStyle = lavaLakeGrad;
+        ctx.fillRect(0, 184, VIEW_WIDTH, VIEW_HEIGHT - 184);
+
+        // Burbujas de lava hirviendo
+        for (let b = 0; b < 6; b++) {
+            const bubbleTime = (Date.now() * 0.003 + b * 1.7) % 3;
+            const bx = ((b * 68 + 25) - bgOffset * 0.8) % VIEW_WIDTH;
+            const by = 186 - bubbleTime * 4;
+            const bRadius = Math.max(1, 4 - bubbleTime);
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(bx, by, bRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Chispas y ascuas flotantes que ascienden
+        for (let s = 0; s < 14; s++) {
+            const sparkTime = (Date.now() * 0.0015 + s * 0.45) % 1;
+            const sx = ((s * 42 + 10) - bgOffset * 0.4 + Math.sin(sparkTime * 6 + s) * 12) % VIEW_WIDTH;
+            const sy = 188 - sparkTime * 140;
+            ctx.fillStyle = (s % 2 === 0) ? '#fbbf24' : '#ef4444';
+            ctx.fillRect(sx, sy, 2, 2);
+        }
+
+        return;
+    }
 
     if (theme === "lava_castle") {
         // === MUNDO 8: FORTALEZA DE FUEGO, LAVA Y MAGMA ===
@@ -1636,62 +1774,301 @@ function drawGoldCoin(x, y) {
 }
 
 function drawCuteEnemy(x, y, type) {
+    const walkCycle = Math.sin(Date.now() * 0.01 + x);
+
     if (type === 'goomba') {
-        // Champiñón marrón estilo Goomba
-        ctx.fillStyle = '#b45309';
+        // === MECHA-GOOMBA AVANZADO (CHAMPIÑÓN ROBÓTICO DE ÉLITE) ===
+        // Pies mecánicos oscilantes
+        const leftFootY = y + 15 - (walkCycle > 0 ? walkCycle * 2.5 : 0);
+        const rightFootY = y + 15 - (walkCycle < 0 ? -walkCycle * 2.5 : 0);
+        ctx.fillStyle = '#0f172a'; // Acero negro carbón
+        ctx.fillRect(x + 2, leftFootY, 6, 5);
+        ctx.fillRect(x + 12, rightFootY, 6, 5);
+        ctx.fillStyle = '#38bdf8'; // Remache / diodo cian
+        ctx.fillRect(x + 4, leftFootY + 1, 2, 2);
+        ctx.fillRect(x + 14, rightFootY + 1, 2, 2);
+
+        // Tallo / Mandíbula de aleación de bronce
+        ctx.fillStyle = '#fed7aa';
+        ctx.fillRect(x + 4, y + 9, 12, 7);
+        ctx.fillStyle = '#450a0a';
+        ctx.fillRect(x + 6, y + 14, 8, 2); // Boca abierta
+
+        // Colmillos afilados amenazantes
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(x + 11, y + 10, 10, Math.PI, 0, false);
+        ctx.moveTo(x + 6, y + 16);
+        ctx.lineTo(x + 8, y + 13);
+        ctx.lineTo(x + 10, y + 16);
+        ctx.moveTo(x + 10, y + 16);
+        ctx.lineTo(x + 12, y + 13);
+        ctx.lineTo(x + 14, y + 16);
         ctx.fill();
 
-        ctx.fillStyle = '#fde68a';
-        ctx.fillRect(x + 4, y + 10, 14, 7);
+        // Caparazón / Sombrero con volumen degradado
+        const capGrad = ctx.createLinearGradient(x, y, x, y + 11);
+        capGrad.addColorStop(0, '#ea580c');
+        capGrad.addColorStop(0.5, '#c2410c');
+        capGrad.addColorStop(1, '#7c2d12');
+        ctx.fillStyle = capGrad;
+        ctx.beginPath();
+        ctx.arc(x + 10, y + 8, 10, Math.PI, 0, false);
+        ctx.fill();
 
-        // Ojos negros enojados
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(x + 6, y + 10, 2, 5);
-        ctx.fillRect(x + 14, y + 10, 2, 5);
+        // Borde inferior reforzado del sombrero
+        ctx.fillStyle = '#9a3412';
+        ctx.fillRect(x + 1, y + 7, 18, 3);
 
-        // Pies negros
-        ctx.fillRect(x + 2, y + 17, 6, 3);
-        ctx.fillRect(x + 14, y + 17, 6, 3);
+        // Cejas angulares negras agresivas
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y + 8);
+        ctx.lineTo(x + 8, y + 10);
+        ctx.moveTo(x + 16, y + 8);
+        ctx.lineTo(x + 12, y + 10);
+        ctx.stroke();
+
+        // Ojos amenazantes con pupilas carmesí brillante
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 5, y + 10, 3, 4);
+        ctx.fillRect(x + 12, y + 10, 3, 4);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(x + 6, y + 11, 2, 3);
+        ctx.fillRect(x + 13, y + 11, 2, 3);
+
     } else {
-        // Tortuga Koopa verde
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(x + 3, y + 4, 16, 14);
-        ctx.strokeStyle = '#ffffff';
-        ctx.strokeRect(x + 5, y + 6, 12, 10);
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(x + 14, y + 4, 6, 6);
+        // === CYBER-KOOPA (TORTUGA ACORAZADA TÁCTICA) ===
+        // Patas reptilianas animadas con zancada
+        const legFrontY = y + 14 - (walkCycle > 0 ? walkCycle * 2 : 0);
+        const legBackY = y + 14 - (walkCycle < 0 ? -walkCycle * 2 : 0);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(x + 2, legFrontY, 5, 5);
+        ctx.fillRect(x + 13, legBackY, 5, 5);
+        ctx.fillStyle = '#ffffff'; // Garras
+        ctx.fillRect(x + 1, legFrontY + 3, 2, 2);
+        ctx.fillRect(x + 12, legBackY + 3, 2, 2);
+
+        // Caparazón 3D con sombreado esmeralda
+        const shellGrad = ctx.createLinearGradient(x + 3, y + 2, x + 3, y + 16);
+        shellGrad.addColorStop(0, '#22c55e');
+        shellGrad.addColorStop(0.7, '#16a34a');
+        shellGrad.addColorStop(1, '#14532d');
+        ctx.fillStyle = shellGrad;
+        ctx.beginPath();
+        ctx.ellipse(x + 10, y + 9, 8, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Borde exterior blanco reforzado
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Placas hexagonales del caparazón
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 3);
+        ctx.lineTo(x + 10, y + 15);
+        ctx.moveTo(x + 4, y + 9);
+        ctx.lineTo(x + 16, y + 9);
+        ctx.stroke();
+
+        // Cabeza táctica con visor cibernético
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(x + 13, y + 3, 7, 7);
+        // Pico anaranjado
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(x + 18, y + 6, 3, 3);
+
+        // Visor de combate cian brillante
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x + 14, y + 4, 4, 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 15, y + 4, 1, 1);
+
+        // Cola puntiaguda
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(x + 3, y + 11);
+        ctx.lineTo(x - 1, y + 13);
+        ctx.lineTo(x + 3, y + 14);
+        ctx.fill();
     }
 }
 
 function drawBossModern(x, y) {
     const b = bossEntity;
-    ctx.fillStyle = b.color;
-    ctx.fillRect(x, y, b.w, b.h);
+    const facingLeft = (b.vx <= 0);
+    const breath = Math.sin(Date.now() * 0.005) * 1.5;
+    const lavaPulse = (Math.sin(Date.now() * 0.007) + 1) * 0.5;
 
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, b.w, b.h);
+    // Partículas de ascuas y fuego flotando alrededor del boss
+    for (let i = 0; i < 4; i++) {
+        const emberTime = (Date.now() * 0.002 + i * 0.6) % 1;
+        const ex = x + 10 + (i * 12) + Math.sin(emberTime * 5 + i) * 8;
+        const ey = y + b.h - 8 - emberTime * 50;
+        ctx.fillStyle = (i % 2 === 0) ? '#f97316' : '#fde047';
+        ctx.fillRect(ex, ey, 2.5, 2.5);
+    }
 
-    // Ojos feroces
-    ctx.fillStyle = '#fde047';
-    ctx.fillRect(x + 8, y + 12, 10, 10);
-    ctx.fillRect(x + b.w - 18, y + 12, 10, 10);
+    // === 1. CAPARAZÓN VOLCÁNICO CON ESPINAS (MAGMA BOWSER) ===
+    const shellX = facingLeft ? x + 18 : x + 4;
+    const shellY = y + 8 + breath;
+    const shellW = 26;
+    const shellH = 34;
 
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(x + 12, y + 14, 5, 5);
-    ctx.fillRect(x + b.w - 14, y + 14, 5, 5);
-
-    // Cuernos
-    ctx.fillStyle = '#1e293b';
+    // Base del caparazón de roca obsidiana oscura
+    ctx.fillStyle = '#1c1917';
     ctx.beginPath();
-    ctx.moveTo(x + 6, y);
-    ctx.lineTo(x + 12, y - 10);
-    ctx.lineTo(x + 18, y);
-    ctx.moveTo(x + b.w - 18, y);
-    ctx.lineTo(x + b.w - 12, y - 10);
-    ctx.lineTo(x + b.w - 6, y);
+    ctx.ellipse(shellX + shellW / 2, shellY + shellH / 2, shellW / 2, shellH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde de roca volcánica
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Espinas volcánicas afiladas saliendo del caparazón
+    ctx.fillStyle = '#292524';
+    const spikePositions = [
+        { sx: shellX + 4, sy: shellY + 6 },
+        { sx: shellX + shellW - 6, sy: shellY + 6 },
+        { sx: shellX + shellW / 2, sy: shellY + 2 },
+        { sx: shellX + shellW / 2, sy: shellY + shellH - 6 },
+        { sx: shellX + 3, sy: shellY + shellH / 2 },
+        { sx: shellX + shellW - 5, sy: shellY + shellH / 2 }
+    ];
+
+    spikePositions.forEach(sp => {
+        ctx.beginPath();
+        ctx.moveTo(sp.sx - 3, sp.sy + 4);
+        ctx.lineTo(sp.sx, sp.sy - 5);
+        ctx.lineTo(sp.sx + 3, sp.sy + 4);
+        ctx.fill();
+
+        // Punta incandescente de la espina
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(sp.sx - 1, sp.sy - 5, 2, 2);
+        ctx.fillStyle = '#292524';
+    });
+
+    // === 2. PIES Y GARRAS TITÁNICAS DE OBSIDIANA ===
+    ctx.fillStyle = '#1c1917';
+    // Pie izquierdo
+    ctx.fillRect(x + 6, y + b.h - 10, 14, 10);
+    // Pie derecho
+    ctx.fillRect(x + b.w - 20, y + b.h - 10, 14, 10);
+
+    // Garras afiladas de lava
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(x + 4, y + b.h - 4, 3, 4);
+    ctx.fillRect(x + 9, y + b.h - 4, 3, 4);
+    ctx.fillRect(x + 14, y + b.h - 4, 3, 4);
+    ctx.fillRect(x + b.w - 22, y + b.h - 4, 3, 4);
+    ctx.fillRect(x + b.w - 17, y + b.h - 4, 3, 4);
+    ctx.fillRect(x + b.w - 12, y + b.h - 4, 3, 4);
+
+    // === 3. TORSO Y CORAZÓN DE MAGMA PULSANTE ===
+    const bodyX = facingLeft ? x + 10 : x + 14;
+    const bodyY = y + 16 + breath;
+    ctx.fillStyle = '#292524'; // Roca volcánica pesada
+    ctx.beginPath();
+    ctx.ellipse(bodyX + 12, bodyY + 14, 14, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Grietas de lava incandescente en el pecho
+    const coreGrad = ctx.createRadialGradient(bodyX + 12, bodyY + 14, 2, bodyX + 12, bodyY + 14, 12);
+    coreGrad.addColorStop(0, '#fef08a');
+    coreGrad.addColorStop(0.4, '#f97316');
+    coreGrad.addColorStop(0.8, '#dc2626');
+    coreGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(bodyX + 12, bodyY + 14, 10 + lavaPulse * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fisuras de magma conectadas a los brazos
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 8, bodyY + 12);
+    ctx.lineTo(bodyX + 4, bodyY + 20);
+    ctx.moveTo(bodyX + 16, bodyY + 12);
+    ctx.lineTo(bodyX + 20, bodyY + 20);
+    ctx.stroke();
+
+    // Brazos titánicos musculosos con puños
+    ctx.fillStyle = '#1c1917';
+    if (facingLeft) {
+        ctx.fillRect(x + 2, bodyY + 8, 10, 14);
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(x + 1, bodyY + 18, 10, 4); // Brazalete de fuego
+    } else {
+        ctx.fillRect(x + b.w - 12, bodyY + 8, 10, 14);
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(x + b.w - 11, bodyY + 18, 10, 4); // Brazalete de fuego
+    }
+
+    // === 4. CABEZA DE DRAGÓN DE LAVA / BOWSER TITÁN ===
+    const headX = facingLeft ? x + 4 : x + 20;
+    const headY = y + 2 + breath;
+
+    // Mandíbula y cráneo de obsidiana
+    ctx.fillStyle = '#1c1917';
+    ctx.beginPath();
+    ctx.roundRect(headX, headY, 24, 18, 4);
+    ctx.fill();
+
+    // Hocico pronunciado
+    const snoutX = facingLeft ? headX - 6 : headX + 16;
+    ctx.fillRect(snoutX, headY + 7, 14, 11);
+
+    // Dientes afilados de lava
+    ctx.fillStyle = '#fef08a';
+    for (let t = 0; t < 3; t++) {
+        const tx = snoutX + (t * 4) + 1;
+        ctx.fillRect(tx, headY + 16, 2, 3); // Dientes inferiores
+        ctx.fillRect(tx, headY + 8, 2, 2);  // Dientes superiores
+    }
+
+    // Ojos feroces demoníacos con pupilas de fuego
+    const eyeX = facingLeft ? headX + 4 : headX + 14;
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(eyeX, headY + 5, 6, 5);
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(eyeX + (facingLeft ? 1 : 3), headY + 6, 2, 3); // Pupila vertical de dragón
+
+    // === 5. CUERNOS CURVOS DE OBSIDIANA Y CRESTA DE FUEGO ===
+    // Cuernos
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    // Cuerno trasero
+    ctx.moveTo(headX + 14, headY);
+    ctx.lineTo(headX + (facingLeft ? 22 : 6), headY - 12);
+    ctx.lineTo(headX + 18, headY + 2);
+    // Cuerno delantero
+    ctx.moveTo(headX + 6, headY);
+    ctx.lineTo(headX + (facingLeft ? -2 : 28), headY - 10);
+    ctx.lineTo(headX + 10, headY + 2);
+    ctx.fill();
+
+    // Puntas de los cuernos con lava ardiendo
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(headX + (facingLeft ? 21 : 5), headY - 12, 3, 3);
+    ctx.fillRect(headX + (facingLeft ? -3 : 27), headY - 10, 3, 3);
+
+    // Melena de fuego ardiente animada sobre la cabeza
+    const flameFlicker = Math.sin(Date.now() * 0.02) * 2;
+    const fireGrad = ctx.createLinearGradient(headX + 8, headY - 14, headX + 8, headY);
+    fireGrad.addColorStop(0, '#fef08a');
+    fireGrad.addColorStop(0.5, '#ea580c');
+    fireGrad.addColorStop(1, '#b91c1c');
+    ctx.fillStyle = fireGrad;
+    ctx.beginPath();
+    ctx.moveTo(headX + 6, headY);
+    ctx.quadraticCurveTo(headX + 10 + flameFlicker, headY - 16, headX + 14, headY - 4);
+    ctx.quadraticCurveTo(headX + 18 - flameFlicker, headY - 14, headX + 22, headY);
     ctx.fill();
 }
 

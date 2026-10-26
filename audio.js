@@ -409,20 +409,59 @@ class SoundManager {
         ];
 
         // ==========================================
-        // TEMA DEL JEFE: MARIO 64 BOWSER + OCARINA GANONDORF
+        // TEMA DEL JEFE FINAL: SUPER MARIO 64 - BATALLA FINAL CONTRA BOWSER
         // ==========================================
+        const C2 = 65.41, Eb2 = 77.78, F2 = 87.31, Fs2 = 92.50, G2 = 98.00, Ab2 = 103.83, Bb2 = 116.54;
         const bossBattleTheme = [
-            { f: 110,   d: 0.14, b: 55 },
-            { f: 110,   d: 0.14, b: 55 },
-            { f: 130.8, d: 0.14, b: 65.4 },
-            { f: 123.5, d: 0.14, b: 61.7 },
-            { f: 110,   d: 0.14, b: 55 },
-            { f: 146.8, d: 0.14, b: 73.4 },
-            { f: 138.6, d: 0.20, b: 69.3 },
-            { f: 220,   d: 0.14, b: 110 },
-            { f: 207.6, d: 0.14, b: 103.8 },
-            { f: 196,   d: 0.14, b: 98 },
-            { f: 185,   d: 0.20, b: 92.5 }
+            // Intro dramática y pesada de Bowser
+            { f: C4,  d: 0.16, b: C2 },
+            { f: C4,  d: 0.16, b: C2 },
+            { f: Eb4, d: 0.16, b: Eb2 },
+            { f: F4,  d: 0.16, b: F2 },
+            { f: Fs4, d: 0.16, b: Fs2 },
+            { f: G4,  d: 0.32, b: G2 },
+            // Motivo principal de la batalla (Marcha siniestra de Bowser)
+            { f: C4,  d: 0.14, b: C2 },
+            { f: C4,  d: 0.14, b: C2 },
+            { f: C4,  d: 0.14, b: C2 },
+            { f: Eb4, d: 0.28, b: Eb2 },
+            { f: D4,  d: 0.14, b: D3 },
+            { f: C4,  d: 0.14, b: C2 },
+            { f: Bb3, d: 0.28, b: Bb2 },
+
+            { f: C4,  d: 0.14, b: C2 },
+            { f: C4,  d: 0.14, b: C2 },
+            { f: C4,  d: 0.14, b: C2 },
+            { f: Eb4, d: 0.14, b: Eb2 },
+            { f: F4,  d: 0.14, b: F2 },
+            { f: G4,  d: 0.30, b: G2 },
+            { f: F4,  d: 0.14, b: F2 },
+            { f: Eb4, d: 0.14, b: Eb2 },
+            { f: D4,  d: 0.30, b: D3 },
+
+            // Clímax orquestal ascendente de Mario 64
+            { f: C4,  d: 0.14, b: C2 },
+            { f: Eb4, d: 0.14, b: Eb2 },
+            { f: G4,  d: 0.14, b: G2 },
+            { f: C5,  d: 0.36, b: C3 },
+            { f: Bb4, d: 0.14, b: Bb2 },
+            { f: Ab4, d: 0.14, b: Ab2 },
+            { f: G4,  d: 0.28, b: G2 },
+            { f: F4,  d: 0.14, b: F2 },
+            { f: Eb4, d: 0.14, b: Eb2 },
+            { f: D4,  d: 0.36, b: D3 },
+
+            // Cadencia de combate
+            { f: G4,  d: 0.14, b: G2 },
+            { f: G4,  d: 0.14, b: G2 },
+            { f: Ab4, d: 0.14, b: Ab2 },
+            { f: Bb4, d: 0.28, b: Bb2 },
+            { f: Ab4, d: 0.14, b: Ab2 },
+            { f: G4,  d: 0.14, b: G2 },
+            { f: F4,  d: 0.28, b: F2 },
+            { f: Eb4, d: 0.14, b: Eb2 },
+            { f: D4,  d: 0.14, b: D3 },
+            { f: C4,  d: 0.50, b: C2 }
         ];
 
         const sequence = isBoss ? bossBattleTheme : mainMedley;
