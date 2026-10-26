@@ -1,121 +1,148 @@
-// levels.js - Definición de las 9 Dimensiones y generación de los 8 Sectores por dimensión
+// levels.js - Definición de Dimensiones y Generador de Niveles
 const WORLDS_CONFIG = [
     {
         id: 1,
-        name: "Planeta Flora",
-        skyColor: "#1e3c72",
-        groundColor: "#2a9d8f",
-        blockColor: "#264653",
-        cloudColor: "#a8dadc",
-        description: "Mundo de vegetación alienígena luminosa y módulos de exploración.",
-        bossName: "Guardián Mecha-Titán",
+        name: "Reino Champiñón Verde",
+        skyTop: "#38bdf8",
+        skyBottom: "#bae6fd",
+        grassColor: "#22c55e",
+        grassHighlight: "#86efac",
+        dirtColor: "#854d0e",
+        dirtPattern: "#713f12",
+        blockColor: "#ea580c",
+        cloudColor: "#ffffff",
+        description: "Colinas verdes y cielos soleados al estilo clásico de plataformas.",
+        bossName: "Mecha-Bowser Jr.",
         bossHp: 3,
-        bossColor: "#e76f51",
-        bossType: "jumper"
+        bossColor: "#ef4444"
     },
     {
         id: 2,
-        name: "Planeta Solaris",
-        skyColor: "#f4a261",
-        groundColor: "#e9c46a",
-        blockColor: "#d4a373",
-        cloudColor: "#ffe8d6",
-        description: "Dunas energéticas y ruinas de una civilización cósmica ancestral.",
-        bossName: "Centinela Solar",
+        name: "Dunas Doradas del Sol",
+        skyTop: "#fdba74",
+        skyBottom: "#fed7aa",
+        grassColor: "#eab308",
+        grassHighlight: "#fef08a",
+        dirtColor: "#a16207",
+        dirtPattern: "#854d0e",
+        blockColor: "#ca8a04",
+        cloudColor: "#fff7ed",
+        description: "Desierto ancestral con bloques de arenisca y oasis reflectantes.",
+        bossName: "Faraón Escorpión",
         bossHp: 4,
-        bossColor: "#e63946",
-        bossType: "shooter"
+        bossColor: "#d97706"
     },
     {
         id: 3,
-        name: "Cavernas de Neón",
-        skyColor: "#130f40",
-        groundColor: "#30336b",
-        blockColor: "#686de0",
-        cloudColor: "#4834d4",
-        description: "Túneles subterráneos repletos de cristales cuánticos de alta energía.",
+        name: "Caverna de Neón Subterránea",
+        skyTop: "#0f172a",
+        skyBottom: "#1e1b4b",
+        grassColor: "#a855f7",
+        grassHighlight: "#d8b4fe",
+        dirtColor: "#312e81",
+        dirtPattern: "#1e1b4b",
+        blockColor: "#7c3aed",
+        cloudColor: "#6366f1",
+        description: "Túneles de cristales bioluminiscentes y plataformas flotantes.",
         bossName: "Gólem Cuántico",
         bossHp: 5,
-        bossColor: "#9b59b6",
-        bossType: "slammer"
+        bossColor: "#9333ea"
     },
     {
         id: 4,
-        name: "Océano Cibernético",
-        skyColor: "#005c97",
-        groundColor: "#00b4db",
-        blockColor: "#0083b0",
-        cloudColor: "#dff9fb",
-        description: "Plataformas flotantes sobre un mar de fluido refrigerante planetario.",
-        bossName: "Leviatán Abisal",
+        name: "Costa Tropical Esmeralda",
+        skyTop: "#0284c7",
+        skyBottom: "#7dd3fc",
+        grassColor: "#10b981",
+        grassHighlight: "#6ee7b7",
+        dirtColor: "#92400e",
+        dirtPattern: "#78350f",
+        blockColor: "#d97706",
+        cloudColor: "#f0fdfa",
+        description: "Archipiélago paradisíaco con puentes de madera y agua cristalina.",
+        bossName: "Capitán Kraken",
         bossHp: 5,
-        bossColor: "#16a085",
-        bossType: "shooter"
+        bossColor: "#059669"
     },
     {
         id: 5,
-        name: "Cráter Glacial",
-        skyColor: "#6190e8",
-        groundColor: "#e3eaf7",
-        blockColor: "#a7bfe8",
+        name: "Cumbres Glaciales",
+        skyTop: "#60a5fa",
+        skyBottom: "#e0f2fe",
+        grassColor: "#f8fafc",
+        grassHighlight: "#ffffff",
+        dirtColor: "#38bdf8",
+        dirtPattern: "#0284c7",
+        blockColor: "#0ea5e9",
         cloudColor: "#ffffff",
-        description: "Permafrost extraterrestre con plataformas de hielo donde deslizarse a gran velocidad.",
-        bossName: "Androide Criogénico",
+        description: "Nieve perpetua y hielo súper resbaladizo para correr a gran velocidad.",
+        bossName: "Yeti Criogénico",
         bossHp: 6,
-        bossColor: "#2980b9",
-        bossType: "charger"
+        bossColor: "#2563eb"
     },
     {
         id: 6,
-        name: "Biosfera Umbría",
-        skyColor: "#0b132b",
-        groundColor: "#1c2541",
-        blockColor: "#3a506b",
-        cloudColor: "#5bc0be",
-        description: "Selva bioluminiscente con esporas electromagnéticas flotantes.",
-        bossName: "Reina Insectoide",
+        name: "Bosque de Sombras Umbrío",
+        skyTop: "#020617",
+        skyBottom: "#0f172a",
+        grassColor: "#15803d",
+        grassHighlight: "#4ade80",
+        dirtColor: "#3f2b1d",
+        dirtPattern: "#291c13",
+        blockColor: "#475569",
+        cloudColor: "#334155",
+        description: "Champiñones gigantes y esporas nocturnas que flotan en la niebla.",
+        bossName: "Espectro del Bosque",
         bossHp: 6,
-        bossColor: "#8e44ad",
-        bossType: "teleporter"
+        bossColor: "#7e22ce"
     },
     {
         id: 7,
-        name: "Estación Orbital",
-        skyColor: "#1f1c2c",
-        groundColor: "#4a4e69",
-        blockColor: "#22223b",
-        cloudColor: "#9a8c98",
-        description: "Plataformas tecnológicas de acero ingrávido y propulsores de salto.",
-        bossName: "Dron Matriz Nodriza",
+        name: "Flota Celestial de las Nubes",
+        skyTop: "#f97316",
+        skyBottom: "#ffedd5",
+        grassColor: "#78350f",
+        grassHighlight: "#b45309",
+        dirtColor: "#451a03",
+        dirtPattern: "#291002",
+        blockColor: "#c2410c",
+        cloudColor: "#fdba74",
+        description: "Naves voladoras entre el atardecer con cañones de propulsión.",
+        bossName: "Meca-Dragón Volador",
         bossHp: 7,
-        bossColor: "#c0392b",
-        bossType: "shooter"
+        bossColor: "#b91c1c"
     },
     {
         id: 8,
-        name: "Fundición Magmática",
-        skyColor: "#1a0000",
-        groundColor: "#3d0c02",
-        blockColor: "#611200",
-        cloudColor: "#ff4d4d",
-        description: "El núcleo volcánico del planeta con ríos de plasma fundido.",
-        bossName: "Señor de la Fundición",
+        name: "Fortaleza de Magma Ardiente",
+        skyTop: "#180202",
+        skyBottom: "#450a0a",
+        grassColor: "#7f1d1d",
+        grassHighlight: "#ef4444",
+        dirtColor: "#2a0404",
+        dirtPattern: "#170202",
+        blockColor: "#991b1b",
+        cloudColor: "#b91c1c",
+        description: "El temible castillo de piedra volcánica con fosos de lava.",
+        bossName: "Bowser de Lava Supremo",
         bossHp: 8,
-        bossColor: "#ff3838",
-        bossType: "bowser"
+        bossColor: "#dc2626"
     },
     {
         id: 9,
-        name: "El Vórtice Supremo",
-        skyColor: "#050014",
-        groundColor: "#00f2fe",
-        blockColor: "#4facfe",
-        cloudColor: "#220066",
-        description: "La dimensión final del hiperespacio. La batalla definitiva.",
-        bossName: "Núcleo de la Singularidad",
+        name: "Reino Cósmico Estelar",
+        skyTop: "#030712",
+        skyBottom: "#1e1b4b",
+        grassColor: "#fbbf24",
+        grassHighlight: "#fef08a",
+        dirtColor: "#312e81",
+        dirtPattern: "#1e1b4b",
+        blockColor: "#8b5cf6",
+        cloudColor: "#c084fc",
+        description: "La dimensión secreta entre galaxias. La cúspide de la aventura.",
+        bossName: "Emperador de la Singularidad",
         bossHp: 10,
-        bossColor: "#00ffff",
-        bossType: "emperor"
+        bossColor: "#00ffff"
     }
 ];
 
@@ -124,31 +151,31 @@ class LevelBuilder {
         const world = WORLDS_CONFIG[worldIndex - 1] || WORLDS_CONFIG[0];
         const isBossLevel = (levelIndex === 8);
         const mapWidth = isBossLevel ? 75 : (70 + levelIndex * 10);
-        const mapHeight = 15;
+        const mapHeight = 9; // 9 filas x 32px = 288px (ideal para canvas de 270px)
 
-        // Cuadrícula de casillas:
-        // 0: Vacío
-        // 1: Suelo tecno-alienígena
-        // 2: Contenedor blindado rompible
-        // 3: Cápsula misteriosa con Cristal de Energía (?)
-        // 4: Cápsula misteriosa con Núcleo de Batería / Cañón de Plasma
-        // 5: Conducto de refrigeración superior izquierdo
-        // 6: Conducto de refrigeración superior derecho
-        // 7: Conducto de refrigeración cuerpo izquierdo
-        // 8: Conducto de refrigeración cuerpo derecho
-        // 9: Río de plasma mortal
-        // 10: Baliza de teleportación / Meta
-        // 11: Puerta de descompresión
-        // 12: Bloque de titanio indestructible
+        // Cuadrícula:
+        // 0: Vacío / Aire
+        // 1: Suelo con hierba verde estilo Mario
+        // 2: Bloque de ladrillo rompible
+        // 3: Bloque misterioso '?' con moneda/cristal
+        // 4: Bloque misterioso '?' con potenciador
+        // 5: Tubería parte superior izquierda
+        // 6: Tubería parte superior derecha
+        // 7: Tubería cuerpo izquierdo
+        // 8: Tubería cuerpo derecho
+        // 9: Lava / Foso mortal
+        // 10: Mástil de meta con bandera
+        // 11: Puerta del castillo
+        // 12: Bloque de piedra dura / gastado
+        // 13: Tierra profunda debajo del suelo
 
         const grid = Array.from({ length: mapHeight }, () => Array(mapWidth).fill(0));
         const enemies = [];
-        const coins = []; // Cristales de energía
+        const coins = [];
         let boss = null;
 
-        const groundLevel = mapHeight - 3;
+        const groundRow = 6; // Fila 6 (Y = 192px). El suelo mide 2 filas (6 y 7).
 
-        // Suelo y fosas
         for (let col = 0; col < mapWidth; col++) {
             let isPit = false;
 
@@ -165,109 +192,105 @@ class LevelBuilder {
             }
 
             if (!isPit) {
-                grid[groundLevel][col] = 1;
-                grid[groundLevel + 1][col] = 1;
-                grid[groundLevel + 2][col] = 1;
+                grid[groundRow][col] = 1;      // Superficie con césped
+                grid[groundRow + 1][col] = 13;  // Tierra interior
+                grid[groundRow + 2][col] = 13;  // Fondo
             } else if (isBossLevel) {
-                grid[mapHeight - 1][col] = 9; // Plasma
+                grid[mapHeight - 1][col] = 9;   // Foso de lava
             }
         }
 
         if (isBossLevel) {
-            // === NIVEL 8: SALA DE CONTENCIÓN DEL JEFE ===
-            for (let c = 12; c < 18; c++) grid[groundLevel - 3][c] = 12;
-            for (let c = 22; c < 26; c++) grid[groundLevel - 4][c] = 12;
-            for (let c = 32; c < 38; c++) grid[groundLevel - 3][c] = 12;
-            for (let c = 44; c < 48; c++) grid[groundLevel - 4][c] = 12;
+            // === NIVEL 8: CASTILLO DEL BOSS ===
+            // Plataformas elevadas
+            for (let c = 12; c < 18; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 22; c < 26; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 32; c < 38; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 44; c < 48; c++) grid[groundRow - 3][c] = 12;
 
-            // Cápsula de soporte antes del combate
-            grid[groundLevel - 4][8] = 4; // Núcleo de Batería garantizado
-            grid[groundLevel - 4][10] = 3;
+            // Bloques de poder antes del jefe
+            grid[groundRow - 3][8] = 4; // Champiñón / Batería
+            grid[groundRow - 3][10] = 3;
 
-            // Paredes de la cámara del Boss
-            grid[groundLevel - 1][52] = 12;
-            grid[groundLevel - 2][52] = 12;
-            grid[groundLevel - 3][52] = 12;
+            // Muro de entrada al combate
+            grid[groundRow - 1][52] = 12;
+            grid[groundRow - 2][52] = 12;
 
-            for (let r = 0; r < groundLevel; r++) {
+            // Muro final derecho
+            for (let r = 0; r < groundRow; r++) {
                 grid[r][mapWidth - 1] = 12;
             }
 
-            for (let c = 58; c <= 62; c++) grid[groundLevel - 4][c] = 12;
-            for (let c = 66; c <= 69; c++) grid[groundLevel - 4][c] = 12;
+            // Plataformas dentro de la arena del boss
+            for (let c = 58; c <= 62; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 66; c <= 69; c++) grid[groundRow - 3][c] = 12;
 
-            // El Boss
+            // Boss
             boss = {
                 x: 64 * 32,
-                y: (groundLevel - 2) * 32,
+                y: (groundRow - 2) * 32,
                 w: 48,
                 h: 56,
                 name: world.bossName,
                 hp: world.bossHp,
                 maxHp: world.bossHp,
                 color: world.bossColor,
-                type: world.bossType,
                 vx: -1.2,
                 vy: 0,
                 isGrounded: false,
                 attackTimer: 0,
-                isBoss: true,
                 alive: true,
                 worldNumber: worldIndex
             };
 
-            // Drones centinela de guardia
-            enemies.push({ x: 15 * 32, y: (groundLevel - 1) * 32, type: 'drone', vx: -1, alive: true });
-            enemies.push({ x: 34 * 32, y: (groundLevel - 4) * 32, type: 'beetle', vx: -1, alive: true });
+            enemies.push({ x: 16 * 32, y: (groundRow - 1) * 32, type: 'goomba', vx: -1, alive: true });
+            enemies.push({ x: 34 * 32, y: (groundRow - 4) * 32, type: 'koopa', vx: -1, alive: true });
 
         } else {
-            // === NIVELES 1 AL 7: EXPLORACIÓN PLANETARIA ===
-            // Conductos de ventilación tecno
-            const pipePositions = [14, 30, 48, 62].filter(p => p < mapWidth - 12);
-            pipePositions.forEach((pipeCol, idx) => {
-                const pipeHeight = (idx % 2 === 0) ? 2 : 3;
-                const topRow = groundLevel - pipeHeight;
-
-                grid[topRow][pipeCol] = 5;
-                grid[topRow][pipeCol + 1] = 6;
-                for (let r = topRow + 1; r < groundLevel; r++) {
-                    grid[r][pipeCol] = 7;
-                    grid[r][pipeCol + 1] = 8;
-                }
+            // === NIVELES 1 AL 7 ===
+            // Tuberías verdes
+            const pipePositions = [14, 28, 44, 58].filter(p => p < mapWidth - 12);
+            pipePositions.forEach((pipeCol) => {
+                const pipeTopRow = groundRow - 2; // Altura de 2 bloques
+                grid[pipeTopRow][pipeCol] = 5;
+                grid[pipeTopRow][pipeCol + 1] = 6;
+                grid[pipeTopRow + 1][pipeCol] = 7;
+                grid[pipeTopRow + 1][pipeCol + 1] = 8;
             });
 
-            // Bloques tecnológicos y cápsulas
-            for (let col = 18; col < mapWidth - 16; col += 7) {
-                const blockRow = groundLevel - 4;
+            // Bloques '?' y ladrillos suspendidos en fila 3
+            for (let col = 18; col < mapWidth - 16; col += 6) {
+                const blockRow = groundRow - 3;
                 if (col % 2 === 0) {
-                    grid[blockRow][col] = 2; // Contenedor blindado
-                    grid[blockRow][col + 1] = (col % 14 === 0) ? 4 : 3; // Cápsula '?'
-                    grid[blockRow][col + 2] = 2;
+                    grid[blockRow][col] = 2; // Ladrillo
+                    grid[blockRow][col + 1] = (col % 12 === 0) ? 4 : 3; // '?'
+                    grid[blockRow][col + 2] = 2; // Ladrillo
                     coins.push({ x: (col + 1) * 32, y: (blockRow - 1) * 32 });
                 } else if (levelIndex > 2) {
-                    for (let step = 0; step < 3; step++) {
+                    // Pequeña pirámide de escalones
+                    for (let step = 0; step < 2; step++) {
                         if (col + step < mapWidth - 10) {
-                            grid[groundLevel - 1 - step][col + step] = 1;
+                            grid[groundRow - 1 - step][col + step] = 1;
                         }
                     }
                 }
             }
 
-            // Cristales de energía flotantes
-            for (let col = 8; col < mapWidth - 15; col += 12) {
-                coins.push({ x: col * 32, y: (groundLevel - 2) * 32 });
-                coins.push({ x: (col + 1) * 32, y: (groundLevel - 2) * 32 });
+            // Monedas flotantes
+            for (let col = 8; col < mapWidth - 15; col += 10) {
+                coins.push({ x: col * 32, y: (groundRow - 2) * 32 });
+                coins.push({ x: (col + 1) * 32, y: (groundRow - 2) * 32 });
             }
 
-            // Enemigos alienígenas y robóticos (Cyber-Drones y Nano-Escarabajos)
+            // Enemigos
             const numEnemies = 4 + levelIndex + worldIndex;
             for (let i = 0; i < numEnemies; i++) {
                 const spawnCol = 16 + Math.floor(i * ((mapWidth - 30) / numEnemies));
-                if (spawnCol < mapWidth - 12 && grid[groundLevel][spawnCol] === 1) {
-                    const eType = (i % 3 === 0 && levelIndex >= 2) ? 'beetle' : 'drone';
+                if (spawnCol < mapWidth - 12 && grid[groundRow][spawnCol] === 1) {
+                    const eType = (i % 3 === 0 && levelIndex >= 2) ? 'koopa' : 'goomba';
                     enemies.push({
                         x: spawnCol * 32,
-                        y: (groundLevel - 1) * 32,
+                        y: (groundRow - 1) * 32,
                         type: eType,
                         vx: -1,
                         vy: 0,
@@ -276,21 +299,21 @@ class LevelBuilder {
                 }
             }
 
-            // Baliza de teletransporte / Meta del sector
+            // Mástil de meta con bandera
             const flagCol = mapWidth - 8;
-            for (let r = groundLevel - 8; r < groundLevel; r++) {
+            for (let r = groundRow - 5; r < groundRow; r++) {
                 grid[r][flagCol] = 10;
             }
-            grid[groundLevel - 1][flagCol] = 1;
+            grid[groundRow - 1][flagCol] = 1;
 
-            // Portal de evacuación
+            // Castillo de final de nivel
             const castleCol = mapWidth - 4;
-            for (let r = groundLevel - 4; r < groundLevel; r++) {
+            for (let r = groundRow - 3; r < groundRow; r++) {
                 for (let c = castleCol; c < castleCol + 3; c++) {
                     grid[r][c] = 12;
                 }
             }
-            grid[groundLevel - 1][castleCol + 1] = 11;
+            grid[groundRow - 1][castleCol + 1] = 11;
         }
 
         return {
@@ -305,7 +328,7 @@ class LevelBuilder {
             coins,
             boss,
             spawnX: 3 * 32,
-            spawnY: (groundLevel - 2) * 32,
+            spawnY: (groundRow - 1) * 32, // En el suelo, 100% visible
             flagX: (mapWidth - 8) * 32
         };
     }

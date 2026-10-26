@@ -5,41 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#00f2fe">
-    <title>Astro Runner: 9 Dimensions</title>
+    <meta name="theme-color" content="#38bdf8">
+    <title>Astro Runner - 9 Mundos</title>
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
-        <!-- HUD Futurista Retro -->
+        <!-- HUD Moderno Flotante -->
         <header id="hud">
             <div class="hud-item">
-                <span class="hud-label">ASTRO</span>
+                <span class="hud-label">⭐ PUNTOS</span>
                 <span id="uiScore" class="hud-val">000000</span>
             </div>
             <div class="hud-item">
-                <span class="hud-label">CRISTALES</span>
+                <span class="hud-label">🪙 MONEDAS</span>
                 <span id="uiCoins" class="hud-val">x00</span>
             </div>
             <div class="hud-item">
-                <span class="hud-label">SECTOR</span>
-                <span id="uiWorld" class="hud-val">DIM 1-1</span>
+                <span class="hud-label">🚩 MUNDO</span>
+                <span id="uiWorld" class="hud-val">1-1</span>
             </div>
             <div class="hud-item">
-                <span class="hud-label">VIDAS</span>
+                <span class="hud-label">❤️ VIDAS</span>
                 <span id="uiLives" class="hud-val">x3</span>
             </div>
             <div class="hud-item">
-                <span class="hud-label">ENERGÍA</span>
+                <span class="hud-label">⏰ TIEMPO</span>
                 <span id="uiTime" class="hud-val">300</span>
             </div>
         </header>
 
-        <!-- Botones superiores de utilidades -->
+        <!-- Botones superiores -->
         <div id="topBarButtons">
-            <button id="btnMap" class="icon-btn" title="Selector de Dimensiones">🗺️ Dimensiones</button>
+            <button id="btnMap" class="icon-btn" title="Selector de Mundos">🗺️ Mundos</button>
             <button id="btnMute" class="icon-btn" title="Silenciar">🔊</button>
             <button id="btnPause" class="icon-btn" title="Pausa">⏸️</button>
             <button id="btnFullscreen" class="icon-btn" title="Pantalla completa">⛶</button>
@@ -48,7 +48,7 @@
         <!-- Pantalla de juego en Canvas -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- Controles táctiles virtuales para teléfono móvil -->
+        <!-- Controles táctiles virtuales -->
         <div id="touchControls">
             <!-- D-Pad Izquierdo -->
             <div class="dpad-container">
@@ -61,13 +61,13 @@
 
             <!-- Botones de Acción Derechos -->
             <div class="action-buttons-container">
-                <button id="btnB" class="touch-btn action-btn btn-fire" aria-label="Plasma o Propulsión">
+                <button id="btnB" class="touch-btn action-btn btn-fire" aria-label="Disparar o Correr">
                     <span class="btn-text">B</span>
-                    <span class="btn-subtext">Plasma / Turbo</span>
+                    <span class="btn-subtext">Fuego / Turbo</span>
                 </button>
-                <button id="btnA" class="touch-btn action-btn btn-jump" aria-label="Salto con Jetpack">
+                <button id="btnA" class="touch-btn action-btn btn-jump" aria-label="Saltar">
                     <span class="btn-text">A</span>
-                    <span class="btn-subtext">Jetpack</span>
+                    <span class="btn-subtext">Saltar</span>
                 </button>
             </div>
         </div>
@@ -75,44 +75,44 @@
         <!-- Pantalla de Pausa -->
         <div id="pauseOverlay" class="modal-overlay hidden">
             <div class="modal-card">
-                <h2>⏸️ SISTEMA EN PAUSA</h2>
-                <p>Propulsores en espera. Pulsa reanudar para continuar la misión.</p>
-                <button class="retro-btn" onclick="togglePause()">REANUDAR</button>
-                <button class="retro-btn secondary" onclick="openWorldSelector()">MAPA DIMENSIONAL</button>
+                <h2>⏸️ JUEGO EN PAUSA</h2>
+                <p>Pulsa continuar para seguir tu aventura.</p>
+                <button class="retro-btn" onclick="togglePause()">CONTINUAR</button>
+                <button class="retro-btn secondary" onclick="openWorldSelector()">VER MAPA DE MUNDOS</button>
             </div>
         </div>
 
         <!-- Modal de Victoria -->
         <div id="modalVictory" class="modal-overlay hidden">
             <div class="modal-card victory-card">
-                <div class="trophy-icon">⚡</div>
-                <h2 id="victoryTitle">¡SECTOR ASEGURADO!</h2>
-                <p id="victoryDesc">¡Has completado el sector espacial!</p>
-                <button id="btnNextLevel" class="retro-btn">SIGUIENTE SECTOR</button>
-                <button class="retro-btn secondary" onclick="openWorldSelector()">MAPA DE DIMENSIONES</button>
+                <div class="trophy-icon">🏆</div>
+                <h2 id="victoryTitle">¡NIVEL COMPLETADO!</h2>
+                <p id="victoryDesc">¡Has superado el desafío!</p>
+                <button id="btnNextLevel" class="retro-btn">SIGUIENTE NIVEL</button>
+                <button class="retro-btn secondary" onclick="openWorldSelector()">MAPA DE MUNDOS</button>
             </div>
         </div>
 
         <!-- Modal Game Over -->
         <div id="modalGameOver" class="modal-overlay hidden">
             <div class="modal-card gameover-card">
-                <h2>⚠️ SISTEMAS CRÍTICOS</h2>
-                <p>¡Astro se ha quedado sin energía! Reinicia los sistemas para continuar.</p>
-                <button class="retro-btn" onclick="restartFromBeginning()">REINICIAR SECTOR</button>
-                <button class="retro-btn secondary" onclick="openWorldSelector()">ELEGIR DIMENSIÓN</button>
+                <h2>💀 FIN DE LA PARTIDA</h2>
+                <p>¡Te has quedado sin vidas! No te rindas, vuelve a intentarlo.</p>
+                <button class="retro-btn" onclick="restartFromBeginning()">REINTENTAR</button>
+                <button class="retro-btn secondary" onclick="openWorldSelector()">ELEGIR MUNDO</button>
             </div>
         </div>
 
-        <!-- Modal Selector de Dimensiones (9 Dimensiones x 8 Sectores = 72 Niveles) -->
+        <!-- Modal Selector de Mundos -->
         <div id="modalWorldSelect" class="modal-overlay hidden">
             <div class="modal-card world-select-card">
                 <div class="modal-header">
-                    <h2>🗺️ MAPA DE LAS 9 DIMENSIONES</h2>
+                    <h2>🗺️ MAPA DE LOS 9 MUNDOS</h2>
                     <button class="close-x-btn" onclick="closeWorldSelector()">✖</button>
                 </div>
-                <p class="subtitle">Cada dimensión cuenta con 8 sectores. En el sector 8 te enfrentarás al <strong>Jefe Mecatrónico</strong> para extraer el Hiper-Núcleo Cuántico y desbloquear el siguiente portal dimensional.</p>
+                <p class="subtitle">Cada mundo cuenta con 8 niveles. En el nivel 8 te enfrentarás al <strong>Boss Final</strong> para obtener la Estrella Mágica y abrir el siguiente mundo.</p>
                 <div id="worldsList" class="worlds-scroll-list"></div>
-                <button class="retro-btn" onclick="closeWorldSelector()">VOLVER A LA MISIÓN</button>
+                <button class="retro-btn" onclick="closeWorldSelector()">VOLVER AL JUEGO</button>
             </div>
         </div>
     </div>

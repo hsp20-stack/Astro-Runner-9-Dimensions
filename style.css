@@ -1,4 +1,4 @@
-/* style.css - Astro Runner: 9 Dimensions (Estilo móvil y arcade espacial) */
+/* style.css - Interfaz Moderna Estilo Nintendo Switch / Mario */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -12,8 +12,8 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #050814;
-    font-family: 'Courier New', Courier, monospace;
+    background-color: #0c1222;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #ffffff;
     display: flex;
     justify-content: center;
@@ -26,57 +26,62 @@ body, html {
     height: 100vh;
     max-width: 960px;
     max-height: 540px;
-    background-color: #000000;
+    background-color: #38bdf8;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 0 35px rgba(0, 242, 254, 0.25);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     overflow: hidden;
+    border-radius: 12px;
 }
 
-/* Barra superior HUD Cyber */
+/* HUD Moderno Flotante estilo Nintendo Switch */
 #hud {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 38px;
-    background: linear-gradient(180deg, rgba(5, 8, 20, 0.95) 0%, rgba(5, 8, 20, 0.4) 100%);
-    border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    height: 40px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 10;
-    padding: 0 10px;
+    padding: 0 14px;
     pointer-events: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .hud-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    gap: 6px;
 }
 
 .hud-label {
-    font-size: 10px;
-    font-weight: bold;
-    color: #00f2fe;
-    letter-spacing: 1px;
-    text-shadow: 0 0 6px rgba(0, 242, 254, 0.6);
+    font-size: 11px;
+    font-weight: 800;
+    color: #fbbf24;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .hud-val {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 900;
     color: #ffffff;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-family: monospace;
 }
 
-/* Botones de menú superior */
+/* Botones superiores */
 #topBarButtons {
     position: absolute;
-    top: 42px;
+    top: 56px;
     right: 12px;
     display: flex;
     gap: 8px;
@@ -84,22 +89,23 @@ body, html {
 }
 
 .icon-btn {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1.5px solid #00f2fe;
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid #38bdf8;
     color: #fff;
-    border-radius: 8px;
-    padding: 4px 8px;
+    border-radius: 12px;
+    padding: 6px 12px;
     font-size: 13px;
+    font-weight: bold;
     cursor: pointer;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(6px);
     transition: transform 0.1s, background 0.2s;
-    box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .icon-btn:active {
     transform: scale(0.92);
-    background: #00f2fe;
-    color: #000;
+    background: #38bdf8;
+    color: #0f172a;
 }
 
 /* Canvas del juego */
@@ -109,20 +115,19 @@ body, html {
     object-fit: contain;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-    background-color: #050814;
 }
 
-/* Controles táctiles virtuales */
+/* Controles táctiles virtuales estilo arcade moderno */
 #touchControls {
     position: absolute;
-    bottom: 8px;
+    bottom: 10px;
     left: 0;
     width: 100%;
     height: 130px;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 0 20px 10px 20px;
+    padding: 0 24px 12px 24px;
     z-index: 15;
     pointer-events: none;
 }
@@ -141,12 +146,13 @@ body, html {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7), inset 0 2px 5px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5), inset 0 3px 6px rgba(255, 255, 255, 0.4);
     cursor: pointer;
+    transition: transform 0.08s;
 }
 
 .touch-btn:active {
-    filter: brightness(1.35);
+    filter: brightness(1.25);
     transform: translateY(4px);
 }
 
@@ -158,13 +164,12 @@ body, html {
 }
 
 .dpad-btn {
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-    border: 2px solid #38bdf8;
-    color: #38bdf8;
-    font-size: 24px;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    width: 62px;
+    height: 62px;
+    background: radial-gradient(circle, #334155 0%, #1e293b 100%);
+    border: 3px solid #64748b;
+    font-size: 26px;
+    color: #f8fafc;
 }
 
 .dpad-center {
@@ -176,55 +181,53 @@ body, html {
 .dpad-down {
     width: 52px;
     height: 52px;
-    margin-top: 15px;
-    font-size: 18px;
+    margin-top: 14px;
+    font-size: 20px;
 }
 
 /* Botones de acción derechos (A y B) */
 .action-buttons-container {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
 }
 
 .action-btn {
-    width: 66px;
-    height: 66px;
+    width: 68px;
+    height: 68px;
 }
 
 .btn-fire {
-    background: radial-gradient(circle, #9333ea 0%, #6b21a8 100%);
-    border: 3px solid #c084fc;
-    box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
-    margin-top: 25px;
+    background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%);
+    border: 3px solid #f87171;
+    margin-top: 24px;
 }
 
 .btn-jump {
-    background: radial-gradient(circle, #0284c7 0%, #0369a1 100%);
-    border: 3px solid #38bdf8;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    background: radial-gradient(circle, #22c55e 0%, #15803d 100%);
+    border: 3px solid #4ade80;
 }
 
 .btn-text {
-    font-size: 22px;
+    font-size: 24px;
     line-height: 1;
 }
 
 .btn-subtext {
-    font-size: 8px;
+    font-size: 9px;
     text-transform: uppercase;
-    opacity: 0.9;
-    letter-spacing: 0.5px;
+    opacity: 0.95;
+    font-weight: bold;
 }
 
-/* Modales Cyber */
+/* Modales */
 .modal-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(3, 7, 18, 0.88);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
@@ -237,9 +240,9 @@ body, html {
 }
 
 .modal-card {
-    background: #0f172a;
-    border: 3px solid #00f2fe;
-    border-radius: 14px;
+    background: #1e293b;
+    border: 3px solid #fbbf24;
+    border-radius: 18px;
     padding: 24px;
     width: 90%;
     max-width: 560px;
@@ -249,15 +252,13 @@ body, html {
     align-items: center;
     text-align: center;
     gap: 14px;
-    box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     overflow-y: auto;
 }
 
 .modal-card h2 {
-    color: #00f2fe;
-    font-size: 20px;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(0, 242, 254, 0.7);
+    color: #fbbf24;
+    font-size: 22px;
 }
 
 .modal-header {
@@ -270,43 +271,42 @@ body, html {
 .close-x-btn {
     background: none;
     border: none;
-    color: #00f2fe;
-    font-size: 18px;
+    color: #fff;
+    font-size: 20px;
     cursor: pointer;
 }
 
 .subtitle {
-    font-size: 12px;
-    color: #94a3b8;
+    font-size: 13px;
+    color: #cbd5e1;
     line-height: 1.4;
 }
 
 .retro-btn {
-    background: #0284c7;
-    border: 2px solid #38bdf8;
+    background: #22c55e;
+    border: 2px solid #ffffff;
     color: #fff;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 12px;
     cursor: pointer;
-    font-family: inherit;
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
     transition: transform 0.1s;
 }
 
 .retro-btn:active {
     transform: scale(0.95);
-    background: #0369a1;
+    background: #16a34a;
 }
 
 .retro-btn.secondary {
-    background: #1e293b;
-    border-color: #64748b;
+    background: #475569;
+    border-color: #94a3b8;
     box-shadow: none;
 }
 
-/* Modal Mapa de Dimensiones */
+/* Modal Mapa de Mundos */
 .worlds-scroll-list {
     width: 100%;
     max-height: 280px;
@@ -318,41 +318,41 @@ body, html {
 }
 
 .world-card {
-    background: #1e293b;
-    border: 2px solid #334155;
-    border-radius: 8px;
+    background: #334155;
+    border: 2px solid #475569;
+    border-radius: 12px;
     padding: 12px;
     text-align: left;
 }
 
 .world-card.unlocked {
-    border-color: #00f2fe;
-    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    border-color: #22c55e;
 }
 
 .world-card.locked {
-    opacity: 0.5;
+    opacity: 0.55;
     filter: grayscale(0.8);
 }
 
 .world-header h3 {
-    font-size: 14px;
+    font-size: 15px;
     color: #fff;
     margin-bottom: 4px;
 }
 
 .world-desc {
-    font-size: 11px;
-    color: #94a3b8;
+    font-size: 12px;
+    color: #cbd5e1;
     display: block;
     margin-bottom: 4px;
 }
 
 .boss-tag {
     font-size: 11px;
-    color: #f43f5e;
+    color: #f87171;
     display: block;
     margin-bottom: 8px;
+    font-weight: bold;
 }
 
 .levels-row {
@@ -362,14 +362,13 @@ body, html {
 }
 
 .lvl-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
     border: 2px solid #fff;
-    font-family: inherit;
-    font-weight: bold;
+    font-weight: 800;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .lvl-btn.active {
@@ -378,20 +377,19 @@ body, html {
 }
 
 .lvl-btn.boss-btn.active {
-    background: #e11d48;
-    border-color: #f43f5e;
-    box-shadow: 0 0 8px rgba(225, 29, 72, 0.6);
+    background: #dc2626;
+    border-color: #fde047;
 }
 
 .lvl-btn.disabled {
-    background: #0f172a;
-    color: #475569;
+    background: #1e293b;
+    color: #64748b;
     border-color: #334155;
     cursor: not-allowed;
 }
 
 .trophy-icon {
-    font-size: 42px;
+    font-size: 44px;
     animation: bounce 0.8s infinite alternate;
 }
 
@@ -402,24 +400,24 @@ body, html {
 
 @media (max-width: 600px) {
     #hud {
-        height: 32px;
+        height: 36px;
     }
     .hud-label {
-        font-size: 8px;
+        font-size: 9px;
     }
     .hud-val {
-        font-size: 11px;
+        font-size: 12px;
     }
     .dpad-btn {
-        width: 52px;
-        height: 52px;
-        font-size: 20px;
+        width: 54px;
+        height: 54px;
+        font-size: 22px;
     }
     .action-btn {
-        width: 56px;
-        height: 56px;
+        width: 58px;
+        height: 58px;
     }
     .btn-text {
-        font-size: 18px;
+        font-size: 20px;
     }
 }

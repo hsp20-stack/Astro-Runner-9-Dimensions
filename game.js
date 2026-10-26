@@ -1,22 +1,18 @@
-// game.js - Astro Runner: 9 Dimensions (Motor principal del juego de plataformas espacial)
+// game.js - Astro Runner: Motor con Gráficos Modernos y Estilo Mario Bros
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Configuración de pantalla retro-futurista
 const TILE_SIZE = 32;
 const VIEW_WIDTH = 480;
 const VIEW_HEIGHT = 270;
 canvas.width = VIEW_WIDTH;
 canvas.height = VIEW_HEIGHT;
 
-// Guardado de progreso en el dispositivo
-const SAVE_KEY = 'astro_runner_mobile_save_v1';
+const SAVE_KEY = 'astro_runner_save_modern_v2';
 function loadProgress() {
     try {
         const data = localStorage.getItem(SAVE_KEY);
-        if (data) {
-            return JSON.parse(data);
-        }
+        if (data) return JSON.parse(data);
     } catch (e) {
         console.error("Error al cargar partida", e);
     }
@@ -55,25 +51,26 @@ let isGameOver = false;
 let isStageClear = false;
 let victoryCoreDropped = null;
 
-// Protagonista: Astro (Explorador Robótico)
+// Protagonista: Astro (Explorador Galáctico)
 const astro = {
     x: 64,
-    y: 180,
-    w: 16,
-    h: 24,
+    y: 150,
+    w: 20,
+    h: 28,
     vx: 0,
     vy: 0,
-    speed: 2.8,
-    jumpForce: -8.8,
+    speed: 3.0,
+    jumpForce: -8.6,
     isGrounded: false,
     facing: 'right',
-    state: 'normal', // 'normal', 'super' (Exo-Shield), 'plasma' (Plasma Blaster)
+    state: 'normal', // 'normal', 'super', 'plasma'
     invulnerableTimer: 0,
     isDying: false,
     deathTimer: 0,
     animFrame: 0,
     animTimer: 0,
-    crouch: false
+    squash: 1.0,
+    stretch: 1.0
 };
 
 // Entidades activas
@@ -95,7 +92,7 @@ const keys = {
 };
 
 // ==========================================
-// CARGAR NIVEL / SECTOR
+// CARGAR NIVEL
 // ==========================================
 function loadLevel(worldNum, levelNum) {
     currentWorldNum = worldNum;
@@ -106,13 +103,14 @@ function loadLevel(worldNum, levelNum) {
 
     levelData = LevelBuilder.generateLevel(worldNum, levelNum);
 
+    // Colocar a Astro justo sobre el césped
     astro.x = levelData.spawnX;
     astro.y = levelData.spawnY;
     astro.vx = 0;
     astro.vy = 0;
     astro.isDying = false;
     astro.deathTimer = 0;
-    astro.invulnerableTimer = 60;
+    astro.invulnerableTimer = 0;
     cameraX = 0;
     energyTime = 300;
     timeAccumulator = 0;
@@ -126,6 +124,7 @@ function loadLevel(worldNum, levelNum) {
     particles = [];
     bossEntity = levelData.boss ? Object.assign({}, levelData.boss) : null;
 
+    // Música de Zelda
     window.sounds.startMusic(worldNum, levelData.isBossLevel);
     updateUI();
 }
@@ -137,7 +136,7 @@ function updateUI() {
     const livesEl = document.getElementById('uiLives');
     const timeEl = document.getElementById('uiTime');
 
-    if (worldEl) worldEl.innerText = `DIM ${currentWorldNum}-${currentLevelNum}`;
+    if (worldEl) worldEl.innerText = `${currentWorldNum}-${currentLevelNum}`;
     if (scoreEl) scoreEl.innerText = String(score).padStart(6, '0');
     if (coinsEl) coinsEl.innerText = `x${String(crystals).padStart(2, '0')}`;
     if (livesEl) livesEl.innerText = `x${lives}`;
@@ -164,13 +163,17 @@ function updateGame(dt) {
         astro.deathTimer++;
         astro.y += astro.vy;
         astro.vy += 0.35;
-        if (astro.deathTimer > 120) {
+        if (astro.deathTimer > 110) {
             handleRespawn();
         }
         return;
     }
 
-    // Movimiento horizontal con propulsores
+    // Efecto squash & stretch suave
+    astro.squash += (1.0 - astro.squash) * 0.15;
+    astro.stretch += (1.0 - astro.stretch) * 0.15;
+
+    // Movimiento horizontal
     const currentSpeed = keys.actionB ? astro.speed * 1.35 : astro.speed;
     if (keys.left) {
         astro.vx = -currentSpeed;
@@ -179,22 +182,25 @@ function updateGame(dt) {
         astro.vx = currentSpeed;
         astro.facing = 'right';
     } else {
-        astro.vx *= 0.7;
+        astro.vx *= 0.72;
         if (Math.abs(astro.vx) < 0.1) astro.vx = 0;
     }
 
-    // Propulsión / Salto con Jetpack
+    // Salto con propulsión
     if (keys.up && astro.isGrounded) {
         astro.vy = astro.jumpForce;
         astro.isGrounded = false;
+        astro.stretch = 1.35;
+        astro.squash = 0.75;
         window.sounds.playJump(astro.state !== 'normal');
-        createJetpackFlames(astro.x + astro.w / 2, astro.y + astro.h);
+        createJetpackParticles(astro.x + astro.w / 2, astro.y + astro.h);
     }
 
-    astro.vy += 0.45;
-    if (astro.vy > 9) astro.vy = 9;
+    // Gravedad suave estilo Mario
+    astro.vy += 0.44;
+    if (astro.vy > 8.5) astro.vy = 8.5;
 
-    // Colisiones
+    // Movimiento y colisión X
     astro.x += astro.vx;
     checkHorizontalCollision(astro);
 
@@ -203,14 +209,23 @@ function updateGame(dt) {
         astro.vx = 0;
     }
 
+    // Movimiento y colisión Y
     astro.y += astro.vy;
+    const wasGrounded = astro.isGrounded;
     astro.isGrounded = false;
     checkVerticalCollision(astro);
 
-    // Animación de zancada
+    // Efecto al aterrizar
+    if (!wasGrounded && astro.isGrounded) {
+        astro.squash = 1.3;
+        astro.stretch = 0.75;
+        createDustPuffs(astro.x + astro.w / 2, astro.y + astro.h);
+    }
+
+    // Animación de carrera
     if (Math.abs(astro.vx) > 0.2 && astro.isGrounded) {
         astro.animTimer++;
-        if (astro.animTimer % 6 === 0) {
+        if (astro.animTimer % 5 === 0) {
             astro.animFrame = (astro.animFrame + 1) % 4;
         }
     } else {
@@ -221,12 +236,12 @@ function updateGame(dt) {
         astro.invulnerableTimer--;
     }
 
-    // Caída al abismo cósmico
+    // Foso
     if (astro.y > levelData.mapHeight * TILE_SIZE + 40) {
         killPlayer();
     }
 
-    // Disparar proyectil de Plasma (Modo Plasma Blaster)
+    // Disparar
     if (keys.actionB && keys.actionPressedOnce && astro.state === 'plasma') {
         keys.actionPressedOnce = false;
         spawnPlasmaShot();
@@ -247,12 +262,12 @@ function updateGame(dt) {
 
     checkCrystalCollisions();
 
-    // Meta final del sector
+    // Mástil de meta
     if (!levelData.isBossLevel && astro.x >= levelData.flagX) {
         triggerStageClear(false);
     }
 
-    // Hiper-Núcleo del Boss
+    // Llave / Hiper-Núcleo del Boss
     if (victoryCoreDropped) {
         updateVictoryCore();
     }
@@ -275,7 +290,8 @@ function setTileAt(col, row, val) {
 
 function isSolidTile(tile) {
     return tile === 1 || tile === 2 || tile === 3 || tile === 4 ||
-           tile === 5 || tile === 6 || tile === 7 || tile === 8 || tile === 12;
+           tile === 5 || tile === 6 || tile === 7 || tile === 8 ||
+           tile === 12 || tile === 13;
 }
 
 function checkHorizontalCollision(ent) {
@@ -343,18 +359,18 @@ function handleBlockHit(c, r, tile) {
         score += 200;
         crystals++;
         window.sounds.playCoin();
-        createCrystalParticle(c * TILE_SIZE + 8, (r - 1) * TILE_SIZE);
+        createCoinBurst(c * TILE_SIZE + 16, r * TILE_SIZE);
         updateUI();
     } else if (tile === 4) {
         setTileAt(c, r, 12);
         const pType = (astro.state === 'normal') ? 'battery' : 'plasma';
         activePowerUps.push({
-            x: c * TILE_SIZE,
+            x: c * TILE_SIZE + 6,
             y: (r - 1) * TILE_SIZE,
-            w: 16,
-            h: 16,
-            vx: 1.2,
-            vy: -2,
+            w: 20,
+            h: 20,
+            vx: 1.3,
+            vy: -2.5,
             type: pType,
             isGrounded: false
         });
@@ -366,13 +382,13 @@ function handleBlockHit(c, r, tile) {
             createDebrisParticles(c * TILE_SIZE + 16, r * TILE_SIZE + 16);
             window.sounds.playStomp();
         } else {
-            createJetpackFlames(c * TILE_SIZE + 16, (r + 1) * TILE_SIZE);
+            createDustPuffs(c * TILE_SIZE + 16, (r + 1) * TILE_SIZE);
         }
     }
 }
 
 // ==========================================
-// DISPAROS DE PLASMA Y PODERES
+// DISPAROS Y ENEMIGOS
 // ==========================================
 function spawnPlasmaShot() {
     if (activePlasmaShots.length >= 3) return;
@@ -381,8 +397,8 @@ function spawnPlasmaShot() {
     activePlasmaShots.push({
         x: astro.x + (dir > 0 ? astro.w : -8),
         y: astro.y + astro.h / 2,
-        w: 8,
-        h: 8,
+        w: 10,
+        h: 10,
         vx: dir * 5.8,
         vy: 0.5,
         bounces: 0
@@ -394,10 +410,10 @@ function updatePlasmaShots() {
         const ps = activePlasmaShots[i];
         ps.x += ps.vx;
         ps.y += ps.vy;
-        ps.vy += 0.3;
+        ps.vy += 0.35;
 
-        const col = Math.floor((ps.x + 4) / TILE_SIZE);
-        const row = Math.floor((ps.y + 8) / TILE_SIZE);
+        const col = Math.floor((ps.x + 5) / TILE_SIZE);
+        const row = Math.floor((ps.y + 10) / TILE_SIZE);
         if (isSolidTile(getTileAt(col, row))) {
             ps.y = row * TILE_SIZE - ps.h;
             ps.vy = -3.8;
@@ -414,7 +430,7 @@ function updatePlasmaShots() {
                 e.alive = false;
                 score += 150;
                 window.sounds.playStomp();
-                createExplosionParticles(e.x + e.w / 2, e.y + e.h / 2, '#00ffff');
+                createExplosion(e.x + 10, e.y + 10, '#38bdf8');
                 hit = true;
                 break;
             }
@@ -426,7 +442,7 @@ function updatePlasmaShots() {
         }
 
         if (hit || ps.x < cameraX - 50 || ps.x > cameraX + VIEW_WIDTH + 50) {
-            createExplosionParticles(ps.x, ps.y, '#00f2fe');
+            createExplosion(ps.x, ps.y, '#38bdf8');
             activePlasmaShots.splice(i, 1);
         }
     }
@@ -444,8 +460,8 @@ function updatePowerUps() {
         if (checkAABB(astro, p)) {
             if (p.type === 'battery') {
                 astro.state = 'super';
-                astro.h = 32;
-                astro.y -= 8;
+                astro.h = 36;
+                astro.y -= 10;
                 score += 1000;
             } else if (p.type === 'plasma') {
                 astro.state = 'plasma';
@@ -470,7 +486,7 @@ function updateEnemies() {
             e.vy = (e.vy || 0) + 0.35;
             e.x += e.vx;
 
-            const colAhead = Math.floor((e.vx > 0 ? e.x + 20 : e.x) / TILE_SIZE);
+            const colAhead = Math.floor((e.vx > 0 ? e.x + 22 : e.x) / TILE_SIZE);
             const rowAt = Math.floor((e.y + 10) / TILE_SIZE);
             if (isSolidTile(getTileAt(colAhead, rowAt))) {
                 e.vx = -e.vx;
@@ -478,19 +494,19 @@ function updateEnemies() {
 
             e.y += e.vy;
             const bottomRow = Math.floor((e.y + 20) / TILE_SIZE);
-            const col = Math.floor((e.x + 8) / TILE_SIZE);
+            const col = Math.floor((e.x + 10) / TILE_SIZE);
             if (isSolidTile(getTileAt(col, bottomRow))) {
-                e.y = bottomRow * TILE_SIZE - 16;
+                e.y = bottomRow * TILE_SIZE - 20;
                 e.vy = 0;
             }
 
-            if (!astro.isDying && checkAABB(astro, { x: e.x, y: e.y, w: 18, h: 18 })) {
+            if (!astro.isDying && checkAABB(astro, { x: e.x, y: e.y, w: 22, h: 20 })) {
                 if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= e.y + 10) {
                     e.alive = false;
-                    astro.vy = -6.5;
+                    astro.vy = -6.8;
                     score += 200;
                     window.sounds.playStomp();
-                    createJetpackFlames(e.x + 8, e.y + 8);
+                    createDustPuffs(e.x + 10, e.y + 10);
                     updateUI();
                 } else if (astro.invulnerableTimer === 0) {
                     damagePlayer();
@@ -501,7 +517,7 @@ function updateEnemies() {
 }
 
 // ==========================================
-// BOSS DE LA DIMENSIÓN (NIVEL 8)
+// BOSS DE NIVEL 8
 // ==========================================
 let bossAttackTimer = 0;
 let bossProjectiles = [];
@@ -530,12 +546,12 @@ function updateBoss() {
     }
 
     bossAttackTimer++;
-    if (bossAttackTimer % 100 === 0 && b.isGrounded) {
-        b.vy = -7.5;
+    if (bossAttackTimer % 95 === 0 && b.isGrounded) {
+        b.vy = -7.6;
         b.isGrounded = false;
     }
 
-    if (bossAttackTimer % 125 === 0) {
+    if (bossAttackTimer % 120 === 0) {
         const dir = (astro.x < b.x) ? -1 : 1;
         b.vx = dir * 2.2;
         bossProjectiles.push({
@@ -565,7 +581,7 @@ function updateBoss() {
     if (!astro.isDying && checkAABB(astro, b)) {
         if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= b.y + 16) {
             damageBoss(1);
-            astro.vy = -7.5;
+            astro.vy = -7.8;
         } else if (astro.invulnerableTimer === 0) {
             damagePlayer();
         }
@@ -576,14 +592,13 @@ function damageBoss(amount) {
     if (!bossEntity || !bossEntity.alive) return;
     bossEntity.hp -= amount;
     window.sounds.playBossHurt();
-    createExplosionParticles(bossEntity.x + bossEntity.w / 2, bossEntity.y + bossEntity.h / 2, '#00ffff');
+    createExplosion(bossEntity.x + bossEntity.w / 2, bossEntity.y + bossEntity.h / 2, '#fbbf24');
 
     if (bossEntity.hp <= 0) {
         bossEntity.alive = false;
         score += 5000;
         updateUI();
 
-        // ¡Aparece el Hiper-Núcleo Cuántico!
         victoryCoreDropped = {
             x: bossEntity.x + bossEntity.w / 2 - 12,
             y: bossEntity.y,
@@ -592,7 +607,7 @@ function damageBoss(amount) {
             vy: -4,
             animTimer: 0
         };
-        createExplosionParticles(bossEntity.x, bossEntity.y, '#ff00ff');
+        createExplosion(bossEntity.x, bossEntity.y, '#f59e0b');
     }
 }
 
@@ -619,7 +634,7 @@ function damagePlayer() {
         window.sounds.playBossHurt();
     } else if (astro.state === 'super') {
         astro.state = 'normal';
-        astro.h = 24;
+        astro.h = 28;
         astro.invulnerableTimer = 90;
         window.sounds.playBossHurt();
     } else {
@@ -630,7 +645,7 @@ function damagePlayer() {
 function killPlayer() {
     if (astro.isDying) return;
     astro.isDying = true;
-    astro.vy = -8;
+    astro.vy = -8.2;
     astro.vx = 0;
     astro.deathTimer = 0;
     lives--;
@@ -673,12 +688,12 @@ function triggerStageClear(isWorldVictory) {
 function checkCrystalCollisions() {
     for (let i = activeCrystals.length - 1; i >= 0; i--) {
         const c = activeCrystals[i];
-        if (checkAABB(astro, { x: c.x, y: c.y, w: 16, h: 16 })) {
+        if (checkAABB(astro, { x: c.x, y: c.y, w: 18, h: 18 })) {
             activeCrystals.splice(i, 1);
             crystals++;
             score += 100;
             window.sounds.playCoin();
-            createCrystalParticle(c.x, c.y);
+            createCoinBurst(c.x + 8, c.y + 8);
             updateUI();
         }
     }
@@ -691,32 +706,58 @@ function checkAABB(a, b) {
            a.y + a.h > b.y;
 }
 
-function createJetpackFlames(x, y) {
-    for (let i = 0; i < 5; i++) {
+// ==========================================
+// PARTÍCULAS
+// ==========================================
+function createDustPuffs(x, y) {
+    for (let i = 0; i < 4; i++) {
         particles.push({
             x, y,
-            vx: (Math.random() - 0.5) * 2.5,
-            vy: Math.random() * 2 + 1,
-            color: Math.random() > 0.5 ? '#00f2fe' : '#4facfe',
+            vx: (Math.random() - 0.5) * 2,
+            vy: -Math.random() * 1.5,
+            color: 'rgba(255,255,255,0.7)',
             life: 14,
-            maxLife: 14,
+            size: 4
+        });
+    }
+}
+
+function createJetpackParticles(x, y) {
+    for (let i = 0; i < 6; i++) {
+        particles.push({
+            x: x + (Math.random() - 0.5) * 6,
+            y,
+            vx: (Math.random() - 0.5) * 2,
+            vy: Math.random() * 2 + 1,
+            color: Math.random() > 0.4 ? '#38bdf8' : '#fbbf24',
+            life: 16,
             size: 3
         });
     }
 }
 
-function createExplosionParticles(x, y, color) {
+function createExplosion(x, y, color) {
     for (let i = 0; i < 14; i++) {
         particles.push({
             x, y,
             vx: (Math.random() - 0.5) * 5,
             vy: (Math.random() - 0.5) * 5,
-            color: color || '#00f2fe',
-            life: 25,
-            maxLife: 25,
+            color: color || '#fbbf24',
+            life: 24,
             size: 4
         });
     }
+}
+
+function createCoinBurst(x, y) {
+    particles.push({
+        x, y,
+        vx: 0,
+        vy: -3.6,
+        color: '#fbbf24',
+        life: 22,
+        isCoin: true
+    });
 }
 
 function createDebrisParticles(x, y) {
@@ -724,27 +765,12 @@ function createDebrisParticles(x, y) {
         particles.push({
             x, y,
             vx: (Math.random() - 0.5) * 4,
-            vy: -Math.random() * 4 - 2,
+            vy: -Math.random() * 3 - 2,
             color: levelData.world.blockColor,
-            life: 30,
-            maxLife: 30,
+            life: 25,
             size: 5
         });
     }
-}
-
-function createCrystalParticle(x, y) {
-    particles.push({
-        x: x + 4,
-        y: y,
-        vx: 0,
-        vy: -3.5,
-        color: '#00ffff',
-        life: 20,
-        maxLife: 20,
-        size: 8,
-        isCrystal: true
-    });
 }
 
 function updateParticles() {
@@ -753,24 +779,28 @@ function updateParticles() {
         p.x += p.vx;
         p.y += p.vy;
         p.life--;
-        if (p.isCrystal) p.vy += 0.15;
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        }
+        if (p.isCoin) p.vy += 0.16;
+        if (p.life <= 0) particles.splice(i, 1);
     }
 }
 
 // ==========================================
-// RENDERIZADO VISUAL
+// RENDERIZADO VISUAL MODERNO ESTILO NINTENDO
 // ==========================================
 function render() {
     if (!levelData) return;
 
-    ctx.fillStyle = levelData.world.skyColor;
+    // Cielo con degradado vertical moderno
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    skyGrad.addColorStop(0, levelData.world.skyTop);
+    skyGrad.addColorStop(1, levelData.world.skyBottom);
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 
-    renderSpaceParallax();
+    // Colinas y nubes estilo Mario con ojos
+    renderMarioBackdrop();
 
+    // Dibujar tiles
     const startCol = Math.floor(cameraX / TILE_SIZE);
     const endCol = Math.min(levelData.mapWidth - 1, Math.floor((cameraX + VIEW_WIDTH) / TILE_SIZE) + 1);
 
@@ -781,35 +811,41 @@ function render() {
 
             const drawX = Math.floor(c * TILE_SIZE - cameraX);
             const drawY = r * TILE_SIZE;
-            drawTile(tile, drawX, drawY);
+            drawMarioTile(tile, drawX, drawY);
         }
     }
 
-    for (let crystal of activeCrystals) {
-        if (crystal.x > cameraX - 16 && crystal.x < cameraX + VIEW_WIDTH + 16) {
-            drawCrystal(crystal.x - cameraX, crystal.y);
+    // Monedas
+    for (let coin of activeCrystals) {
+        if (coin.x > cameraX - 20 && coin.x < cameraX + VIEW_WIDTH + 20) {
+            drawGoldCoin(coin.x - cameraX, coin.y);
         }
     }
 
+    // Potenciadores
     for (let p of activePowerUps) {
-        drawPowerUp(p.x - cameraX, p.y, p.type);
+        drawPowerUpItem(p.x - cameraX, p.y, p.type);
     }
 
+    // Disparos
     for (let ps of activePlasmaShots) {
-        drawPlasmaShot(ps.x - cameraX, ps.y);
+        drawPlasmaBall(ps.x - cameraX, ps.y);
     }
 
+    // Enemigos
     for (let e of activeEnemies) {
         if (e.alive && e.x > cameraX - 32 && e.x < cameraX + VIEW_WIDTH + 32) {
-            drawEnemy(e.x - cameraX, e.y, e.type);
+            drawCuteEnemy(e.x - cameraX, e.y, e.type);
         }
     }
 
+    // Boss
     if (bossEntity && bossEntity.alive) {
-        drawBoss(bossEntity.x - cameraX, bossEntity.y);
-        drawBossHealthBar();
+        drawBossModern(bossEntity.x - cameraX, bossEntity.y);
+        drawBossHealthBarModern();
     }
 
+    // Proyectiles boss
     for (let bp of bossProjectiles) {
         ctx.fillStyle = bp.color;
         ctx.beginPath();
@@ -817,243 +853,367 @@ function render() {
         ctx.fill();
     }
 
+    // Llave / Núcleo
     if (victoryCoreDropped) {
-        drawQuantumCore(victoryCoreDropped.x - cameraX, victoryCoreDropped.y);
+        drawGoldenStar(victoryCoreDropped.x - cameraX, victoryCoreDropped.y);
     }
 
-    if (!astro.isDying || astro.deathTimer < 100) {
-        drawAstro();
+    // El Jugador: Astro (con alta visibilidad y animaciones)
+    if (!astro.isDying || astro.deathTimer < 90) {
+        drawAstroModern();
     }
 
+    // Partículas
     for (let p of particles) {
-        ctx.fillStyle = p.color;
-        if (p.isCrystal) {
-            drawCrystal(p.x - cameraX, p.y);
+        if (p.isCoin) {
+            drawGoldCoin(p.x - cameraX, p.y);
         } else {
+            ctx.fillStyle = p.color;
             ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
         }
     }
 }
 
-function renderSpaceParallax() {
+function renderMarioBackdrop() {
     const bgOffset = cameraX * 0.25;
-    ctx.fillStyle = '#ffffff';
 
-    // Estrellas titilantes en el cosmos
-    for (let i = 0; i < 40; i++) {
-        const sx = ((i * 37) - bgOffset) % (VIEW_WIDTH * 2);
-        const sy = (i * 17) % (VIEW_HEIGHT - 40);
-        ctx.globalAlpha = 0.4 + ((i % 5) * 0.12);
-        ctx.fillRect(sx, sy, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
-    }
-
-    // Nebulosas lejanas
-    ctx.fillStyle = levelData.world.cloudColor;
-    ctx.globalAlpha = 0.35;
+    // Colinas redondeadas estilo Mario con ojos
+    ctx.fillStyle = '#4ade80';
     for (let i = 0; i < 6; i++) {
-        const cx = ((i * 180) - bgOffset * 1.5) % (VIEW_WIDTH * 2);
-        const cy = 20 + (i % 3) * 25;
+        const hx = ((i * 220) - bgOffset) % (VIEW_WIDTH * 2.2);
+        const hy = 192;
         ctx.beginPath();
-        ctx.arc(cx, cy, 26, 0, Math.PI * 2);
-        ctx.arc(cx + 20, cy - 8, 20, 0, Math.PI * 2);
-        ctx.arc(cx + 40, cy, 22, 0, Math.PI * 2);
+        ctx.arc(hx, hy, 55, Math.PI, 0, false);
         ctx.fill();
+
+        // Ojos negros de la colina
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(hx - 14, hy - 40, 3, 8);
+        ctx.fillRect(hx + 11, hy - 40, 3, 8);
+        ctx.fillStyle = '#4ade80';
     }
-    ctx.globalAlpha = 1.0;
+
+    // Nubes flotantes estilo Mario
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 5; i++) {
+        const cx = ((i * 180) - bgOffset * 1.6) % (VIEW_WIDTH * 2);
+        const cy = 35 + (i % 2) * 25;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+        ctx.arc(cx + 14, cy - 6, 12, 0, Math.PI * 2);
+        ctx.arc(cx + 28, cy, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ojos de la nube
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(cx + 10, cy - 2, 2, 5);
+        ctx.fillRect(cx + 16, cy - 2, 2, 5);
+        ctx.fillStyle = '#ffffff';
+    }
 }
 
-function drawTile(tile, x, y) {
-    if (tile === 1) { // Plataforma tecno-alienígena
-        ctx.fillStyle = levelData.world.groundColor;
+// ==========================================
+// DIBUJO DE TILES ESTILO MARIO BROS
+// ==========================================
+function drawMarioTile(tile, x, y) {
+    if (tile === 1) {
+        // SUELO CON HIERBA VERDE VIBRANTE Y TIERRA (ESTILO SUPER MARIO BROS)
+        // Fondo de tierra marrón rica
+        ctx.fillStyle = levelData.world.dirtColor;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = '#00f2fe';
-        ctx.fillRect(x, y, TILE_SIZE, 2); // Borde de neón superior
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(x + 4, y + 6, TILE_SIZE - 8, TILE_SIZE - 8);
-    } else if (tile === 2) { // Contenedor blindado rompible
+
+        // Textura de guijarros en la tierra
+        ctx.fillStyle = levelData.world.dirtPattern;
+        ctx.fillRect(x + 4, y + 16, 6, 5);
+        ctx.fillRect(x + 18, y + 22, 7, 5);
+
+        // Capa de césped superior verde
+        ctx.fillStyle = levelData.world.grassColor;
+        ctx.fillRect(x, y, TILE_SIZE, 11);
+
+        // Brillo superior del césped
+        ctx.fillStyle = levelData.world.grassHighlight;
+        ctx.fillRect(x, y, TILE_SIZE, 3);
+
+        // Borde ondulado de césped cayendo
+        ctx.fillStyle = levelData.world.grassColor;
+        ctx.beginPath();
+        ctx.arc(x + 6, y + 11, 4, 0, Math.PI);
+        ctx.arc(x + 16, y + 11, 4, 0, Math.PI);
+        ctx.arc(x + 26, y + 11, 4, 0, Math.PI);
+        ctx.fill();
+
+    } else if (tile === 13) {
+        // TIERRA PROFUNDA DEBAJO DEL SUELO
+        ctx.fillStyle = levelData.world.dirtColor;
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = levelData.world.dirtPattern;
+        ctx.fillRect(x + 2, y + 6, 8, 6);
+        ctx.fillRect(x + 16, y + 18, 9, 7);
+
+    } else if (tile === 2) {
+        // BLOQUE DE LADRILLO MARIO 3D
         ctx.fillStyle = levelData.world.blockColor;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#00f2fe';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-        ctx.fillStyle = '#00f2fe';
-        ctx.fillRect(x + 12, y + 12, 8, 8);
-    } else if (tile === 3 || tile === 4) { // Cápsula energética '?'
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#38bdf8';
+
+        // Borde 3D con relieve
+        ctx.strokeStyle = '#7c2d12';
         ctx.lineWidth = 2;
         ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 18px monospace';
-        ctx.fillText('⚡', x + 6, y + 23);
-    } else if (tile === 12) { // Bloque de titanio indestructible
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#64748b';
-        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-    } else if (tile >= 5 && tile <= 8) { // Conductos de refrigeración
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x + 4, y, TILE_SIZE - 8, TILE_SIZE);
-        ctx.strokeStyle = '#0369a1';
-        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-    } else if (tile === 9) { // Río de plasma
-        ctx.fillStyle = '#ff007f';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = '#00ffff';
-        ctx.fillRect(x, y + 3, TILE_SIZE, 3);
-    } else if (tile === 10) { // Baliza de teletransporte
-        ctx.fillStyle = '#00f2fe';
-        ctx.fillRect(x + 14, y, 4, TILE_SIZE);
-        ctx.fillStyle = '#38bdf8';
+
+        // Líneas de mortero de ladrillo
         ctx.beginPath();
-        ctx.arc(x + 16, y + 6, 8, 0, Math.PI * 2);
+        ctx.moveTo(x, y + 16);
+        ctx.lineTo(x + TILE_SIZE, y + 16);
+        ctx.moveTo(x + 16, y);
+        ctx.lineTo(x + 16, y + 16);
+        ctx.moveTo(x + 8, y + 16);
+        ctx.lineTo(x + 8, y + TILE_SIZE);
+        ctx.moveTo(x + 24, y + 16);
+        ctx.lineTo(x + 24, y + TILE_SIZE);
+        ctx.stroke();
+
+    } else if (tile === 3 || tile === 4) {
+        // BLOQUE '?' DORADO METÁLICO MODERNO
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+        // Brillo superior
+        ctx.fillStyle = '#fde68a';
+        ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, 4);
+
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+
+        // Tornillos en las 4 esquinas
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(x + 3, y + 3, 3, 3);
+        ctx.fillRect(x + TILE_SIZE - 6, y + 3, 3, 3);
+        ctx.fillRect(x + 3, y + TILE_SIZE - 6, 3, 3);
+        ctx.fillRect(x + TILE_SIZE - 6, y + TILE_SIZE - 6, 3, 3);
+
+        // Símbolo '?' blanco con relieve
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText('?', x + 9, y + 24);
+
+    } else if (tile >= 5 && tile <= 8) {
+        // TUBERÍAS VERDES BRILLANTES ESTILO MARIO 3D
+        ctx.fillStyle = '#16a34a';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+        // Brillo reflectante blanco vertical
+        ctx.fillStyle = '#86efac';
+        ctx.fillRect(x + 6, y, 4, TILE_SIZE);
+
+        // Sombra lateral
+        ctx.fillStyle = '#14532d';
+        ctx.fillRect(x + TILE_SIZE - 5, y, 5, TILE_SIZE);
+
+        ctx.strokeStyle = '#052e16';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+
+    } else if (tile === 10) {
+        // MÁSTIL DE META
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(x + 14, y, 4, TILE_SIZE);
+        // Bola dorada en la punta
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(x + 16, y + 2, 5, 0, Math.PI * 2);
         ctx.fill();
-    } else if (tile === 11) { // Portal de evacuación
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(x + 4, y, TILE_SIZE - 8, TILE_SIZE);
-        ctx.strokeStyle = '#00f2fe';
-        ctx.strokeRect(x + 4, y, TILE_SIZE - 8, TILE_SIZE);
+        // Bandera verde
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.moveTo(x + 14, y + 6);
+        ctx.lineTo(x - 8, y + 14);
+        ctx.lineTo(x + 14, y + 22);
+        ctx.fill();
+
+    } else if (tile === 12) {
+        // BLOQUE GASTADO / PIEDRA DURA
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+
+    } else if (tile === 9) {
+        // LAVA
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(x, y, TILE_SIZE, 4);
     }
 }
 
 // ==========================================
-// DIBUJAR AL PROTAGONISTA: ASTRO
+// DIBUJO DE ASTRO (SUPER VISIBLE Y ELEGANTE)
 // ==========================================
-function drawAstro() {
-    if (astro.invulnerableTimer > 0 && Math.floor(astro.invulnerableTimer / 4) % 2 === 0) {
-        return;
-    }
-
+function drawAstroModern() {
     const px = Math.floor(astro.x - cameraX);
     const py = Math.floor(astro.y);
 
-    const isSuper = astro.state === 'super';
-    const isPlasma = astro.state === 'plasma';
-
-    // Colores del traje según potenciador
-    let suitColor = '#f1f5f9';    // Blanco espacial
-    let armorColor = '#0284c7';   // Azul tecno
-    let visorColor = '#00f2fe';   // Cian brillante
-
-    if (isSuper) {
-        suitColor = '#fbbf24';    // Exo-Armadura dorada
-        armorColor = '#b45309';
-        visorColor = '#67e8f9';
-    } else if (isPlasma) {
-        suitColor = '#a855f7';    // Púrpura plasma
-        armorColor = '#6b21a8';
-        visorColor = '#22d3ee';
-    }
-
     ctx.save();
+    ctx.translate(px + astro.w / 2, py + astro.h);
+    ctx.scale(astro.squash, astro.stretch);
+    ctx.translate(-(px + astro.w / 2), -(py + astro.h));
+
     if (astro.facing === 'left') {
         ctx.scale(-1, 1);
         ctx.translate(-px * 2 - astro.w, 0);
     }
 
-    // Micro-Jetpack en la espalda
-    ctx.fillStyle = '#475569';
-    ctx.fillRect(px - 3, py + 8, 5, astro.h - 12);
-    // Propulsor
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(px - 2, py + astro.h - 4, 3, 2);
+    // Traje y colores
+    const isSuper = astro.state === 'super';
+    const isPlasma = astro.state === 'plasma';
 
-    // Casco espacial robótico
+    let suitColor = '#ffffff';
+    let armorColor = '#0284c7';
+    let visorColor = '#38bdf8';
+
+    if (isSuper) {
+        suitColor = '#fbbf24';
+        armorColor = '#b45309';
+        visorColor = '#fef08a';
+    } else if (isPlasma) {
+        suitColor = '#ef4444';
+        armorColor = '#991b1b';
+        visorColor = '#38bdf8';
+    }
+
+    // Micro-Jetpack trasero con llama
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(px - 4, py + 8, 6, astro.h - 14);
+
+    if (!astro.isGrounded) {
+        // Llama activa del jetpack
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(px - 3, py + astro.h - 6);
+        ctx.lineTo(px - 1, py + astro.h + 6);
+        ctx.lineTo(px + 1, py + astro.h - 6);
+        ctx.fill();
+    }
+
+    // Cuerpo / Torso
+    ctx.fillStyle = suitColor;
+    ctx.fillRect(px + 2, py + 12, astro.w - 4, astro.h - 14);
+
+    // Cinturón y emblema
+    ctx.fillStyle = armorColor;
+    ctx.fillRect(px + 2, py + 18, astro.w - 4, 3);
+    ctx.fillStyle = visorColor;
+    ctx.fillRect(px + astro.w / 2 - 2, py + 14, 4, 4);
+
+    // Botas
+    ctx.fillStyle = armorColor;
+    const footOffset = (astro.animFrame % 2 === 0) ? 0 : 3;
+    ctx.fillRect(px + 1, py + astro.h - 4 + footOffset, 7, 4);
+    ctx.fillRect(px + astro.w - 8, py + astro.h - 4 - footOffset, 7, 4);
+
+    // Casco espacial redondeado con brillo de cristal
     ctx.fillStyle = suitColor;
     ctx.beginPath();
-    ctx.arc(px + 8, py + 8, 8, 0, Math.PI * 2);
+    ctx.arc(px + astro.w / 2, py + 8, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = armorColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Visor brillante con ojos expresivos
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.ellipse(px + astro.w / 2 + 1, py + 8, 6, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Antena superior
-    ctx.fillStyle = armorColor;
-    ctx.fillRect(px + 7, py - 3, 2, 4);
     ctx.fillStyle = visorColor;
-    ctx.fillRect(px + 6, py - 5, 4, 2);
-
-    // Visor futurista con línea de escaneo
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(px + 5, py + 5, 8, 5);
-    ctx.fillStyle = visorColor;
-    ctx.fillRect(px + 6, py + 6, 6, 2);
-
-    // Torso y armadura
-    ctx.fillStyle = suitColor;
-    ctx.fillRect(px + 2, py + 14, 12, astro.h - 14);
-
-    // Núcleo energético en el pecho
-    ctx.fillStyle = visorColor;
-    ctx.fillRect(px + 6, py + 16, 4, 4);
-
-    // Botas propulsoras magnéticas
-    ctx.fillStyle = armorColor;
-    const footOffset = (astro.animFrame % 2 === 0) ? 0 : 2;
-    ctx.fillRect(px + 1, py + astro.h - 4 + footOffset, 5, 4);
-    ctx.fillRect(px + 8, py + astro.h - 4 - footOffset, 5, 4);
+    ctx.fillRect(px + astro.w / 2, py + 7, 5, 2); // Línea de visión
 
     ctx.restore();
 }
 
-function drawEnemy(x, y, type) {
-    if (type === 'drone') {
-        // Drone centinela flotante / caminante
-        ctx.fillStyle = '#334155';
+function drawGoldCoin(x, y) {
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.ellipse(x + 8, y + 8, 7, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.ellipse(x + 7, y + 8, 4, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+}
+
+function drawCuteEnemy(x, y, type) {
+    if (type === 'goomba') {
+        // Champiñón marrón estilo Goomba
+        ctx.fillStyle = '#b45309';
         ctx.beginPath();
-        ctx.arc(x + 10, y + 8, 8, 0, Math.PI * 2);
+        ctx.arc(x + 11, y + 10, 10, Math.PI, 0, false);
         ctx.fill();
 
-        // Ojo sensor rojo
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(x + 7, y + 6, 6, 4);
-        ctx.fillStyle = '#fca5a5';
-        ctx.fillRect(x + 9, y + 7, 2, 2);
+        ctx.fillStyle = '#fde68a';
+        ctx.fillRect(x + 4, y + 10, 14, 7);
 
-        // Patas mecánicas
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(x + 3, y + 14, 4, 4);
-        ctx.fillRect(x + 13, y + 14, 4, 4);
+        // Ojos negros enojados
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 6, y + 10, 2, 5);
+        ctx.fillRect(x + 14, y + 10, 2, 5);
+
+        // Pies negros
+        ctx.fillRect(x + 2, y + 17, 6, 3);
+        ctx.fillRect(x + 14, y + 17, 6, 3);
     } else {
-        // Nano-Escarabajo acorazado
-        ctx.fillStyle = '#10b981';
-        ctx.fillRect(x + 2, y + 4, 14, 12);
-        ctx.strokeStyle = '#059669';
-        ctx.strokeRect(x + 2, y + 4, 14, 12);
-        // Luz de antena
-        ctx.fillStyle = '#34d399';
-        ctx.fillRect(x + 12, y + 6, 4, 4);
+        // Tortuga Koopa verde
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(x + 3, y + 4, 16, 14);
+        ctx.strokeStyle = '#ffffff';
+        ctx.strokeRect(x + 5, y + 6, 12, 10);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(x + 14, y + 4, 6, 6);
     }
 }
 
-function drawBoss(x, y) {
+function drawBossModern(x, y) {
     const b = bossEntity;
     ctx.fillStyle = b.color;
     ctx.fillRect(x, y, b.w, b.h);
 
-    // Blindaje y orbes de poder
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(x + 4, y + 4, b.w - 8, 12);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, b.w, b.h);
 
-    ctx.fillStyle = '#00ffff';
-    ctx.fillRect(x + 8, y + 6, 8, 8);
-    ctx.fillRect(x + b.w - 16, y + 6, 8, 8);
+    // Ojos feroces
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(x + 8, y + 12, 10, 10);
+    ctx.fillRect(x + b.w - 18, y + 12, 10, 10);
 
-    // Reactor central de energía
-    ctx.fillStyle = '#ff0055';
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(x + 12, y + 14, 5, 5);
+    ctx.fillRect(x + b.w - 14, y + 14, 5, 5);
+
+    // Cuernos
+    ctx.fillStyle = '#1e293b';
     ctx.beginPath();
-    ctx.arc(x + b.w / 2, y + b.h / 2 + 6, 10, 0, Math.PI * 2);
+    ctx.moveTo(x + 6, y);
+    ctx.lineTo(x + 12, y - 10);
+    ctx.lineTo(x + 18, y);
+    ctx.moveTo(x + b.w - 18, y);
+    ctx.lineTo(x + b.w - 12, y - 10);
+    ctx.lineTo(x + b.w - 6, y);
     ctx.fill();
-
-    // Cañones laterales
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(x - 4, y + 20, 6, 14);
-    ctx.fillRect(x + b.w - 2, y + 20, 6, 14);
 }
 
-function drawBossHealthBar() {
+function drawBossHealthBarModern() {
     const b = bossEntity;
-    const barW = 160;
+    const barW = 180;
     const barH = 12;
     const barX = (VIEW_WIDTH - barW) / 2;
     const barY = 24;
@@ -1061,79 +1221,65 @@ function drawBossHealthBar() {
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.fillRect(barX - 4, barY - 14, barW + 8, barH + 20);
 
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = '#fde047';
+    ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${b.name.toUpperCase()} (DIMENSIÓN ${currentWorldNum})`, VIEW_WIDTH / 2, barY - 3);
+    ctx.fillText(`${b.name.toUpperCase()} (MUNDO ${currentWorldNum})`, VIEW_WIDTH / 2, barY - 3);
 
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = '#334155';
     ctx.fillRect(barX, barY, barW, barH);
 
     const healthPercent = Math.max(0, b.hp / b.maxHp);
-    ctx.fillStyle = healthPercent > 0.4 ? '#00f2fe' : '#f43f5e';
+    ctx.fillStyle = healthPercent > 0.4 ? '#ef4444' : '#f59e0b';
     ctx.fillRect(barX, barY, barW * healthPercent, barH);
 
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(barX, barY, barW, barH);
     ctx.textAlign = 'left';
 }
 
-function drawQuantumCore(x, y) {
-    ctx.fillStyle = '#00f2fe';
+function drawGoldenStar(x, y) {
+    ctx.fillStyle = '#fde047';
     ctx.beginPath();
-    ctx.arc(x + 12, y + 12, 9, 0, Math.PI * 2);
+    ctx.arc(x + 12, y + 12, 10, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.strokeStyle = '#f43f5e';
+    ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 2;
-    ctx.strokeRect(x + 3, y + 3, 18, 18);
+    ctx.stroke();
 }
 
-function drawCrystal(x, y) {
-    ctx.fillStyle = '#00ffff';
-    ctx.beginPath();
-    ctx.moveTo(x + 8, y + 2);
-    ctx.lineTo(x + 14, y + 8);
-    ctx.lineTo(x + 8, y + 14);
-    ctx.lineTo(x + 2, y + 8);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 7, y + 6, 3, 4);
-}
-
-function drawPowerUp(x, y, type) {
+function drawPowerUpItem(x, y, type) {
     if (type === 'battery') {
-        // Batería cuántica
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x + 3, y + 3, 10, 12);
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(x + 5, y + 1, 6, 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 6, y + 6, 4, 6);
-    } else {
-        // Cañón de Plasma
-        ctx.fillStyle = '#a855f7';
+        // Champiñón rojo estilo Mario
+        ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(x + 8, y + 8, 7, 0, Math.PI * 2);
+        ctx.arc(x + 10, y + 9, 9, Math.PI, 0, false);
         ctx.fill();
-        ctx.fillStyle = '#22d3ee';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 6, y + 9, 8, 8);
+        ctx.fillRect(x + 8, y + 4, 4, 4);
+    } else {
+        // Flor de fuego
+        ctx.fillStyle = '#f97316';
         ctx.beginPath();
-        ctx.arc(x + 8, y + 8, 3, 0, Math.PI * 2);
+        ctx.arc(x + 10, y + 10, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(x + 10, y + 10, 4, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
-function drawPlasmaShot(x, y) {
-    ctx.fillStyle = '#00f2fe';
+function drawPlasmaBall(x, y) {
+    ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
-    ctx.arc(x + 4, y + 4, 5, 0, Math.PI * 2);
+    ctx.arc(x + 5, y + 5, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(x + 4, y + 4, 2, 0, Math.PI * 2);
+    ctx.arc(x + 5, y + 5, 2, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -1152,7 +1298,7 @@ function gameLoop(time) {
 }
 
 // ==========================================
-// MODALES Y MENÚS
+// MODALES
 // ==========================================
 function showVictoryModal(isBossDefeated) {
     const modal = document.getElementById('modalVictory');
@@ -1162,26 +1308,26 @@ function showVictoryModal(isBossDefeated) {
 
     if (isBossDefeated) {
         if (currentWorldNum === 9) {
-            title.innerText = "¡CAMPEÓN DE LAS 9 DIMENSIONES!";
-            desc.innerText = "¡Has derrotado al Núcleo de la Singularidad y salvado el multiverso cósmico! ¡Misión cumplida, Astro Runner!";
-            nextBtn.innerText = "Reiniciar Odisea";
+            title.innerText = "¡CAMPEÓN DE LOS 9 MUNDOS!";
+            desc.innerText = "¡Has derrotado al Emperador Supremo y superado todos los 72 niveles del juego!";
+            nextBtn.innerText = "Reiniciar Aventura";
             nextBtn.onclick = () => {
                 modal.classList.add('hidden');
                 loadLevel(1, 1);
             };
         } else {
-            title.innerText = `¡JEFE DE LA DIMENSIÓN ${currentWorldNum} DESTRUIDO!`;
-            desc.innerText = `¡Has obtenido el Hiper-Núcleo Cuántico! El portal hacia la DIMENSIÓN ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name} se ha abierto.`;
-            nextBtn.innerText = `Saltar a Dimensión ${currentWorldNum + 1}`;
+            title.innerText = `¡JEFE DEL MUNDO ${currentWorldNum} DERROTADO!`;
+            desc.innerText = `¡Has obtenido la Estrella Mágica! El portal hacia el MUNDO ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name} se ha abierto.`;
+            nextBtn.innerText = `Viajar al Mundo ${currentWorldNum + 1}`;
             nextBtn.onclick = () => {
                 modal.classList.add('hidden');
                 loadLevel(currentWorldNum + 1, 1);
             };
         }
     } else {
-        title.innerText = `¡SECTOR ${currentWorldNum}-${currentLevelNum} ASEGURADO!`;
-        desc.innerText = `¡Gran maniobra! Avanzas con éxito hacia la cámara del Boss de esta dimensión.`;
-        nextBtn.innerText = `Siguiente Sector (${currentWorldNum}-${currentLevelNum + 1})`;
+        title.innerText = `¡NIVEL ${currentWorldNum}-${currentLevelNum} COMPLETADO!`;
+        desc.innerText = `¡Excelente salto! Te acercas al castillo del Boss final.`;
+        nextBtn.innerText = `Siguiente Nivel (${currentWorldNum}-${currentLevelNum + 1})`;
         nextBtn.onclick = () => {
             modal.classList.add('hidden');
             loadLevel(currentWorldNum, currentLevelNum + 1);
@@ -1231,9 +1377,9 @@ function openWorldSelector() {
 
         item.innerHTML = `
             <div class="world-header">
-                <h3>Dimensión ${w.id}: ${w.name} ${isUnlocked ? '' : '🔒'}</h3>
+                <h3>Mundo ${w.id}: ${w.name} ${isUnlocked ? '' : '🔒'}</h3>
                 <span class="world-desc">${w.description}</span>
-                <span class="boss-tag">Jefe de sector: <strong>${w.bossName}</strong></span>
+                <span class="boss-tag">Boss final: <strong>${w.bossName}</strong></span>
             </div>
             <div class="levels-row">
                 ${levelsHtml}
@@ -1256,16 +1402,14 @@ function selectLevel(world, level) {
 }
 
 // ==========================================
-// CONTROLES Y ENTRADA
+// CONTROLES TÁCTILES Y EVENTOS
 // ==========================================
 function setupControls() {
     window.addEventListener('keydown', (e) => {
         window.sounds.init();
         if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
-        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') {
-            keys.up = true;
-        }
+        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') keys.up = true;
         if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = true;
         if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'KeyJ') {
             keys.actionB = true;
