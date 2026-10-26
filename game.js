@@ -124,9 +124,8 @@ function loadLevel(worldNum, levelNum) {
     particles = [];
     bossEntity = levelData.boss ? Object.assign({}, levelData.boss) : null;
 
-    // Música de Zelda (solo si la intro ya pasó)
-    const splash = document.getElementById('studioSplashScreen');
-    if (!splash || splash.classList.contains('fade-out')) {
+    // Música de Zelda (solo si ya se pulsó JUGAR en el menú)
+    if (gameStartedFromMenu) {
         window.sounds.startMusic(worldNum, levelData.isBossLevel);
     }
     updateUI();
@@ -150,7 +149,7 @@ function updateUI() {
 // FÍSICAS Y ACTUALIZACIÓN
 // ==========================================
 function updateGame(dt) {
-    if (isPaused || isGameOver || isStageClear) return;
+    if (isPaused || isGameOver || isStageClear || !gameStartedFromMenu) return;
 
     timeAccumulator += dt;
     if (timeAccumulator >= 1.0) {
@@ -1490,40 +1489,123 @@ function toggleFullscreen() {
     }
 }
 
-// Configuración de la intro de Hugo SP Studios
-function setupStudioSplashScreen() {
-    const splash = document.getElementById('studioSplashScreen');
-    if (!splash) return;
+// ==========================================
+// FLUJO ESTILO UNITY: INTRO HUGO SP STUDIOS ➔ MENÚ PRINCIPAL
+// ==========================================
+let gameStartedFromMenu = false;
+let vibrationEnabled = true;
+let sfxEnabled = true;
 
-    let hasStarted = false;
-    const startAdventure = () => {
-        if (hasStarted) return;
-        hasStarted = true;
+function setupGameFlow() {
+    const splash = document.getElementById('studioSplashScreen');
+    const mainMenu = document.getElementById('mainMenuScreen');
+
+    let splashFinished = false;
+
+    const endSplashAndShowMenu = () => {
+        if (splashFinished) return;
+        splashFinished = true;
+
         window.sounds.init();
         window.sounds.playStudioIntroChime();
-
-        // Solicitar orientación horizontal en dispositivos compatibles
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-        }
 
         setTimeout(() => {
             splash.classList.add('fade-out');
             setTimeout(() => {
                 splash.style.display = 'none';
-            }, 800);
-            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
-        }, 2400);
+                mainMenu.classList.remove('hidden');
+            }, 700);
+        }, 2200);
     };
 
-    splash.addEventListener('click', startAdventure);
-    splash.addEventListener('touchstart', startAdventure, { passive: true });
-    setTimeout(startAdventure, 400);
+    // Toque para avanzar la intro de Hugo SP Studios
+    splash.addEventListener('click', endSplashAndShowMenu);
+    splash.addEventListener('touchstart', endSplashAndShowMenu, { passive: true });
+    setTimeout(endSplashAndShowMenu, 600);
+
+    // Botones del Menú Principal
+    document.getElementById('btnPlayGame').onclick = () => {
+        window.sounds.init();
+        mainMenu.classList.add('hidden');
+        gameStartedFromMenu = true;
+        isPaused = false;
+        window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+    };
+
+    document.getElementById('btnOpenControls').onclick = () => {
+        window.sounds.init();
+        document.getElementById('modalControls').classList.remove('hidden');
+    };
+
+    document.getElementById('btnOpenSettings').onclick = () => {
+        window.sounds.init();
+        document.getElementById('modalSettings').classList.remove('hidden');
+    };
+}
+
+function closeControlsModal() {
+    document.getElementById('modalControls').classList.add('hidden');
+}
+
+function closeSettingsModal() {
+    document.getElementById('modalSettings').classList.add('hidden');
+}
+
+function toggleMusicSetting() {
+    const isMuted = window.sounds.toggleMute();
+    const btn = document.getElementById('toggleMusicBtn');
+    if (isMuted) {
+        btn.innerText = 'DESACTIVADA';
+        btn.classList.add('disabled');
+    } else {
+        btn.innerText = 'ACTIVADA';
+        btn.classList.remove('disabled');
+    }
+}
+
+function toggleSfxSetting() {
+    sfxEnabled = !sfxEnabled;
+    const btn = document.getElementById('toggleSfxBtn');
+    btn.innerText = sfxEnabled ? 'ACTIVADOS' : 'DESACTIVADOS';
+    btn.classList.toggle('disabled', !sfxEnabled);
+}
+
+function toggleVibSetting() {
+    vibrationEnabled = !vibrationEnabled;
+    const btn = document.getElementById('toggleVibBtn');
+    btn.innerText = vibrationEnabled ? 'ACTIVADA' : 'DESACTIVADA';
+    btn.classList.toggle('disabled', !vibrationEnabled);
+}
+
+function resetSaveData() {
+    if (confirm("¿Estás seguro de que quieres borrar todo tu progreso y volver al Mundo 1-1?")) {
+        localStorage.removeItem(SAVE_KEY);
+        saveState = {
+            unlockedWorld: 1,
+            unlockedLevel: 1,
+            currentWorld: 1,
+            currentLevel: 1,
+            highScore: 0,
+            totalCrystals: 0
+        };
+        closeSettingsModal();
+        loadLevel(1, 1);
+        goToMainMenu();
+    }
+}
+
+function goToMainMenu() {
+    isPaused = true;
+    window.sounds.stopMusic();
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    document.getElementById('modalGameOver').classList.add('hidden');
+    document.getElementById('modalVictory').classList.add('hidden');
+    document.getElementById('mainMenuScreen').classList.remove('hidden');
 }
 
 window.addEventListener('load', () => {
     setupControls();
     loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1);
-    setupStudioSplashScreen();
+    setupGameFlow();
     requestAnimationFrame(gameLoop);
 });

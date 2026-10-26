@@ -12,14 +12,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- AVISO DE GIRO DE PANTALLA EN MÓVILES (Si el teléfono está en vertical) -->
+    <!-- AVISO DE GIRO DE PANTALLA EN MÓVILES -->
     <div id="rotateDeviceOverlay">
         <div class="rotate-phone-icon">📲</div>
         <h2>GIRA TU TELÉFONO</h2>
-        <p>Astro Runner está optimizado para jugarse en <strong>horizontal</strong> con controles a ambos lados.</p>
+        <p>Astro Runner está diseñado para jugarse en <strong>horizontal</strong>.</p>
+        <div class="ios-hint-box">
+            <span>ℹ️ <strong>En iPhone:</strong> Si la pantalla no gira, abre el Centro de Control y desactiva el candado de <strong>Bloqueo de rotación 🔒</strong>.</span>
+        </div>
     </div>
 
-    <!-- PANTALLA COMPLETA DE INTRO: HUGO SP STUDIOS (A PANTALLA COMPLETA 100% INDEPENDIENTE) -->
+    <!-- 1. INTRO SPLASH SCREEN: HUGO SP STUDIOS (ESTILO UNITY) -->
     <div id="studioSplashScreen" class="studio-splash">
         <div class="studio-bg-glow"></div>
         <div class="studio-content">
@@ -28,7 +31,6 @@
                     <span class="emblem-letter">H</span>
                 </div>
                 <div class="emblem-ring"></div>
-                <div class="emblem-ring ring-delayed"></div>
             </div>
             <div class="studio-text-wrap">
                 <h1 class="studio-title">HUGO SP STUDIOS</h1>
@@ -38,11 +40,109 @@
             <div class="studio-loader">
                 <div class="loader-bar"></div>
             </div>
-            <span class="studio-tap-hint">Toca la pantalla para entrar</span>
         </div>
     </div>
 
-    <!-- CONTENEDOR DEL JUEGO (Se revela solo tras la intro) -->
+    <!-- 2. MENÚ PRINCIPAL (ESTILO JUEGO DE CONSOLA / UNITY) -->
+    <div id="mainMenuScreen" class="main-menu-overlay hidden">
+        <div class="menu-backdrop"></div>
+        <div class="menu-content">
+            <div class="game-logo-box">
+                <div class="logo-badge">9 DIMENSIONES</div>
+                <h1 class="game-main-title">ASTRO RUNNER</h1>
+                <p class="game-tagline">Una aventura espacial retro</p>
+            </div>
+
+            <!-- Botones Principales -->
+            <div class="menu-buttons-list">
+                <button id="btnPlayGame" class="menu-btn primary-btn">
+                    <span class="btn-icon">▶</span> JUGAR
+                </button>
+                <button id="btnOpenControls" class="menu-btn secondary-btn">
+                    <span class="btn-icon">🕹️</span> CONTROLES
+                </button>
+                <button id="btnOpenSettings" class="menu-btn secondary-btn">
+                    <span class="btn-icon">⚙️</span> AJUSTES
+                </button>
+            </div>
+
+            <footer class="menu-footer">
+                <span>© 2026 Hugo SP Studios · Todos los derechos reservados</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONTROLES -->
+    <div id="modalControls" class="modal-overlay hidden">
+        <div class="modal-card controls-card">
+            <div class="modal-header">
+                <h2>🕹️ GUÍA DE CONTROLES</h2>
+                <button class="close-x-btn" onclick="closeControlsModal()">✖</button>
+            </div>
+            <div class="controls-guide-grid">
+                <div class="control-guide-item">
+                    <div class="guide-keys">◀ ▶</div>
+                    <div class="guide-info">
+                        <strong>Moverse</strong>
+                        <span>Mueve a Astro a la izquierda o derecha</span>
+                    </div>
+                </div>
+                <div class="control-guide-item">
+                    <div class="guide-keys">▼</div>
+                    <div class="guide-info">
+                        <strong>Agacharse</strong>
+                        <span>Esquiva ataques o entra por tuberías</span>
+                    </div>
+                </div>
+                <div class="control-guide-item">
+                    <div class="guide-keys">[ A ] / Espacio</div>
+                    <div class="guide-info">
+                        <strong>Salto Jetpack</strong>
+                        <span>Mantén pulsado para saltar más alto</span>
+                    </div>
+                </div>
+                <div class="control-guide-item">
+                    <div class="guide-keys">[ B ] / Z</div>
+                    <div class="guide-info">
+                        <strong>Turbo / Disparo de Fuego</strong>
+                        <span>Corre más rápido o dispara al tener la flor</span>
+                    </div>
+                </div>
+            </div>
+            <button class="retro-btn" onclick="closeControlsModal()">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE AJUSTES -->
+    <div id="modalSettings" class="modal-overlay hidden">
+        <div class="modal-card settings-card">
+            <div class="modal-header">
+                <h2>⚙️ AJUSTES DEL JUEGO</h2>
+                <button class="close-x-btn" onclick="closeSettingsModal()">✖</button>
+            </div>
+            <div class="settings-options-list">
+                <div class="setting-row">
+                    <span>Música de Zelda</span>
+                    <button id="toggleMusicBtn" class="setting-toggle active" onclick="toggleMusicSetting()">ACTIVADA</button>
+                </div>
+                <div class="setting-row">
+                    <span>Efectos de sonido (SFX)</span>
+                    <button id="toggleSfxBtn" class="setting-toggle active" onclick="toggleSfxSetting()">ACTIVADOS</button>
+                </div>
+                <div class="setting-row">
+                    <span>Vibración táctil</span>
+                    <button id="toggleVibBtn" class="setting-toggle active" onclick="toggleVibSetting()">ACTIVADA</button>
+                </div>
+                <div class="setting-row danger-row">
+                    <span>Borrar progreso guardado</span>
+                    <button class="setting-danger-btn" onclick="resetSaveData()">REINICIAR</button>
+                </div>
+            </div>
+            <button class="retro-btn" onclick="closeSettingsModal()">GUARDAR Y VOLVER</button>
+        </div>
+    </div>
+
+    <!-- 3. CONTENEDOR DEL JUEGO -->
     <div id="gameContainer">
         <!-- HUD LIMPIO Y ESPACIADO EN LAS ESQUINAS -->
         <div id="hudTopLeft" class="hud-pill">
@@ -113,6 +213,7 @@
                 <p>Pulsa continuar para seguir tu aventura.</p>
                 <button class="retro-btn" onclick="togglePause()">CONTINUAR</button>
                 <button class="retro-btn secondary" onclick="openWorldSelector()">VER MAPA DE MUNDOS</button>
+                <button class="retro-btn secondary" onclick="goToMainMenu()">MENÚ PRINCIPAL</button>
             </div>
         </div>
 
@@ -132,6 +233,7 @@
                 <p>¡Te has quedado sin vidas! No te rindas, vuelve a intentarlo.</p>
                 <button class="retro-btn" onclick="restartFromBeginning()">REINTENTAR</button>
                 <button class="retro-btn secondary" onclick="openWorldSelector()">ELEGIR MUNDO</button>
+                <button class="retro-btn secondary" onclick="goToMainMenu()">MENÚ PRINCIPAL</button>
             </div>
         </div>
 
