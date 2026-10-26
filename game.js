@@ -190,13 +190,13 @@ function updateGame(dt) {
         if (Math.abs(astro.vx) < 0.1) astro.vx = 0;
     }
 
-    // Gestión de Salto con Jump Buffering y Coyote Time (salta siempre, incluso sobre bloques)
+    // Gestión de Salto con Jump Buffering y Coyote Time
     if (keys.up) {
-        jumpBuffer = 8;
+        jumpBuffer = 12;
     }
 
     if (astro.isGrounded) {
-        coyoteTimer = 6;
+        coyoteTimer = 8;
     } else if (coyoteTimer > 0) {
         coyoteTimer--;
     }
@@ -208,7 +208,6 @@ function updateGame(dt) {
             astro.isGrounded = false;
             coyoteTimer = 0;
             jumpBuffer = 0;
-            keys.up = false;
             astro.stretch = 1.35;
             astro.squash = 0.75;
             window.sounds.playJump(astro.state !== 'normal');
@@ -346,8 +345,8 @@ function checkHorizontalCollision(ent) {
 }
 
 function checkVerticalCollision(ent) {
-    const leftCol = Math.floor((ent.x + 2) / TILE_SIZE);
-    const rightCol = Math.floor((ent.x + ent.w - 2) / TILE_SIZE);
+    const leftCol = Math.floor((ent.x + 3) / TILE_SIZE);
+    const rightCol = Math.floor((ent.x + ent.w - 3) / TILE_SIZE);
     const topRow = Math.floor(ent.y / TILE_SIZE);
     const bottomRow = Math.floor((ent.y + ent.h) / TILE_SIZE);
 
@@ -358,6 +357,7 @@ function checkVerticalCollision(ent) {
                 ent.y = bottomRow * TILE_SIZE - ent.h;
                 ent.vy = 0;
                 ent.isGrounded = true;
+                coyoteTimer = 8;
                 break;
             } else if (tile === 9) {
                 if (ent === astro) killPlayer();
@@ -823,8 +823,8 @@ function render() {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 
-    // Colinas y nubes estilo Mario con ojos
-    renderMarioBackdrop();
+    // Fondo temático dinámico según el mundo (Fuego en Mundo 8, Desierto en Mundo 2, etc.)
+    renderThemedBackdrop();
 
     // Dibujar tiles
     const startCol = Math.floor(cameraX / TILE_SIZE);
@@ -900,42 +900,232 @@ function render() {
     }
 }
 
-function renderMarioBackdrop() {
+function renderThemedBackdrop() {
+    const theme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
     const bgOffset = cameraX * 0.25;
 
-    // Colinas redondeadas estilo Mario con ojos
-    ctx.fillStyle = '#4ade80';
-    for (let i = 0; i < 6; i++) {
-        const hx = ((i * 220) - bgOffset) % (VIEW_WIDTH * 2.2);
-        const hy = 192;
+    if (theme === "lava_castle") {
+        // === MUNDO 8: FONDO DE FUEGO Y VOLCANES EN ERUPCIÓN ===
+        for (let i = 0; i < 5; i++) {
+            const vx = ((i * 180) - bgOffset) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#2a0505';
+            ctx.beginPath();
+            ctx.moveTo(vx - 65, 192);
+            ctx.lineTo(vx, 70 + (i % 2) * 20);
+            ctx.lineTo(vx + 65, 192);
+            ctx.fill();
+
+            // Cráter con magma
+            ctx.fillStyle = '#ff3700';
+            ctx.beginPath();
+            ctx.ellipse(vx, 70 + (i % 2) * 20, 15, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Llamas de fuego saliendo del volcán
+            ctx.fillStyle = (i % 2 === 0) ? '#ffaa00' : '#ff2200';
+            ctx.beginPath();
+            ctx.arc(vx, 60 + (i % 2) * 20, 9, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Río de lava ardiente en el horizonte
+        ctx.fillStyle = '#ff2200';
+        ctx.fillRect(0, 186, VIEW_WIDTH, 6);
+        ctx.fillStyle = '#ffdd00';
+        ctx.fillRect(0, 187, VIEW_WIDTH, 2);
+
+        // Chispas de fuego ascendentes
+        ctx.fillStyle = '#ffcc00';
+        for (let i = 0; i < 15; i++) {
+            const fx = ((i * 47) - bgOffset * 1.8) % (VIEW_WIDTH * 2);
+            const fy = (Date.now() / 25 + i * 20) % (VIEW_HEIGHT - 60);
+            ctx.fillRect(fx, (VIEW_HEIGHT - 60) - fy, 2, 2);
+        }
+
+    } else if (theme === "desert") {
+        // === MUNDO 2: PIRÁMIDES Y DUNAS DORADAS ===
+        ctx.fillStyle = '#fef08a';
         ctx.beginPath();
-        ctx.arc(hx, hy, 55, Math.PI, 0, false);
+        ctx.arc(VIEW_WIDTH - 60, 45, 22, 0, Math.PI * 2);
         ctx.fill();
 
-        // Ojos negros de la colina
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(hx - 14, hy - 40, 3, 8);
-        ctx.fillRect(hx + 11, hy - 40, 3, 8);
-        ctx.fillStyle = '#4ade80';
-    }
+        for (let i = 0; i < 4; i++) {
+            const px = ((i * 200) - bgOffset) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#b45309';
+            ctx.beginPath();
+            ctx.moveTo(px - 70, 192);
+            ctx.lineTo(px, 85 + (i % 2) * 15);
+            ctx.lineTo(px + 70, 192);
+            ctx.fill();
 
-    // Nubes flotantes estilo Mario
-    ctx.fillStyle = '#ffffff';
-    for (let i = 0; i < 5; i++) {
-        const cx = ((i * 180) - bgOffset * 1.6) % (VIEW_WIDTH * 2);
-        const cy = 35 + (i % 2) * 25;
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.moveTo(px, 85 + (i % 2) * 15);
+            ctx.lineTo(px + 70, 192);
+            ctx.lineTo(px, 192);
+            ctx.fill();
+        }
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-        ctx.arc(cx + 14, cy - 6, 12, 0, Math.PI * 2);
-        ctx.arc(cx + 28, cy, 14, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = '#f59e0b';
+        for (let i = 0; i < 5; i++) {
+            const dx = ((i * 150) - bgOffset * 1.4) % (VIEW_WIDTH * 2);
+            ctx.beginPath();
+            ctx.arc(dx, 200, 60, Math.PI, 0, false);
+            ctx.fill();
+        }
 
-        // Ojos de la nube
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(cx + 10, cy - 2, 2, 5);
-        ctx.fillRect(cx + 16, cy - 2, 2, 5);
+    } else if (theme === "neon_cave") {
+        // === MUNDO 3: CAVERNA DE CRISTALES ===
+        ctx.fillStyle = '#1e1b4b';
+        for (let i = 0; i < 12; i++) {
+            const sx = ((i * 50) - bgOffset * 0.8) % (VIEW_WIDTH * 2);
+            ctx.beginPath();
+            ctx.moveTo(sx, 0);
+            ctx.lineTo(sx + 15, 35 + (i % 4) * 10);
+            ctx.lineTo(sx + 30, 0);
+            ctx.fill();
+        }
+        for (let i = 0; i < 10; i++) {
+            const cx = ((i * 75) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
+            const cy = 130 + (i % 3) * 15;
+            ctx.fillStyle = (i % 2 === 0) ? '#00f2fe' : '#c084fc';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + 6, cy - 18);
+            ctx.lineTo(cx + 12, cy);
+            ctx.fill();
+        }
+
+    } else if (theme === "ice") {
+        // === MUNDO 5: PICOS NEVADOS Y VENTISCA ===
+        for (let i = 0; i < 5; i++) {
+            const mx = ((i * 170) - bgOffset) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#93c5fd';
+            ctx.beginPath();
+            ctx.moveTo(mx - 65, 192);
+            ctx.lineTo(mx, 75);
+            ctx.lineTo(mx + 65, 192);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(mx - 25, 120);
+            ctx.lineTo(mx, 75);
+            ctx.lineTo(mx + 25, 120);
+            ctx.lineTo(mx, 110);
+            ctx.fill();
+        }
         ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 20; i++) {
+            const sx = ((i * 35) - bgOffset * 1.5) % (VIEW_WIDTH * 2);
+            const sy = (Date.now() / 20 + i * 25) % VIEW_HEIGHT;
+            ctx.fillRect(sx, sy, 2, 2);
+        }
+
+    } else if (theme === "spooky_forest") {
+        // === MUNDO 6: BOSQUE NOCTURNO Y LUNA ===
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(80, 50, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        for (let i = 0; i < 7; i++) {
+            const tx = ((i * 130) - bgOffset) % (VIEW_WIDTH * 2);
+            ctx.fillRect(tx + 20, 120, 10, 72);
+            ctx.beginPath();
+            ctx.arc(tx + 25, 120, 28, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+    } else if (theme === "ocean") {
+        // === MUNDO 4: OCÉANO TROPICAL Y PALMERAS ===
+        ctx.fillStyle = '#0284c7';
+        for (let i = 0; i < 8; i++) {
+            const ox = ((i * 90) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
+            ctx.beginPath();
+            ctx.arc(ox, 185, 30, Math.PI, 0, false);
+            ctx.fill();
+        }
+        for (let i = 0; i < 3; i++) {
+            const ix = ((i * 250) - bgOffset * 0.8) % (VIEW_WIDTH * 2);
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.ellipse(ix, 185, 35, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.arc(ix, 155, 16, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+    } else if (theme === "airship") {
+        // === MUNDO 7: FLOTA CELESTIAL Y NAVES ===
+        ctx.fillStyle = '#ea580c';
+        for (let i = 0; i < 6; i++) {
+            const cx = ((i * 160) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
+            ctx.beginPath();
+            ctx.arc(cx, 160, 45, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#7c2d12';
+        for (let i = 0; i < 3; i++) {
+            const ax = ((i * 240) - bgOffset * 0.6) % (VIEW_WIDTH * 2);
+            ctx.beginPath();
+            ctx.ellipse(ax, 70 + i * 25, 32, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+    } else if (theme === "space") {
+        // === MUNDO 9: REINO CÓSMICO ESTELAR ===
+        ctx.fillStyle = '#8b5cf6';
+        ctx.beginPath();
+        ctx.arc(VIEW_WIDTH - 70, 60, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(VIEW_WIDTH - 70, 60, 36, 8, -0.4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 35; i++) {
+            const sx = ((i * 37) - bgOffset * 0.4) % (VIEW_WIDTH * 2);
+            const sy = (i * 23) % (VIEW_HEIGHT - 60);
+            ctx.fillRect(sx, sy, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
+        }
+
+    } else {
+        // === MUNDO 1: COLINAS VERDES ESTILO MARIO CLÁSICO ===
+        ctx.fillStyle = '#4ade80';
+        for (let i = 0; i < 6; i++) {
+            const hx = ((i * 220) - bgOffset) % (VIEW_WIDTH * 2.2);
+            const hy = 192;
+            ctx.beginPath();
+            ctx.arc(hx, hy, 55, Math.PI, 0, false);
+            ctx.fill();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(hx - 14, hy - 40, 3, 8);
+            ctx.fillRect(hx + 11, hy - 40, 3, 8);
+            ctx.fillStyle = '#4ade80';
+        }
+
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 5; i++) {
+            const cx = ((i * 180) - bgOffset * 1.6) % (VIEW_WIDTH * 2);
+            const cy = 35 + (i % 2) * 25;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+            ctx.arc(cx + 14, cy - 6, 12, 0, Math.PI * 2);
+            ctx.arc(cx + 28, cy, 14, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(cx + 10, cy - 2, 2, 5);
+            ctx.fillRect(cx + 16, cy - 2, 2, 5);
+            ctx.fillStyle = '#ffffff';
+        }
     }
 }
 
@@ -1462,23 +1652,38 @@ function setupControls() {
         const el = document.getElementById(elId);
         if (!el) return;
 
-        const handleStart = (e) => {
-            e.preventDefault();
+        let isDown = false;
+
+        const press = (e) => {
+            if (e) e.preventDefault();
+            if (isDown) return;
+            isDown = true;
             window.sounds.init();
-            if (navigator.vibrate) navigator.vibrate(15);
+            if (navigator.vibrate && vibrationEnabled) navigator.vibrate(15);
             onDown();
         };
 
-        const handleEnd = (e) => {
-            e.preventDefault();
+        const release = (e) => {
+            if (e) e.preventDefault();
+            if (!isDown) return;
+            isDown = false;
             onUp();
         };
 
-        el.addEventListener('touchstart', handleStart, { passive: false });
-        el.addEventListener('touchend', handleEnd, { passive: false });
-        el.addEventListener('mousedown', handleStart);
-        el.addEventListener('mouseup', handleEnd);
-        el.addEventListener('mouseleave', handleEnd);
+        el.addEventListener('pointerdown', (e) => {
+            try { el.setPointerCapture(e.pointerId); } catch(err) {}
+            press(e);
+        });
+        el.addEventListener('pointerup', release);
+        el.addEventListener('pointercancel', release);
+
+        el.addEventListener('touchstart', press, { passive: false });
+        el.addEventListener('touchend', release, { passive: false });
+        el.addEventListener('touchcancel', release, { passive: false });
+
+        el.addEventListener('mousedown', press);
+        el.addEventListener('mouseup', release);
+        el.addEventListener('mouseleave', release);
     };
 
     bindTouch('btnLeft', () => keys.left = true, () => keys.left = false);
@@ -1486,8 +1691,10 @@ function setupControls() {
     bindTouch('btnDown', () => keys.down = true, () => keys.down = false);
     bindTouch('btnA', () => {
         keys.up = true;
-        jumpBuffer = 10;
-    }, () => keys.up = false);
+        jumpBuffer = 12;
+    }, () => {
+        keys.up = false;
+    });
     bindTouch('btnB', () => {
         keys.actionB = true;
         keys.actionPressedOnce = true;
