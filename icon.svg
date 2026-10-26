@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="spaceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo espacial -->
+  <rect width="512" height="512" rx="110" fill="url(#spaceGrad)"/>
+  <rect width="512" height="512" rx="110" fill="none" stroke="url(#neonCyan)" stroke-width="14"/>
+
+  <!-- Estrellas de fondo -->
+  <circle cx="80" cy="90" r="3" fill="#fff" opacity="0.8"/>
+  <circle cx="430" cy="110" r="4" fill="#00f2fe" opacity="0.7"/>
+  <circle cx="100" cy="380" r="3" fill="#38bdf8" opacity="0.6"/>
+  <circle cx="420" cy="370" r="4" fill="#fff" opacity="0.8"/>
+
+  <!-- Casco de Astro -->
+  <circle cx="256" cy="220" r="110" fill="#f8fafc" stroke="#38bdf8" stroke-width="10"/>
+  
+  <!-- Antena de comunicaciones -->
+  <rect x="250" y="70" width="12" height="42" fill="#0284c7" rx="6"/>
+  <circle cx="256" cy="65" r="16" fill="#00f2fe"/>
+
+  <!-- Visor Cyber de Neón -->
+  <rect x="180" y="180" width="152" height="80" rx="40" fill="#090d16" stroke="#00f2fe" stroke-width="8"/>
+  <ellipse cx="256" cy="220" rx="60" ry="24" fill="#00f2fe" opacity="0.35"/>
+  <rect x="200" y="214" width="112" height="12" rx="6" fill="#00f2fe"/>
+
+  <!-- Texto del juego -->
+  <text x="256" y="390" font-family="'Courier New', monospace" font-size="44" font-weight="900" fill="#00f2fe" text-anchor="middle" letter-spacing="2">ASTRO RUNNER</text>
+  <text x="256" y="440" font-family="'Courier New', monospace" font-size="24" font-weight="bold" fill="#f8fafc" text-anchor="middle" opacity="0.85">9 DIMENSIONS</text>
+</svg>

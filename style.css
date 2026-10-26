@@ -1,0 +1,425 @@
+/* style.css - Astro Runner: 9 Dimensions (Estilo móvil y arcade espacial) */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #050814;
+    font-family: 'Courier New', Courier, monospace;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 960px;
+    max-height: 540px;
+    background-color: #000000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 35px rgba(0, 242, 254, 0.25);
+    overflow: hidden;
+}
+
+/* Barra superior HUD Cyber */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 38px;
+    background: linear-gradient(180deg, rgba(5, 8, 20, 0.95) 0%, rgba(5, 8, 20, 0.4) 100%);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10;
+    padding: 0 10px;
+    pointer-events: none;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #00f2fe;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(0, 242, 254, 0.6);
+}
+
+.hud-val {
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+
+/* Botones de menú superior */
+#topBarButtons {
+    position: absolute;
+    top: 42px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 12;
+}
+
+.icon-btn {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1.5px solid #00f2fe;
+    color: #fff;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: transform 0.1s, background 0.2s;
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+}
+
+.icon-btn:active {
+    transform: scale(0.92);
+    background: #00f2fe;
+    color: #000;
+}
+
+/* Canvas del juego */
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background-color: #050814;
+}
+
+/* Controles táctiles virtuales */
+#touchControls {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    height: 130px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 20px 10px 20px;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.touch-btn {
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    border: none;
+    outline: none;
+    border-radius: 50%;
+    color: #ffffff;
+    font-family: inherit;
+    font-weight: 900;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7), inset 0 2px 5px rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+}
+
+.touch-btn:active {
+    filter: brightness(1.35);
+    transform: translateY(4px);
+}
+
+/* D-Pad izquierdo */
+.dpad-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dpad-btn {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    border: 2px solid #38bdf8;
+    color: #38bdf8;
+    font-size: 24px;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.dpad-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dpad-down {
+    width: 52px;
+    height: 52px;
+    margin-top: 15px;
+    font-size: 18px;
+}
+
+/* Botones de acción derechos (A y B) */
+.action-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.action-btn {
+    width: 66px;
+    height: 66px;
+}
+
+.btn-fire {
+    background: radial-gradient(circle, #9333ea 0%, #6b21a8 100%);
+    border: 3px solid #c084fc;
+    box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
+    margin-top: 25px;
+}
+
+.btn-jump {
+    background: radial-gradient(circle, #0284c7 0%, #0369a1 100%);
+    border: 3px solid #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.btn-text {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.btn-subtext {
+    font-size: 8px;
+    text-transform: uppercase;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+}
+
+/* Modales Cyber */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 25;
+}
+
+.modal-overlay.hidden {
+    display: none !important;
+}
+
+.modal-card {
+    background: #0f172a;
+    border: 3px solid #00f2fe;
+    border-radius: 14px;
+    padding: 24px;
+    width: 90%;
+    max-width: 560px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+    overflow-y: auto;
+}
+
+.modal-card h2 {
+    color: #00f2fe;
+    font-size: 20px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.7);
+}
+
+.modal-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-x-btn {
+    background: none;
+    border: none;
+    color: #00f2fe;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.retro-btn {
+    background: #0284c7;
+    border: 2px solid #38bdf8;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    transition: transform 0.1s;
+}
+
+.retro-btn:active {
+    transform: scale(0.95);
+    background: #0369a1;
+}
+
+.retro-btn.secondary {
+    background: #1e293b;
+    border-color: #64748b;
+    box-shadow: none;
+}
+
+/* Modal Mapa de Dimensiones */
+.worlds-scroll-list {
+    width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 6px;
+}
+
+.world-card {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: left;
+}
+
+.world-card.unlocked {
+    border-color: #00f2fe;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+.world-card.locked {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+}
+
+.world-header h3 {
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.world-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.boss-tag {
+    font-size: 11px;
+    color: #f43f5e;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.levels-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.lvl-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 2px solid #fff;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.lvl-btn.active {
+    background: #0284c7;
+    color: #fff;
+}
+
+.lvl-btn.boss-btn.active {
+    background: #e11d48;
+    border-color: #f43f5e;
+    box-shadow: 0 0 8px rgba(225, 29, 72, 0.6);
+}
+
+.lvl-btn.disabled {
+    background: #0f172a;
+    color: #475569;
+    border-color: #334155;
+    cursor: not-allowed;
+}
+
+.trophy-icon {
+    font-size: 42px;
+    animation: bounce 0.8s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}
+
+@media (max-width: 600px) {
+    #hud {
+        height: 32px;
+    }
+    .hud-label {
+        font-size: 8px;
+    }
+    .hud-val {
+        font-size: 11px;
+    }
+    .dpad-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 20px;
+    }
+    .action-btn {
+        width: 56px;
+        height: 56px;
+    }
+    .btn-text {
+        font-size: 18px;
+    }
+}
