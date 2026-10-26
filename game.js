@@ -51,6 +51,16 @@ let isGameOver = false;
 let isStageClear = false;
 let victoryCoreDropped = null;
 
+// Animación cinematográfica de la bandera de meta
+let flagPoleAnimation = {
+    active: false,
+    timer: 0,
+    flagY: 0,
+    targetFlagY: 0,
+    astroSliding: false,
+    astroWalkingToCastle: false
+};
+
 // Protagonista: Astro (Explorador Galáctico)
 const astro = {
     x: 64,
@@ -60,7 +70,7 @@ const astro = {
     vx: 0,
     vy: 0,
     speed: 3.0,
-    jumpForce: -8.6,
+    jumpForce: -9.8, // Salto súper ágil y alto para subir fácilmente a cualquier bloque o tubería
     isGrounded: false,
     facing: 'right',
     state: 'normal', // 'normal', 'super', 'plasma'
@@ -118,6 +128,9 @@ function loadLevel(worldNum, levelNum) {
     timeAccumulator = 0;
     isStageClear = false;
     victoryCoreDropped = null;
+    flagPoleAnimation.active = false;
+    flagPoleAnimation.astroSliding = false;
+    flagPoleAnimation.astroWalkingToCastle = false;
 
     activeEnemies = JSON.parse(JSON.stringify(levelData.enemies));
     activeCrystals = JSON.parse(JSON.stringify(levelData.coins));
@@ -152,6 +165,13 @@ function updateUI() {
 // ==========================================
 function updateGame(dt) {
     if (isPaused || isGameOver || isStageClear || !gameStartedFromMenu) return;
+
+    // Si la secuencia de la bandera de meta está en marcha
+    if (flagPoleAnimation.active) {
+        updateFlagPoleSequence();
+        updateParticles();
+        return;
+    }
 
     timeAccumulator += dt;
     if (timeAccumulator >= 1.0) {
@@ -192,11 +212,11 @@ function updateGame(dt) {
 
     // Gestión de Salto con Jump Buffering y Coyote Time
     if (keys.up) {
-        jumpBuffer = 12;
+        jumpBuffer = 14;
     }
 
     if (astro.isGrounded) {
-        coyoteTimer = 8;
+        coyoteTimer = 10;
     } else if (coyoteTimer > 0) {
         coyoteTimer--;
     }
@@ -215,8 +235,8 @@ function updateGame(dt) {
         }
     }
 
-    // Gravedad suave estilo Mario
-    astro.vy += 0.44;
+    // Gravedad ágil y ligera estilo Mario 64 / Galaxy
+    astro.vy += 0.40;
     if (astro.vy > 8.5) astro.vy = 8.5;
 
     // Techo de pantalla (para no perderse fuera por arriba)
@@ -287,9 +307,12 @@ function updateGame(dt) {
 
     checkCrystalCollisions();
 
-    // Mástil de meta
-    if (!levelData.isBossLevel && astro.x >= levelData.flagX) {
-        triggerStageClear(false);
+    // Mástil de meta: comprobación fluida y generosa (al tocar el mástil o la base)
+    if (!levelData.isBossLevel && !flagPoleAnimation.active && !isStageClear) {
+        const flagReachX = levelData.flagX - 12;
+        if (astro.x + astro.w >= flagReachX) {
+            startFlagPoleSequence();
+        }
     }
 
     // Llave / Hiper-Núcleo del Boss
@@ -298,6 +321,90 @@ function updateGame(dt) {
     }
 
     updateParticles();
+}
+
+// ==========================================
+// SECUENCIA CINEMATOGRÁFICA DE META (ESTILO SUPER MARIO BROS)
+// ==========================================
+function startFlagPoleSequence() {
+    flagPoleAnimation.active = true;
+    flagPoleAnimation.timer = 0;
+    flagPoleAnimation.astroSliding = true;
+    flagPoleAnimation.astroWalkingToCastle = false;
+    flagPoleAnimation.flagY = (6 - 5) * 32 + 4; // Inicio en la cima del mástil
+    flagPoleAnimation.targetFlagY = (6 - 1) * 32 - 12; // Base del mástil
+
+    astro.vx = 0;
+    astro.vy = 0;
+    astro.x = levelData.flagX - 10; // Abrazado al mástil
+    score += 5000;
+    updateUI();
+
+    window.sounds.playStageClear();
+}
+
+function updateFlagPoleSequence() {
+    flagPoleAnimation.timer++;
+
+    if (flagPoleAnimation.astroSliding) {
+        // Astro se desliza suavemente por el mástil
+        astro.y += 2.2;
+        if (flagPoleAnimation.flagY < flagPoleAnimation.targetFlagY) {
+            flagPoleAnimation.flagY += 2.2;
+        }
+
+        // Chispas resplandecientes al deslizarse por el mástil
+        if (flagPoleAnimation.timer % 3 === 0) {
+            particles.push({
+                x: levelData.flagX + 8,
+                y: astro.y + astro.h,
+                vx: (Math.random() - 0.5) * 2,
+                vy: -Math.random() * 2,
+                color: '#fbbf24',
+                life: 18,
+                size: 3
+            });
+        }
+
+        const groundLevelY = (6 - 1) * 32;
+        if (astro.y >= groundLevelY) {
+            astro.y = groundLevelY;
+            flagPoleAnimation.astroSliding = false;
+            flagPoleAnimation.astroWalkingToCastle = true;
+            // Salto triunfal hacia la derecha
+            astro.x = levelData.flagX + 16;
+            astro.vy = -3.2;
+            astro.stretch = 1.25;
+
+            // Gran estallido de fuegos artificiales de Hugo SP Studios
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x: levelData.flagX + 16,
+                    y: astro.y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: -Math.random() * 4 - 1.5,
+                    color: ['#f59e0b', '#22c55e', '#38bdf8', '#ef4444', '#ec4899', '#fef08a'][i % 6],
+                    life: 40,
+                    size: 4
+                });
+            }
+        }
+    } else if (flagPoleAnimation.astroWalkingToCastle) {
+        // Astro camina triunfalmente hacia la puerta del castillo
+        astro.x += 1.8;
+        astro.facing = 'right';
+        astro.animTimer++;
+        if (astro.animTimer % 5 === 0) {
+            astro.animFrame = (astro.animFrame + 1) % 4;
+        }
+
+        // Al entrar en la puerta del castillo
+        const castleDoorX = (levelData.castleX || (levelData.mapWidth - 5) * 32) + 16;
+        if (astro.x >= castleDoorX) {
+            flagPoleAnimation.active = false;
+            triggerStageClear(false);
+        }
+    }
 }
 
 function getTileAt(col, row) {
@@ -837,9 +944,12 @@ function render() {
 
             const drawX = Math.floor(c * TILE_SIZE - cameraX);
             const drawY = r * TILE_SIZE;
-            drawMarioTile(tile, drawX, drawY);
+            drawMarioTile(tile, drawX, drawY, c, r);
         }
     }
+
+    // Bandera ondeando al viento con la estrella de Hugo SP Studios
+    renderWavingFlag();
 
     // Monedas
     for (let coin of activeCrystals) {
@@ -905,41 +1015,77 @@ function renderThemedBackdrop() {
     const bgOffset = cameraX * 0.25;
 
     if (theme === "lava_castle") {
-        // === MUNDO 8: FONDO DE FUEGO Y VOLCANES EN ERUPCIÓN ===
-        for (let i = 0; i < 5; i++) {
-            const vx = ((i * 180) - bgOffset) % (VIEW_WIDTH * 2.2);
-            ctx.fillStyle = '#2a0505';
+        // === MUNDO 8: FORTALEZA DE FUEGO, LAVA Y MAGMA ===
+        // Cielo ardiente con resplandor volcánico profundo
+        const lavaSky = ctx.createLinearGradient(0, 0, 0, 192);
+        lavaSky.addColorStop(0, '#150202');
+        lavaSky.addColorStop(0.5, '#450a0a');
+        lavaSky.addColorStop(1, '#7f1d1d');
+        ctx.fillStyle = lavaSky;
+        ctx.fillRect(0, 0, VIEW_WIDTH, 192);
+
+        // Volcanes colosales lejanos con ríos de magma
+        for (let i = 0; i < 4; i++) {
+            const vx = ((i * 170) - bgOffset * 0.5) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#260404';
             ctx.beginPath();
-            ctx.moveTo(vx - 65, 192);
-            ctx.lineTo(vx, 70 + (i % 2) * 20);
-            ctx.lineTo(vx + 65, 192);
+            ctx.moveTo(vx - 85, 192);
+            ctx.lineTo(vx, 55 + (i % 2) * 20);
+            ctx.lineTo(vx + 85, 192);
             ctx.fill();
 
-            // Cráter con magma
-            ctx.fillStyle = '#ff3700';
+            // Cráter ardiente con lava hirviente
+            ctx.fillStyle = '#dc2626';
             ctx.beginPath();
-            ctx.ellipse(vx, 70 + (i % 2) * 20, 15, 5, 0, 0, Math.PI * 2);
+            ctx.ellipse(vx, 55 + (i % 2) * 20, 18, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.ellipse(vx, 55 + (i % 2) * 20, 10, 3, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Llamas de fuego saliendo del volcán
-            ctx.fillStyle = (i % 2 === 0) ? '#ffaa00' : '#ff2200';
+            // Cascada de lava bajando por la ladera del volcán
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
-            ctx.arc(vx, 60 + (i % 2) * 20, 9, 0, Math.PI * 2);
+            ctx.moveTo(vx, 58 + (i % 2) * 20);
+            ctx.quadraticCurveTo(vx + 14, 115, vx + 22, 192);
+            ctx.stroke();
+        }
+
+        // Volcanes cercanos de relieve
+        for (let i = 0; i < 3; i++) {
+            const vx = ((i * 220 + 70) - bgOffset * 0.85) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#3f0707';
+            ctx.beginPath();
+            ctx.moveTo(vx - 70, 192);
+            ctx.lineTo(vx, 75);
+            ctx.lineTo(vx + 70, 192);
+            ctx.fill();
+
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.ellipse(vx, 75, 16, 4, 0, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Río de lava ardiente en el horizonte
-        ctx.fillStyle = '#ff2200';
-        ctx.fillRect(0, 186, VIEW_WIDTH, 6);
-        ctx.fillStyle = '#ffdd00';
-        ctx.fillRect(0, 187, VIEW_WIDTH, 2);
+        // Lago de lava ardiente en el horizonte
+        const lavaGrad = ctx.createLinearGradient(0, 184, 0, 192);
+        lavaGrad.addColorStop(0, '#fbbf24');
+        lavaGrad.addColorStop(0.35, '#ea580c');
+        lavaGrad.addColorStop(1, '#7f1d1d');
+        ctx.fillStyle = lavaGrad;
+        ctx.fillRect(0, 184, VIEW_WIDTH, 8);
 
-        // Chispas de fuego ascendentes
-        ctx.fillStyle = '#ffcc00';
-        for (let i = 0; i < 15; i++) {
-            const fx = ((i * 47) - bgOffset * 1.8) % (VIEW_WIDTH * 2);
-            const fy = (Date.now() / 25 + i * 20) % (VIEW_HEIGHT - 60);
-            ctx.fillRect(fx, (VIEW_HEIGHT - 60) - fy, 2, 2);
+        // Chispas de fuego y brasas incandescentes flotando en el aire
+        const now = Date.now();
+        for (let i = 0; i < 26; i++) {
+            const sx = ((i * 37 + Math.sin(now / 500 + i) * 15) - bgOffset * 1.5) % VIEW_WIDTH;
+            const drawSx = (sx < 0) ? sx + VIEW_WIDTH : sx;
+            const sy = (VIEW_HEIGHT - 60) - ((now / 18 + i * 26) % (VIEW_HEIGHT - 40));
+            ctx.fillStyle = (i % 3 === 0) ? '#fef08a' : ((i % 2 === 0) ? '#f97316' : '#ef4444');
+            const sparkSize = (i % 4 === 0) ? 3 : 2;
+            ctx.fillRect(drawSx, sy, sparkSize, sparkSize);
         }
 
     } else if (theme === "desert") {
@@ -975,7 +1121,7 @@ function renderThemedBackdrop() {
         }
 
     } else if (theme === "neon_cave") {
-        // === MUNDO 3: CAVERNA DE CRISTALES ===
+        // === MUNDO 3: CAVERNA DE CRISTALES NEÓN ===
         ctx.fillStyle = '#1e1b4b';
         for (let i = 0; i < 12; i++) {
             const sx = ((i * 50) - bgOffset * 0.8) % (VIEW_WIDTH * 2);
@@ -1096,19 +1242,27 @@ function renderThemedBackdrop() {
         }
 
     } else {
-        // === MUNDO 1: COLINAS VERDES ESTILO MARIO CLÁSICO ===
-        ctx.fillStyle = '#4ade80';
-        for (let i = 0; i < 6; i++) {
-            const hx = ((i * 220) - bgOffset) % (VIEW_WIDTH * 2.2);
-            const hy = 192;
+        // === MUNDO 1: COLINAS VERDES SUPER MARIO ===
+        ctx.fillStyle = '#86efac';
+        for (let i = 0; i < 4; i++) {
+            const hx = ((i * 240) - bgOffset * 0.4) % (VIEW_WIDTH * 2.2);
             ctx.beginPath();
-            ctx.arc(hx, hy, 55, Math.PI, 0, false);
+            ctx.arc(hx, 192, 85, Math.PI, 0, false);
+            ctx.fill();
+        }
+
+        ctx.fillStyle = '#22c55e';
+        for (let i = 0; i < 5; i++) {
+            const hx = ((i * 180 + 60) - bgOffset * 0.8) % (VIEW_WIDTH * 2.2);
+            ctx.beginPath();
+            ctx.arc(hx, 192, 55, Math.PI, 0, false);
             ctx.fill();
 
+            // Ojos negros de las colinas (sello inconfundible de Mario)
             ctx.fillStyle = '#0f172a';
-            ctx.fillRect(hx - 14, hy - 40, 3, 8);
-            ctx.fillRect(hx + 11, hy - 40, 3, 8);
-            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(hx - 12, 155, 3, 9);
+            ctx.fillRect(hx + 9, 155, 3, 9);
+            ctx.fillStyle = '#22c55e';
         }
 
         ctx.fillStyle = '#ffffff';
@@ -1130,9 +1284,48 @@ function renderThemedBackdrop() {
 }
 
 // ==========================================
+// BANDERA DE META ONDEANDO AL VIENTO (HUGO SP STUDIOS)
+// ==========================================
+function renderWavingFlag() {
+    if (!levelData || levelData.isBossLevel) return;
+    const flagPoleX = levelData.flagX - cameraX;
+    if (flagPoleX < -60 || flagPoleX > VIEW_WIDTH + 60) return;
+
+    const currentY = flagPoleAnimation.active ? flagPoleAnimation.flagY : ((6 - 5) * 32 + 4);
+    const poleRight = flagPoleX + 16;
+
+    const time = Date.now();
+    const wave1 = Math.sin(time / 140) * 3.5;
+    const wave2 = Math.cos(time / 120) * 2.5;
+
+    ctx.save();
+    // Tela verde ondeante de la bandera
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.moveTo(poleRight, currentY);
+    ctx.lineTo(poleRight + 26, currentY + 10 + wave1);
+    ctx.lineTo(poleRight, currentY + 20 + wave2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ribete dorado resplandeciente
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Estrella dorada de Hugo SP Studios en el centro
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(poleRight + 9, currentY + 10 + wave1 * 0.4, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// ==========================================
 // DIBUJO DE TILES ESTILO MARIO BROS
 // ==========================================
-function drawMarioTile(tile, x, y) {
+function drawMarioTile(tile, x, y, c, r) {
     if (tile === 1) {
         // SUELO CON HIERBA VERDE VIBRANTE Y TIERRA (ESTILO SUPER MARIO BROS)
         // Fondo de tierra marrón rica
@@ -1216,41 +1409,71 @@ function drawMarioTile(tile, x, y) {
         ctx.fillText('?', x + 9, y + 24);
 
     } else if (tile >= 5 && tile <= 8) {
-        // TUBERÍAS VERDES BRILLANTES ESTILO MARIO 3D
+        // TUBERÍAS VERDES COMPACTAS Y BAJAS (FÁCILES DE SALTAR)
+        const pipeY = y + 6; // Altura reducida y compacta (26px) para saltar comodísimo
+        const pipeH = TILE_SIZE - 6;
         ctx.fillStyle = '#16a34a';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.fillRect(x, pipeY, TILE_SIZE, pipeH);
+
+        // Borde superior o collar de la tubería
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(x, pipeY, TILE_SIZE, 6);
 
         // Brillo reflectante blanco vertical
         ctx.fillStyle = '#86efac';
-        ctx.fillRect(x + 6, y, 4, TILE_SIZE);
+        ctx.fillRect(x + 5, pipeY, 4, pipeH);
 
         // Sombra lateral
         ctx.fillStyle = '#14532d';
-        ctx.fillRect(x + TILE_SIZE - 5, y, 5, TILE_SIZE);
+        ctx.fillRect(x + TILE_SIZE - 5, pipeY, 5, pipeH);
 
         ctx.strokeStyle = '#052e16';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.strokeRect(x, pipeY, TILE_SIZE, pipeH);
 
     } else if (tile === 10) {
-        // MÁSTIL DE META
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(x + 14, y, 4, TILE_SIZE);
-        // Bola dorada en la punta
-        ctx.fillStyle = '#fbbf24';
+        // MÁSTIL DE META (TILE 10)
+        // Poste metálico plateado elegante con reflejo
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(x + 13, y, 6, TILE_SIZE);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(x + 15, y, 2, TILE_SIZE);
+
+        // Bola dorada superior (solo en la cima del mástil, fila r === 1)
+        if (r === 1) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(x + 16, y + 4, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x + 14, y + 2, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Pedestal de piedra esculpida en la base (solo en fila r === 5)
+        if (r === 5) {
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(x + 5, y + 14, 22, 18);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(x + 6, y + 14, 20, 3);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + 5, y + 14, 22, 18);
+        }
+
+    } else if (tile === 11) {
+        // PUERTA DEL CASTILLO (ARCO ABIERTO PARA ENTRAR A LA META)
+        ctx.fillStyle = '#020617';
         ctx.beginPath();
-        ctx.arc(x + 16, y + 2, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Bandera verde
-        ctx.fillStyle = '#22c55e';
-        ctx.beginPath();
-        ctx.moveTo(x + 14, y + 6);
-        ctx.lineTo(x - 8, y + 14);
-        ctx.lineTo(x + 14, y + 22);
+        ctx.arc(x + 16, y + 16, 14, Math.PI, 0, false);
+        ctx.lineTo(x + 30, y + 32);
+        ctx.lineTo(x + 2, y + 32);
+        ctx.closePath();
         ctx.fill();
 
     } else if (tile === 12) {
-        // BLOQUE GASTADO / PIEDRA DURA
+        // BLOQUE GASTADO / PIEDRA DURA DE CASTILLO
         ctx.fillStyle = '#64748b';
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
         ctx.strokeStyle = '#334155';
@@ -1573,31 +1796,50 @@ function openWorldSelector() {
     const list = document.getElementById('worldsList');
     list.innerHTML = '';
 
+    const banner = document.createElement('div');
+    banner.style.cssText = "background: rgba(30, 41, 59, 0.85); padding: 10px 14px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #475569;";
+    banner.innerHTML = `
+        <span style="font-size: 13px; color: #cbd5e1;">🎮 Toca cualquier nivel para jugar inmediatamente a ese mundo.</span>
+        <button id="btnCheatAll" class="retro-btn" style="padding: 6px 12px; font-size: 11px; background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid #fef08a;" onclick="unlockAllWorldsCheat()">⭐ DESBLOQUEAR TODOS (1-9)</button>
+    `;
+    list.appendChild(banner);
+
+    const worldEmojis = {
+        1: "🌿",
+        2: "🏜️",
+        3: "🔮",
+        4: "🏝️",
+        5: "❄️",
+        6: "🌲",
+        7: "⚓",
+        8: "🔥",
+        9: "🚀"
+    };
+
     WORLDS_CONFIG.forEach(w => {
-        const isUnlocked = w.id <= saveState.unlockedWorld;
         const item = document.createElement('div');
-        item.className = `world-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+        item.className = 'world-card unlocked';
+        item.style.borderLeft = `5px solid ${w.bossColor || '#38bdf8'}`;
 
         let levelsHtml = '';
         for (let lvl = 1; lvl <= 8; lvl++) {
-            const isLvlUnlocked = (w.id < saveState.unlockedWorld) ||
-                                  (w.id === saveState.unlockedWorld && lvl <= saveState.unlockedLevel);
             const isBoss = lvl === 8;
             levelsHtml += `
-                <button class="lvl-btn ${isLvlUnlocked ? 'active' : 'disabled'} ${isBoss ? 'boss-btn' : ''}"
-                        ${isLvlUnlocked ? `onclick="selectLevel(${w.id}, ${lvl})"` : 'disabled'}>
-                    ${isBoss ? '👑' : lvl}
+                <button class="lvl-btn active ${isBoss ? 'boss-btn' : ''}"
+                        onclick="selectLevel(${w.id}, ${lvl})">
+                    ${isBoss ? '👑 Boss' : lvl}
                 </button>
             `;
         }
 
+        const emoji = worldEmojis[w.id] || "⭐";
         item.innerHTML = `
             <div class="world-header">
-                <h3>Mundo ${w.id}: ${w.name} ${isUnlocked ? '' : '🔒'}</h3>
-                <span class="world-desc">${w.description}</span>
-                <span class="boss-tag">Boss final: <strong>${w.bossName}</strong></span>
+                <h3 style="color: ${w.bossColor || '#f8fafc'}; font-size: 15px; margin: 0 0 4px 0;">${emoji} Mundo ${w.id}: ${w.name}</h3>
+                <span class="world-desc" style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px;">${w.description}</span>
+                <span class="boss-tag" style="font-size: 11px; color: #fbbf24;">Boss del mundo: <strong>${w.bossName}</strong></span>
             </div>
-            <div class="levels-row">
+            <div class="levels-row" style="margin-top: 8px;">
                 ${levelsHtml}
             </div>
         `;
@@ -1607,6 +1849,13 @@ function openWorldSelector() {
     modal.classList.remove('hidden');
 }
 
+function unlockAllWorldsCheat() {
+    saveState.unlockedWorld = 9;
+    saveState.unlockedLevel = 8;
+    saveProgress(saveState);
+    openWorldSelector();
+}
+
 function closeWorldSelector() {
     document.getElementById('modalWorldSelect').classList.add('hidden');
     isPaused = false;
@@ -1614,7 +1863,13 @@ function closeWorldSelector() {
 
 function selectLevel(world, level) {
     closeWorldSelector();
+    const mainMenu = document.getElementById('mainMenuScreen');
+    if (mainMenu) mainMenu.classList.add('hidden');
+    gameStartedFromMenu = true;
+    isPaused = false;
     loadLevel(world, level);
+    window.sounds.init();
+    window.sounds.startMusic(world, level === 8);
 }
 
 // ==========================================
@@ -1627,7 +1882,7 @@ function setupControls() {
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
         if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') {
             keys.up = true;
-            jumpBuffer = 10;
+            jumpBuffer = 14;
         }
         if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = true;
         if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'KeyJ') {
@@ -1652,30 +1907,27 @@ function setupControls() {
         const el = document.getElementById(elId);
         if (!el) return;
 
-        let isDown = false;
-
         const press = (e) => {
-            if (e) e.preventDefault();
-            if (isDown) return;
-            isDown = true;
+            if (e) {
+                if (e.cancelable) e.preventDefault();
+                e.stopPropagation();
+            }
             window.sounds.init();
             if (navigator.vibrate && vibrationEnabled) navigator.vibrate(15);
             onDown();
         };
 
         const release = (e) => {
-            if (e) e.preventDefault();
-            if (!isDown) return;
-            isDown = false;
+            if (e) {
+                if (e.cancelable) e.preventDefault();
+                e.stopPropagation();
+            }
             onUp();
         };
 
-        el.addEventListener('pointerdown', (e) => {
-            try { el.setPointerCapture(e.pointerId); } catch(err) {}
-            press(e);
-        });
-        el.addEventListener('pointerup', release);
-        el.addEventListener('pointercancel', release);
+        el.addEventListener('pointerdown', press, { passive: false });
+        el.addEventListener('pointerup', release, { passive: false });
+        el.addEventListener('pointercancel', release, { passive: false });
 
         el.addEventListener('touchstart', press, { passive: false });
         el.addEventListener('touchend', release, { passive: false });
@@ -1683,15 +1935,37 @@ function setupControls() {
 
         el.addEventListener('mousedown', press);
         el.addEventListener('mouseup', release);
-        el.addEventListener('mouseleave', release);
     };
+
+    // Reseteo global para que NUNCA se quede pegado ningún botón
+    window.addEventListener('pointerup', () => {
+        keys.left = false;
+        keys.right = false;
+        keys.up = false;
+        keys.down = false;
+        keys.actionB = false;
+    });
+    window.addEventListener('touchend', () => {
+        keys.left = false;
+        keys.right = false;
+        keys.up = false;
+        keys.down = false;
+        keys.actionB = false;
+    });
+    window.addEventListener('touchcancel', () => {
+        keys.left = false;
+        keys.right = false;
+        keys.up = false;
+        keys.down = false;
+        keys.actionB = false;
+    });
 
     bindTouch('btnLeft', () => keys.left = true, () => keys.left = false);
     bindTouch('btnRight', () => keys.right = true, () => keys.right = false);
     bindTouch('btnDown', () => keys.down = true, () => keys.down = false);
     bindTouch('btnA', () => {
         keys.up = true;
-        jumpBuffer = 12;
+        jumpBuffer = 14;
     }, () => {
         keys.up = false;
     });
@@ -1770,6 +2044,12 @@ function setupGameFlow() {
         window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
     };
 
+    const worldSelectAction = (e) => {
+        if (e) e.preventDefault();
+        window.sounds.init();
+        openWorldSelector();
+    };
+
     const controlsAction = (e) => {
         if (e) e.preventDefault();
         window.sounds.init();
@@ -1785,6 +2065,12 @@ function setupGameFlow() {
     const btnPlay = document.getElementById('btnPlayGame');
     btnPlay.addEventListener('click', playAction);
     btnPlay.addEventListener('touchstart', playAction, { passive: false });
+
+    const btnWorldMenu = document.getElementById('btnOpenWorldSelectMenu');
+    if (btnWorldMenu) {
+        btnWorldMenu.addEventListener('click', worldSelectAction);
+        btnWorldMenu.addEventListener('touchstart', worldSelectAction, { passive: false });
+    }
 
     const btnCtrl = document.getElementById('btnOpenControls');
     btnCtrl.addEventListener('click', controlsAction);

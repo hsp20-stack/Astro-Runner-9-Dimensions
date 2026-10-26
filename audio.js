@@ -18,6 +18,14 @@ class SoundManager {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
+        // Desbloqueo especial para Safari en iPhone/iOS
+        try {
+            const buffer = this.ctx.createBuffer(1, 1, 22050);
+            const source = this.ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(this.ctx.destination);
+            source.start(0);
+        } catch (e) {}
     }
 
     toggleMute() {
@@ -271,7 +279,9 @@ class SoundManager {
     }
 
     // ==========================================
-    // MÚSICA DE THE LEGEND OF ZELDA (OVERWORLD THEME)
+    // MEDLEY NINTENDO SUPREMO:
+    // SUPER MARIO 64 + ZELDA: OCARINA OF TIME +
+    // SUPER MARIO SUNSHINE + SUPER MARIO GALAXY
     // ==========================================
     startMusic(worldNum, isBoss = false) {
         if (this.muted) return;
@@ -281,67 +291,141 @@ class SoundManager {
         this.stopMusic();
         this.musicPlaying = true;
 
-        // Notas del icónico tema de Zelda (Overworld)
-        // Frecuencias:
-        const Bb3 = 233.08, F3 = 174.61, C4 = 261.63, D4 = 293.66, Eb4 = 311.13, F4 = 349.23;
-        const Bb4 = 466.16, F4_hi = 349.23, Gb4 = 369.99, Ab4 = 415.30;
-        const C5 = 523.25, D5 = 587.33, Eb5 = 622.25, F5 = 698.46, Gb5 = 739.99, Ab5 = 830.61, Bb5 = 932.33;
+        // Frecuencias exactas en Hz
+        const C3 = 130.81, D3 = 146.83, E3 = 164.81, F3 = 174.61, G3 = 196.00, A3 = 220.00, B3 = 246.94;
+        const C4 = 261.63, Cs4 = 277.18, D4 = 293.66, Ds4 = 311.13, E4 = 329.63, F4 = 349.23, Fs4 = 369.99, G4 = 392.00, Gs4 = 415.30, A4 = 440.00, As4 = 466.16, B4 = 493.88;
+        const C5 = 523.25, Cs5 = 554.37, D5 = 587.33, Ds5 = 622.25, E5 = 659.25, F5 = 698.46, Fs5 = 739.99, G5 = 783.99, Gs5 = 830.61, A5 = 880.00, As5 = 932.33, B5 = 987.77;
+        const C6 = 1046.50, D6 = 1174.66, E6 = 1318.51;
 
-        // Melodía completa del tema principal de The Legend of Zelda
-        const zeldaTheme = [
-            // Compás 1: Bb4 (larga)
-            { f: Bb4, d: 0.65 },
-            // F4 (media)
-            { f: F4_hi, d: 0.35 },
-            // Bb4 Bb4 C5 D5 Eb5 F5
-            { f: Bb4, d: 0.18 },
-            { f: Bb4, d: 0.18 },
-            { f: C5,  d: 0.18 },
-            { f: D5,  d: 0.18 },
-            { f: Eb5, d: 0.18 },
-            { f: F5,  d: 0.65 },
-            // F5 F5 F5 Gb5 Ab5 Bb5
-            { f: F5,  d: 0.18 },
-            { f: F5,  d: 0.18 },
-            { f: Gb5, d: 0.18 },
-            { f: Ab5, d: 0.18 },
-            { f: Bb5, d: 0.70 },
-            // Bb5 Ab5 Gb5
-            { f: Bb5, d: 0.20 },
-            { f: Ab5, d: 0.20 },
-            { f: Gb5, d: 0.35 },
-            // Ab5 Gb5 F5
-            { f: Ab5, d: 0.20 },
-            { f: Gb5, d: 0.20 },
-            { f: F5,  d: 0.55 },
-            // F5 Eb5 F5
-            { f: F5,  d: 0.20 },
-            { f: Eb5, d: 0.20 },
-            { f: F5,  d: 0.40 },
-            // Eb5 D5 Eb5
-            { f: Eb5, d: 0.20 },
-            { f: D5,  d: 0.20 },
-            { f: Eb5, d: 0.40 },
-            // D5 C5 D5
-            { f: D5,  d: 0.20 },
-            { f: C5,  d: 0.20 },
-            { f: D5,  d: 0.35 },
-            // F4
-            { f: F4_hi, d: 0.45 }
+        // ==========================================
+        // 1. SUPER MARIO 64 - BOB-OMB BATTLEFIELD (TEMA PRINCIPAL)
+        // ==========================================
+        const sm64Theme = [
+            { f: G4, d: 0.16, b: C3 },
+            { f: C5, d: 0.16, b: C3 },
+            { f: E5, d: 0.16, b: E3 },
+            { f: G5, d: 0.30, b: G3 },
+            { f: A5, d: 0.16, b: A3 },
+            { f: G5, d: 0.16, b: G3 },
+            { f: E5, d: 0.30, b: E3 },
+            { f: C5, d: 0.30, b: C3 },
+            { f: D5, d: 0.16, b: G3 },
+            { f: D5, d: 0.16, b: G3 },
+            { f: D5, d: 0.26, b: G3 },
+            { f: E5, d: 0.16, b: A3 },
+            { f: D5, d: 0.16, b: G3 },
+            { f: C5, d: 0.44, b: C3 },
+            { f: 0,  d: 0.08, b: 0  }
         ];
 
-        // Boss Theme tenso y rápido
-        const bossTheme = [
-            { f: 110, d: 0.14 },
-            { f: 110, d: 0.14 },
-            { f: 130.8, d: 0.14 },
-            { f: 123.5, d: 0.14 },
-            { f: 110, d: 0.14 },
-            { f: 146.8, d: 0.14 },
-            { f: 138.6, d: 0.20 }
+        // ==========================================
+        // 2. ZELDA: OCARINA OF TIME - SONG OF STORMS (CANCIÓN DE LAS TORMENTAS)
+        // ==========================================
+        const songOfStorms = [
+            { f: D4, d: 0.15, b: D3 },
+            { f: F4, d: 0.15, b: F3 },
+            { f: D5, d: 0.45, b: D3 },
+            { f: D4, d: 0.15, b: D3 },
+            { f: F4, d: 0.15, b: F3 },
+            { f: D5, d: 0.45, b: D3 },
+            { f: E5, d: 0.28, b: E3 },
+            { f: F5, d: 0.15, b: F3 },
+            { f: E5, d: 0.15, b: E3 },
+            { f: F5, d: 0.15, b: F3 },
+            { f: E5, d: 0.15, b: E3 },
+            { f: C5, d: 0.15, b: C3 },
+            { f: A4, d: 0.50, b: A3 },
+            { f: 0,  d: 0.08, b: 0  }
         ];
 
-        const sequence = isBoss ? bossTheme : zeldaTheme;
+        // ==========================================
+        // 3. SUPER MARIO SUNSHINE - DELFINO PLAZA (PLAZA DELFINO)
+        // ==========================================
+        const sunshineTheme = [
+            { f: E5, d: 0.17, b: C3 },
+            { f: G5, d: 0.17, b: G3 },
+            { f: A5, d: 0.17, b: A3 },
+            { f: C6, d: 0.32, b: C3 },
+            { f: B5, d: 0.17, b: G3 },
+            { f: G5, d: 0.17, b: E3 },
+            { f: A5, d: 0.32, b: A3 },
+            { f: F5, d: 0.17, b: F3 },
+            { f: E5, d: 0.17, b: E3 },
+            { f: D5, d: 0.17, b: G3 },
+            { f: C5, d: 0.45, b: C3 },
+            { f: 0,  d: 0.08, b: 0  }
+        ];
+
+        // ==========================================
+        // 4. ZELDA: OCARINA OF TIME - SARIA'S SONG (LOST WOODS / BOSQUE PERDIDO)
+        // ==========================================
+        const sariasSong = [
+            { f: F4, d: 0.15, b: F3 },
+            { f: A4, d: 0.15, b: A3 },
+            { f: B4, d: 0.30, b: G3 },
+            { f: F4, d: 0.15, b: F3 },
+            { f: A4, d: 0.15, b: A3 },
+            { f: B4, d: 0.30, b: G3 },
+            { f: F4, d: 0.15, b: F3 },
+            { f: A4, d: 0.15, b: A3 },
+            { f: B4, d: 0.15, b: B3 },
+            { f: E5, d: 0.15, b: E3 },
+            { f: D5, d: 0.30, b: D3 },
+            { f: B4, d: 0.15, b: G3 },
+            { f: C5, d: 0.15, b: A3 },
+            { f: B4, d: 0.15, b: G3 },
+            { f: G4, d: 0.15, b: E3 },
+            { f: E4, d: 0.45, b: C3 },
+            { f: 0,  d: 0.08, b: 0  }
+        ];
+
+        // ==========================================
+        // 5. SUPER MARIO GALAXY - GUSTY GARDEN GALAXY (JARDÍN CÉFIRO)
+        // ==========================================
+        const galaxyTheme = [
+            { f: D5,  d: 0.22, b: D3 },
+            { f: E5,  d: 0.22, b: E3 },
+            { f: Fs5, d: 0.22, b: F3 },
+            { f: A5,  d: 0.44, b: A3 },
+            { f: G5,  d: 0.22, b: G3 },
+            { f: Fs5, d: 0.22, b: F3 },
+            { f: E5,  d: 0.22, b: E3 },
+            { f: D5,  d: 0.35, b: D3 },
+            { f: B4,  d: 0.22, b: G3 },
+            { f: D5,  d: 0.55, b: D3 },
+            { f: Cs5, d: 0.22, b: A3 },
+            { f: D5,  d: 0.22, b: D3 },
+            { f: E5,  d: 0.55, b: E3 },
+            { f: 0,   d: 0.10, b: 0  }
+        ];
+
+        // Medley completo para los niveles normales
+        const mainMedley = [
+            ...sm64Theme,
+            ...songOfStorms,
+            ...sunshineTheme,
+            ...sariasSong,
+            ...galaxyTheme
+        ];
+
+        // ==========================================
+        // TEMA DEL JEFE: MARIO 64 BOWSER + OCARINA GANONDORF
+        // ==========================================
+        const bossBattleTheme = [
+            { f: 110,   d: 0.14, b: 55 },
+            { f: 110,   d: 0.14, b: 55 },
+            { f: 130.8, d: 0.14, b: 65.4 },
+            { f: 123.5, d: 0.14, b: 61.7 },
+            { f: 110,   d: 0.14, b: 55 },
+            { f: 146.8, d: 0.14, b: 73.4 },
+            { f: 138.6, d: 0.20, b: 69.3 },
+            { f: 220,   d: 0.14, b: 110 },
+            { f: 207.6, d: 0.14, b: 103.8 },
+            { f: 196,   d: 0.14, b: 98 },
+            { f: 185,   d: 0.20, b: 92.5 }
+        ];
+
+        const sequence = isBoss ? bossBattleTheme : mainMedley;
         let index = 0;
 
         const playNextNote = () => {
@@ -349,33 +433,37 @@ class SoundManager {
             const note = sequence[index % sequence.length];
             const now = this.ctx.currentTime;
 
-            // Voz principal (Zelda Lead - Volumen Alto y Nítido)
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            if (note.f > 0) {
+                // Voz principal: Melodía rica y brillante con armónicos estilo Nintendo 64/GameCube
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-            osc.type = isBoss ? 'sawtooth' : 'triangle';
-            osc.frequency.setValueAtTime(note.f, now);
+                osc.type = isBoss ? 'sawtooth' : 'triangle';
+                osc.frequency.setValueAtTime(note.f, now);
 
-            gain.gain.setValueAtTime(0.24, now); // Volumen de música subido
-            gain.gain.exponentialRampToValueAtTime(0.015, now + note.d * 0.9);
+                gain.gain.setValueAtTime(0.26, now); // Volumen principal bien claro y nítido
+                gain.gain.exponentialRampToValueAtTime(0.012, now + note.d * 0.92);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + note.d * 0.95);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + note.d * 0.95);
 
-            // Línea de bajo rítmico (Bassline con buen cuerpo)
-            if (!isBoss && index % 2 === 0) {
-                const bassOsc = this.ctx.createOscillator();
-                const bassGain = this.ctx.createGain();
-                bassOsc.type = 'triangle';
-                bassOsc.frequency.setValueAtTime(note.f / 4, now);
-                bassGain.gain.setValueAtTime(0.18, now); // Bajo sonoro
-                bassGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.8);
-                bassOsc.connect(bassGain);
-                bassGain.connect(this.ctx.destination);
-                bassOsc.start(now);
-                bassOsc.stop(now + note.d * 0.85);
+                // Línea de bajo rítmico (Bassline que marca el compás de Super Mario y Zelda)
+                if (note.b && note.b > 0) {
+                    const bassOsc = this.ctx.createOscillator();
+                    const bassGain = this.ctx.createGain();
+                    bassOsc.type = isBoss ? 'sawtooth' : 'triangle';
+                    bassOsc.frequency.setValueAtTime(note.b, now);
+
+                    bassGain.gain.setValueAtTime(0.19, now);
+                    bassGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.85);
+
+                    bassOsc.connect(bassGain);
+                    bassGain.connect(this.ctx.destination);
+                    bassOsc.start(now);
+                    bassOsc.stop(now + note.d * 0.88);
+                }
             }
 
             index++;

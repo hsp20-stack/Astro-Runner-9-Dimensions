@@ -240,39 +240,33 @@ class LevelBuilder {
             // NIVELES 1 AL 7: DISEÑO FLUIDO, EQUILIBRADO Y 100% PASABLE
             // ==========================================
 
-            // 1. Tuberías verdes bien espaciadas (con altura justa de 1 y 2 bloques para saltar fácil)
+            // 1. Tuberías verdes compactas y bajas (1 solo bloque de altura para saltar comodísimo)
             // Separadas por amplias zonas abiertas para nunca atrapar a nadie
-            const pipeConfigs = [
-                { col: 14, h: 1 }, // Tubería baja (1 bloque de altura)
-                { col: 30, h: 2 }, // Tubería media (2 bloques)
-                { col: 50, h: 1 }, // Tubería baja
-                { col: 64, h: 2 }  // Tubería media
-            ];
-
-            pipeConfigs.forEach(p => {
-                if (p.col < mapWidth - 16) {
-                    if (p.h === 1) {
-                        grid[groundRow - 1][p.col] = 5;
-                        grid[groundRow - 1][p.col + 1] = 6;
-                    } else {
-                        grid[groundRow - 2][p.col] = 5;
-                        grid[groundRow - 2][p.col + 1] = 6;
-                        grid[groundRow - 1][p.col] = 7;
-                        grid[groundRow - 1][p.col + 1] = 8;
-                    }
+            const pipeCols = [14, 32, 50, 64];
+            pipeCols.forEach(col => {
+                if (col < mapWidth - 16) {
+                    grid[groundRow - 1][col] = 5;
+                    grid[groundRow - 1][col + 1] = 6;
                 }
             });
 
-            // 2. Formaciones de bloques suspendidos a altura accesible
-            // Con 3 bloques de aire arriba y abajo para saltar y golpear con la cabeza
-            const blockCols = [19, 36, 54];
+            // 2. Formaciones de bloques más bajas y accesibles (a solo 2 bloques del suelo)
+            // Con escalones de ayuda al inicio y al final para subir de nuevo fácilmente si te caes
+            const blockCols = [19, 37, 54];
             blockCols.forEach((col, idx) => {
-                const bRow = groundRow - 3;
+                const bRow = groundRow - 2; // Fila 4: muy fácil de alcanzar y saltar encima
+                // Escalón de subida (1 bloque)
+                grid[groundRow - 1][col - 1] = 2;
+
+                // Bloques suspendidos compactos
                 grid[bRow][col] = 2; // Ladrillo
                 grid[bRow][col + 1] = 3; // '?' Moneda
                 grid[bRow][col + 2] = (idx === 0) ? 4 : 2; // '?' Champiñón / Super Batería
                 grid[bRow][col + 3] = 3; // '?' Moneda
                 grid[bRow][col + 4] = 2; // Ladrillo
+
+                // Escalón de bajada/subida al otro extremo
+                grid[groundRow - 1][col + 5] = 2;
 
                 coins.push({ x: (col + 1) * 32, y: (bRow - 1) * 32 });
                 coins.push({ x: (col + 3) * 32, y: (bRow - 1) * 32 });
