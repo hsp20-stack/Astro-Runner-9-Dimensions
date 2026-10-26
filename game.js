@@ -124,8 +124,11 @@ function loadLevel(worldNum, levelNum) {
     particles = [];
     bossEntity = levelData.boss ? Object.assign({}, levelData.boss) : null;
 
-    // Música de Zelda
-    window.sounds.startMusic(worldNum, levelData.isBossLevel);
+    // Música de Zelda (solo si la intro ya pasó)
+    const splash = document.getElementById('studioSplashScreen');
+    if (!splash || splash.classList.contains('fade-out')) {
+        window.sounds.startMusic(worldNum, levelData.isBossLevel);
+    }
     updateUI();
 }
 
@@ -1487,8 +1490,33 @@ function toggleFullscreen() {
     }
 }
 
+// Configuración de la intro de Hugo SP Studios
+function setupStudioSplashScreen() {
+    const splash = document.getElementById('studioSplashScreen');
+    if (!splash) return;
+
+    let hasStarted = false;
+    const startAdventure = () => {
+        if (hasStarted) return;
+        hasStarted = true;
+        window.sounds.init();
+        window.sounds.playStudioIntroChime();
+
+        setTimeout(() => {
+            splash.classList.add('fade-out');
+            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        }, 2200);
+    };
+
+    // Auto-iniciar tras cargar o con un toque/clic
+    splash.addEventListener('click', startAdventure);
+    splash.addEventListener('touchstart', startAdventure, { passive: true });
+    setTimeout(startAdventure, 1000);
+}
+
 window.addEventListener('load', () => {
     setupControls();
     loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1);
+    setupStudioSplashScreen();
     requestAnimationFrame(gameLoop);
 });

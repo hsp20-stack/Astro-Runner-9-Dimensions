@@ -5,50 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#38bdf8">
-    <title>Astro Runner - 9 Mundos</title>
+    <meta name="theme-color" content="#0a0e17">
+    <title>Astro Runner - Hugo SP Studios</title>
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
-        <!-- HUD Moderno Flotante -->
-        <header id="hud">
-            <div class="hud-item">
-                <span class="hud-label">⭐ PUNTOS</span>
-                <span id="uiScore" class="hud-val">000000</span>
+        <!-- PANTALLA DE INTRO: HUGO SP STUDIOS (Estilo Unity / PlayStation) -->
+        <div id="studioSplashScreen" class="studio-splash">
+            <div class="studio-content">
+                <div class="studio-emblem">
+                    <div class="emblem-shield">
+                        <span class="emblem-letter">H</span>
+                    </div>
+                    <div class="emblem-glow"></div>
+                </div>
+                <h1 class="studio-title">HUGO SP STUDIOS</h1>
+                <p class="studio-subtitle">P R E S E N T A</p>
+                <div class="studio-loader">
+                    <div class="loader-bar"></div>
+                </div>
+                <span class="studio-tap-hint">Toca la pantalla para saltar</span>
             </div>
-            <div class="hud-item">
-                <span class="hud-label">🪙 MONEDAS</span>
-                <span id="uiCoins" class="hud-val">x00</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">🚩 MUNDO</span>
-                <span id="uiWorld" class="hud-val">1-1</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">❤️ VIDAS</span>
-                <span id="uiLives" class="hud-val">x3</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">⏰ TIEMPO</span>
-                <span id="uiTime" class="hud-val">300</span>
-            </div>
-        </header>
+        </div>
 
-        <!-- Botones superiores -->
-        <div id="topBarButtons">
-            <button id="btnMap" class="icon-btn" title="Selector de Mundos">🗺️ Mundos</button>
-            <button id="btnMute" class="icon-btn" title="Silenciar">🔊</button>
-            <button id="btnPause" class="icon-btn" title="Pausa">⏸️</button>
-            <button id="btnFullscreen" class="icon-btn" title="Pantalla completa">⛶</button>
+        <!-- HUD LIMPIO Y ESPACIADO EN LAS ESQUINAS (No todo amontonado) -->
+        <div id="hudTopLeft" class="hud-pill">
+            <div class="hud-badge world-badge">
+                <span class="badge-icon">🚩</span>
+                <span id="uiWorld" class="badge-val">1-1</span>
+            </div>
+            <div class="hud-badge lives-badge">
+                <span class="badge-icon">❤️</span>
+                <span id="uiLives" class="badge-val">x3</span>
+            </div>
+        </div>
+
+        <div id="hudTopRight" class="hud-pill">
+            <div class="hud-badge score-badge">
+                <span class="badge-icon">⭐</span>
+                <span id="uiScore" class="badge-val">000000</span>
+            </div>
+            <div class="hud-badge coins-badge">
+                <span class="badge-icon">🪙</span>
+                <span id="uiCoins" class="badge-val">x00</span>
+            </div>
+            <div class="hud-badge time-badge">
+                <span class="badge-icon">⏰</span>
+                <span id="uiTime" class="badge-val">300</span>
+            </div>
+        </div>
+
+        <!-- Botones de Utilidades pequeños y discretos -->
+        <div id="utilityButtons">
+            <button id="btnMap" class="mini-btn" title="Mundos">🗺️</button>
+            <button id="btnMute" class="mini-btn" title="Silenciar">🔊</button>
+            <button id="btnPause" class="mini-btn" title="Pausa">⏸️</button>
+            <button id="btnFullscreen" class="mini-btn" title="Pantalla completa">⛶</button>
         </div>
 
         <!-- Pantalla de juego en Canvas -->
         <canvas id="gameCanvas"></canvas>
 
-        <!-- Controles táctiles virtuales -->
+        <!-- Controles táctiles virtuales para teléfono móvil -->
         <div id="touchControls">
             <!-- D-Pad Izquierdo -->
             <div class="dpad-container">
@@ -61,18 +82,18 @@
 
             <!-- Botones de Acción Derechos -->
             <div class="action-buttons-container">
-                <button id="btnB" class="touch-btn action-btn btn-fire" aria-label="Disparar o Correr">
+                <button id="btnB" class="touch-btn action-btn btn-fire" aria-label="Fuego o Turbo">
                     <span class="btn-text">B</span>
-                    <span class="btn-subtext">Fuego / Turbo</span>
+                    <span class="btn-subtext">Fuego</span>
                 </button>
                 <button id="btnA" class="touch-btn action-btn btn-jump" aria-label="Saltar">
                     <span class="btn-text">A</span>
-                    <span class="btn-subtext">Saltar</span>
+                    <span class="btn-subtext">Salto</span>
                 </button>
             </div>
         </div>
 
-        <!-- Pantalla de Pausa -->
+        <!-- Modales de Pausa, Victoria y Game Over -->
         <div id="pauseOverlay" class="modal-overlay hidden">
             <div class="modal-card">
                 <h2>⏸️ JUEGO EN PAUSA</h2>
@@ -82,7 +103,6 @@
             </div>
         </div>
 
-        <!-- Modal de Victoria -->
         <div id="modalVictory" class="modal-overlay hidden">
             <div class="modal-card victory-card">
                 <div class="trophy-icon">🏆</div>
@@ -93,7 +113,6 @@
             </div>
         </div>
 
-        <!-- Modal Game Over -->
         <div id="modalGameOver" class="modal-overlay hidden">
             <div class="modal-card gameover-card">
                 <h2>💀 FIN DE LA PARTIDA</h2>

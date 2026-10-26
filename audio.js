@@ -30,6 +30,38 @@ class SoundManager {
         return this.muted;
     }
 
+    playStudioIntroChime() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        // Intro cinemática estilo PlayStation / Unity
+        const chords = [
+            { f: 261.63, d: 1.2 }, // C4
+            { f: 329.63, d: 1.2 }, // E4
+            { f: 392.00, d: 1.2 }, // G4
+            { f: 523.25, d: 1.4 }  // C5
+        ];
+
+        chords.forEach((note) => {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(note.f, now);
+
+            gain.gain.setValueAtTime(0.01, now);
+            gain.gain.linearRampToValueAtTime(0.18, now + 0.3);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + note.d);
+        });
+    }
+
     playJump(isSuper = false) {
         if (this.muted) return;
         this.init();
