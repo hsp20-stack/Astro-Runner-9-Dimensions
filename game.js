@@ -81,7 +81,9 @@ let activePlasmaShots = [];
 let particles = [];
 let bossEntity = null;
 
-// Controles
+// Controles y sistema de salto suave
+let jumpBuffer = 0;
+let coyoteTimer = 0;
 const keys = {
     left: false,
     right: false,
@@ -188,19 +190,41 @@ function updateGame(dt) {
         if (Math.abs(astro.vx) < 0.1) astro.vx = 0;
     }
 
-    // Salto con propulsión
-    if (keys.up && astro.isGrounded) {
-        astro.vy = astro.jumpForce;
-        astro.isGrounded = false;
-        astro.stretch = 1.35;
-        astro.squash = 0.75;
-        window.sounds.playJump(astro.state !== 'normal');
-        createJetpackParticles(astro.x + astro.w / 2, astro.y + astro.h);
+    // Gestión de Salto con Jump Buffering y Coyote Time (salta siempre, incluso sobre bloques)
+    if (keys.up) {
+        jumpBuffer = 8;
+    }
+
+    if (astro.isGrounded) {
+        coyoteTimer = 6;
+    } else if (coyoteTimer > 0) {
+        coyoteTimer--;
+    }
+
+    if (jumpBuffer > 0) {
+        jumpBuffer--;
+        if (astro.isGrounded || coyoteTimer > 0) {
+            astro.vy = astro.jumpForce;
+            astro.isGrounded = false;
+            coyoteTimer = 0;
+            jumpBuffer = 0;
+            keys.up = false;
+            astro.stretch = 1.35;
+            astro.squash = 0.75;
+            window.sounds.playJump(astro.state !== 'normal');
+            createJetpackParticles(astro.x + astro.w / 2, astro.y + astro.h);
+        }
     }
 
     // Gravedad suave estilo Mario
     astro.vy += 0.44;
     if (astro.vy > 8.5) astro.vy = 8.5;
+
+    // Techo de pantalla (para no perderse fuera por arriba)
+    if (astro.y < 4) {
+        astro.y = 4;
+        if (astro.vy < 0) astro.vy = 0;
+    }
 
     // Movimiento y colisión X
     astro.x += astro.vx;
@@ -1411,7 +1435,10 @@ function setupControls() {
         window.sounds.init();
         if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
-        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') keys.up = true;
+        if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') {
+            keys.up = true;
+            jumpBuffer = 10;
+        }
         if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = true;
         if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'KeyJ') {
             keys.actionB = true;
@@ -1457,7 +1484,10 @@ function setupControls() {
     bindTouch('btnLeft', () => keys.left = true, () => keys.left = false);
     bindTouch('btnRight', () => keys.right = true, () => keys.right = false);
     bindTouch('btnDown', () => keys.down = true, () => keys.down = false);
-    bindTouch('btnA', () => keys.up = true, () => keys.up = false);
+    bindTouch('btnA', () => {
+        keys.up = true;
+        jumpBuffer = 10;
+    }, () => keys.up = false);
     bindTouch('btnB', () => {
         keys.actionB = true;
         keys.actionPressedOnce = true;
@@ -1524,7 +1554,8 @@ function setupGameFlow() {
     setTimeout(endSplashAndShowMenu, 600);
 
     // Botones del Menú Principal
-    document.getElementById('btnPlayGame').onclick = () => {
+    const playAction = (e) => {
+        if (e) e.preventDefault();
         window.sounds.init();
         mainMenu.classList.add('hidden');
         gameStartedFromMenu = true;
@@ -1532,15 +1563,29 @@ function setupGameFlow() {
         window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
     };
 
-    document.getElementById('btnOpenControls').onclick = () => {
+    const controlsAction = (e) => {
+        if (e) e.preventDefault();
         window.sounds.init();
         document.getElementById('modalControls').classList.remove('hidden');
     };
 
-    document.getElementById('btnOpenSettings').onclick = () => {
+    const settingsAction = (e) => {
+        if (e) e.preventDefault();
         window.sounds.init();
         document.getElementById('modalSettings').classList.remove('hidden');
     };
+
+    const btnPlay = document.getElementById('btnPlayGame');
+    btnPlay.addEventListener('click', playAction);
+    btnPlay.addEventListener('touchstart', playAction, { passive: false });
+
+    const btnCtrl = document.getElementById('btnOpenControls');
+    btnCtrl.addEventListener('click', controlsAction);
+    btnCtrl.addEventListener('touchstart', controlsAction, { passive: false });
+
+    const btnSet = document.getElementById('btnOpenSettings');
+    btnSet.addEventListener('click', settingsAction);
+    btnSet.addEventListener('touchstart', settingsAction, { passive: false });
 }
 
 function closeControlsModal() {
