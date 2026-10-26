@@ -240,9 +240,8 @@ class LevelBuilder {
             // NIVELES 1 AL 7: DISEÑO FLUIDO, EQUILIBRADO Y 100% PASABLE
             // ==========================================
 
-            // 1. Tuberías verdes compactas y bajas (1 solo bloque de altura para saltar comodísimo)
-            // Separadas por amplias zonas abiertas para nunca atrapar a nadie
-            const pipeCols = [14, 32, 50, 64];
+            // 1. Tuberías verdes compactas (1 solo bloque de altura para saltar limpiamente)
+            const pipeCols = [15, 33, 51, 65];
             pipeCols.forEach(col => {
                 if (col < mapWidth - 16) {
                     grid[groundRow - 1][col] = 5;
@@ -250,23 +249,20 @@ class LevelBuilder {
                 }
             });
 
-            // 2. Formaciones de bloques más bajas y accesibles (a solo 2 bloques del suelo)
-            // Con escalones de ayuda al inicio y al final para subir de nuevo fácilmente si te caes
-            const blockCols = [19, 37, 54];
-            blockCols.forEach((col, idx) => {
-                const bRow = groundRow - 2; // Fila 4: muy fácil de alcanzar y saltar encima
-                // Escalón de subida (1 bloque)
-                grid[groundRow - 1][col - 1] = 2;
+            // Bloque '?' inicial con Super Poder para transformarse desde el principio
+            grid[groundRow - 2][10] = 4; // Batería / Champiñón de transformación al inicio
 
-                // Bloques suspendidos compactos
-                grid[bRow][col] = 2; // Ladrillo
-                grid[bRow][col + 1] = 3; // '?' Moneda
-                grid[bRow][col + 2] = (idx === 0) ? 4 : 2; // '?' Champiñón / Super Batería
-                grid[bRow][col + 3] = 3; // '?' Moneda
-                grid[bRow][col + 4] = 2; // Ladrillo
+            // 2. Formaciones de bloques elevadas para saltar sobre ellas con emoción
+            // Cada formación tiene un bloque de poder central para transformarse
+            const blockCols = [20, 38, 55];
+            blockCols.forEach(col => {
+                const bRow = groundRow - 3; // Fila 3: altura clásica para saltar sobre ellos
 
-                // Escalón de bajada/subida al otro extremo
-                grid[groundRow - 1][col + 5] = 2;
+                grid[bRow][col] = 2;     // Ladrillo rompible
+                grid[bRow][col + 1] = 3; // '?' Moneda dorada
+                grid[bRow][col + 2] = 4; // '?' SUPER PODER DE TRANSFORMACIÓN (Batería / Flor de Plasma)
+                grid[bRow][col + 3] = 3; // '?' Moneda dorada
+                grid[bRow][col + 4] = 2; // Ladrillo rompible
 
                 coins.push({ x: (col + 1) * 32, y: (bRow - 1) * 32 });
                 coins.push({ x: (col + 3) * 32, y: (bRow - 1) * 32 });

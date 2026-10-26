@@ -74,6 +74,7 @@ const astro = {
     isGrounded: false,
     facing: 'right',
     state: 'normal', // 'normal', 'super', 'plasma'
+    transformationTimer: 0, // Destellos épicos de transformación
     invulnerableTimer: 0,
     isDying: false,
     deathTimer: 0,
@@ -279,6 +280,10 @@ function updateGame(dt) {
 
     if (astro.invulnerableTimer > 0) {
         astro.invulnerableTimer--;
+    }
+
+    if (astro.transformationTimer > 0) {
+        astro.transformationTimer--;
     }
 
     // Foso
@@ -591,6 +596,7 @@ function updatePowerUps() {
         checkVerticalCollision(p);
 
         if (checkAABB(astro, p)) {
+            astro.transformationTimer = 45; // Animación de destellos y transformación
             if (p.type === 'battery') {
                 astro.state = 'super';
                 astro.h = 36;
@@ -598,9 +604,25 @@ function updatePowerUps() {
                 score += 1000;
             } else if (p.type === 'plasma') {
                 astro.state = 'plasma';
+                astro.h = 36;
                 score += 1000;
             }
             window.sounds.playPowerUp();
+
+            // Estallido de partículas resplandecientes al transformarse
+            const pColor = (p.type === 'battery') ? '#fbbf24' : '#38bdf8';
+            for (let k = 0; k < 24; k++) {
+                particles.push({
+                    x: astro.x + astro.w / 2,
+                    y: astro.y + astro.h / 2,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    color: pColor,
+                    life: 30,
+                    size: 3.5
+                });
+            }
+
             updateUI();
             activePowerUps.splice(i, 1);
         }
@@ -1508,19 +1530,34 @@ function drawAstroModern() {
     // Traje y colores
     const isSuper = astro.state === 'super';
     const isPlasma = astro.state === 'plasma';
+    const isTransforming = astro.transformationTimer > 0;
 
     let suitColor = '#ffffff';
     let armorColor = '#0284c7';
     let visorColor = '#38bdf8';
 
-    if (isSuper) {
-        suitColor = '#fbbf24';
+    if (isTransforming && Math.floor(astro.transformationTimer / 3) % 2 === 0) {
+        // Destello visual de transformación estilo Super Mario
+        suitColor = '#ffffff';
+        armorColor = '#fef08a';
+        visorColor = '#f59e0b';
+    } else if (isSuper) {
+        suitColor = '#fbbf24'; // Armadura dorada resplandeciente
         armorColor = '#b45309';
         visorColor = '#fef08a';
     } else if (isPlasma) {
-        suitColor = '#ef4444';
+        suitColor = '#ef4444'; // Exo-traje carmesí de combate
         armorColor = '#991b1b';
         visorColor = '#38bdf8';
+    }
+
+    // Aura de poder si está transformado
+    if (isSuper || isPlasma || isTransforming) {
+        ctx.strokeStyle = isPlasma ? 'rgba(56, 189, 248, 0.7)' : 'rgba(251, 191, 36, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(px + astro.w / 2, py + astro.h / 2, astro.w / 2 + 5, astro.h / 2 + 5, 0, 0, Math.PI * 2);
+        ctx.stroke();
     }
 
     // Micro-Jetpack trasero con llama
@@ -1529,10 +1566,10 @@ function drawAstroModern() {
 
     if (!astro.isGrounded) {
         // Llama activa del jetpack
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = isPlasma ? '#ef4444' : '#38bdf8';
         ctx.beginPath();
         ctx.moveTo(px - 3, py + astro.h - 6);
-        ctx.lineTo(px - 1, py + astro.h + 6);
+        ctx.lineTo(px - 1, py + astro.h + 7);
         ctx.lineTo(px + 1, py + astro.h - 6);
         ctx.fill();
     }
@@ -1540,6 +1577,14 @@ function drawAstroModern() {
     // Cuerpo / Torso
     ctx.fillStyle = suitColor;
     ctx.fillRect(px + 2, py + 12, astro.w - 4, astro.h - 14);
+
+    // Cañón de Plasma montado en el brazo (solo en estado plasma)
+    if (isPlasma) {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(px + astro.w - 3, py + 14, 9, 6);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(px + astro.w + 3, py + 15, 4, 4);
+    }
 
     // Cinturón y emblema
     ctx.fillStyle = armorColor;
