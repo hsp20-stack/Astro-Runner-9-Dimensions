@@ -11,6 +11,23 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
+    <!-- Script infalible e instantáneo para la pantalla de inicio Hugo SP Studios -->
+    <script>
+        function dismissStudioSplash() {
+            var splash = document.getElementById('studioSplashScreen');
+            var menu = document.getElementById('mainMenuScreen');
+            if (splash && splash.style.display !== 'none') {
+                splash.classList.add('fade-out');
+                splash.style.pointerEvents = 'none';
+                setTimeout(function() {
+                    splash.style.display = 'none';
+                    if (menu) menu.classList.remove('hidden');
+                }, 120);
+            }
+        }
+        // Salto automático garantizado tras 1.4 segundos
+        setTimeout(dismissStudioSplash, 1400);
+    </script>
 </head>
 <body>
     <!-- AVISO DE GIRO DE PANTALLA EN MÓVILES -->
@@ -24,7 +41,7 @@
     </div>
 
     <!-- 1. INTRO SPLASH SCREEN: HUGO SP STUDIOS (ESTILO UNITY) -->
-    <div id="studioSplashScreen" class="studio-splash">
+    <div id="studioSplashScreen" class="studio-splash" onclick="dismissStudioSplash()" ontouchstart="dismissStudioSplash()" onpointerdown="dismissStudioSplash()">
         <div class="studio-bg-glow"></div>
         <div class="studio-content">
             <div class="studio-emblem">

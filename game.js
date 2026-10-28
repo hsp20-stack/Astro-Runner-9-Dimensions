@@ -1,4 +1,12 @@
 // game.js - Astro Runner: Motor con Gráficos Modernos y Estilo Mario Bros
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (!r) r = 0;
+        this.rect(x, y, w, h);
+        return this;
+    };
+}
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
