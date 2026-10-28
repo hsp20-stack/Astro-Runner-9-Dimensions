@@ -236,7 +236,7 @@ function updateGame(dt) {
 
         updateParticles();
 
-        if (victorySequence.timer === 150) {
+        if (victorySequence.timer === 70) {
             showVictoryModal(victorySequence.isBossVictory);
         }
         return;
@@ -912,7 +912,11 @@ function handleRespawn() {
 function triggerStageClear(isWorldVictory) {
     if (isStageClear) return;
     isStageClear = true;
-    window.sounds.playStageClear();
+    try {
+        window.sounds.playStageClear();
+    } catch (e) {
+        console.error("playStageClear note:", e);
+    }
 
     // Iniciar secuencia festiva de victoria 2026
     victorySequence.active = true;
@@ -922,7 +926,9 @@ function triggerStageClear(isWorldVictory) {
     victorySequence.fireworkTimer = 0;
 
     // Lanzar primera salva de fuegos artificiales festivos
-    triggerCelebrationFireworks(cameraX + VIEW_WIDTH / 2, 65);
+    try {
+        triggerCelebrationFireworks(cameraX + VIEW_WIDTH / 2, 65);
+    } catch (e) {}
 
     if (isWorldVictory) {
         if (currentWorldNum < 9) {
@@ -1145,7 +1151,9 @@ function render() {
 
     // El Jugador: Astro (con alta visibilidad y animaciones)
     if (!astro.isDying || astro.deathTimer < 90) {
-        drawAstroModern();
+        if (!isStageClear || (levelData && levelData.isBossLevel)) {
+            drawAstroModern();
+        }
     }
 
     // Partículas
@@ -3262,38 +3270,74 @@ function gameLoop(time) {
 // ==========================================
 // MODALES
 // ==========================================
+function goToNextLevel() {
+    const modal = document.getElementById('modalVictory');
+    if (modal) modal.classList.add('hidden');
+    victorySequence.active = false;
+    isStageClear = false;
+
+    if (victorySequence.isBossVictory) {
+        if (currentWorldNum === 9) {
+            loadLevel(1, 1);
+        } else {
+            loadLevel(currentWorldNum + 1, 1);
+        }
+    } else {
+        if (currentLevelNum < 8) {
+            loadLevel(currentWorldNum, currentLevelNum + 1);
+        } else {
+            loadLevel(currentWorldNum, 8);
+        }
+    }
+}
+window.goToNextLevel = goToNextLevel;
+
 function showVictoryModal(isBossDefeated) {
     const modal = document.getElementById('modalVictory');
     const title = document.getElementById('victoryTitle');
     const desc = document.getElementById('victoryDesc');
     const nextBtn = document.getElementById('btnNextLevel');
 
+    if (!modal) return;
+
     if (isBossDefeated) {
         if (currentWorldNum === 9) {
-            title.innerText = "¡CAMPEÓN DE LOS 9 MUNDOS!";
-            desc.innerText = "¡Has derrotado al Emperador Supremo y superado todos los 72 niveles del juego!";
-            nextBtn.innerText = "Reiniciar Aventura";
-            nextBtn.onclick = () => {
-                modal.classList.add('hidden');
-                loadLevel(1, 1);
-            };
+            if (title) title.innerText = "¡CAMPEÓN DE LOS 9 MUNDOS!";
+            if (desc) desc.innerText = "¡Has derrotado al Emperador Supremo y superado todos los 72 niveles del juego!";
+            if (nextBtn) {
+                nextBtn.innerText = "Reiniciar Aventura";
+                nextBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    victorySequence.active = false;
+                    isStageClear = false;
+                    loadLevel(1, 1);
+                };
+            }
         } else {
-            title.innerText = `¡JEFE DEL MUNDO ${currentWorldNum} DERROTADO!`;
-            desc.innerText = `¡Has obtenido la Estrella Mágica! El portal hacia el MUNDO ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name} se ha abierto.`;
-            nextBtn.innerText = `Viajar al Mundo ${currentWorldNum + 1}`;
-            nextBtn.onclick = () => {
-                modal.classList.add('hidden');
-                loadLevel(currentWorldNum + 1, 1);
-            };
+            if (title) title.innerText = `¡JEFE DEL MUNDO ${currentWorldNum} DERROTADO!`;
+            if (desc) desc.innerText = `¡Has obtenido la Estrella Mágica! El portal hacia el MUNDO ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name} se ha abierto.`;
+            if (nextBtn) {
+                nextBtn.innerText = `Viajar al Mundo ${currentWorldNum + 1}`;
+                nextBtn.onclick = () => {
+                    modal.classList.add('hidden');
+                    victorySequence.active = false;
+                    isStageClear = false;
+                    loadLevel(currentWorldNum + 1, 1);
+                };
+            }
         }
     } else {
-        title.innerText = `¡NIVEL ${currentWorldNum}-${currentLevelNum} COMPLETADO!`;
-        desc.innerText = `¡Excelente salto! Te acercas al castillo del Boss final.`;
-        nextBtn.innerText = `Siguiente Nivel (${currentWorldNum}-${currentLevelNum + 1})`;
-        nextBtn.onclick = () => {
-            modal.classList.add('hidden');
-            loadLevel(currentWorldNum, currentLevelNum + 1);
-        };
+        if (title) title.innerText = `¡NIVEL ${currentWorldNum}-${currentLevelNum} COMPLETADO!`;
+        if (desc) desc.innerText = `¡Excelente salto! Te acercas al castillo del Boss final.`;
+        if (nextBtn) {
+            nextBtn.innerText = `Siguiente Nivel (${currentWorldNum}-${currentLevelNum + 1})`;
+            nextBtn.onclick = () => {
+                modal.classList.add('hidden');
+                victorySequence.active = false;
+                isStageClear = false;
+                loadLevel(currentWorldNum, currentLevelNum + 1);
+            };
+        }
     }
 
     modal.classList.remove('hidden');
@@ -3729,6 +3773,7 @@ window.togglePause = togglePause;
 window.toggleFullscreen = toggleFullscreen;
 window.restartFromBeginning = restartFromBeginning;
 window.showGameOverModal = showGameOverModal;
+window.goToNextLevel = goToNextLevel;
 window.startGameFromMenu = startGameFromMenu;
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {

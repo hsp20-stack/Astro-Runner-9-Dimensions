@@ -1,4 +1,14 @@
 // audio.js - Sintetizador de efectos y el Tema Legendario de Zelda en Chiptune con Web Audio API
+
+// ==========================================
+// FRECUENCIAS UNIVERSALES DE NOTAS (Octavas 1 a 6)
+// ==========================================
+const C2 = 65.41, Cs2 = 69.30, Db2 = 69.30, D2 = 73.42, Ds2 = 77.78, Eb2 = 77.78, E2 = 82.41, F2 = 87.31, Fs2 = 92.50, Gb2 = 92.50, G2 = 98.00, Gs2 = 103.83, Ab2 = 103.83, A2 = 110.00, As2 = 116.54, Bb2 = 116.54, B2 = 123.47;
+const C3 = 130.81, Cs3 = 138.59, Db3 = 138.59, D3 = 146.83, Ds3 = 155.56, Eb3 = 155.56, E3 = 164.81, F3 = 174.61, Fs3 = 185.00, Gb3 = 185.00, G3 = 196.00, Gs3 = 207.65, Ab3 = 207.65, A3 = 220.00, As3 = 233.08, Bb3 = 233.08, B3 = 246.94;
+const C4 = 261.63, Cs4 = 277.18, Db4 = 277.18, D4 = 293.66, Ds4 = 311.13, Eb4 = 311.13, E4 = 329.63, F4 = 349.23, Fs4 = 369.99, Gb4 = 369.99, G4 = 392.00, Gs4 = 415.30, Ab4 = 415.30, A4 = 440.00, As4 = 466.16, Bb4 = 466.16, B4 = 493.88;
+const C5 = 523.25, Cs5 = 554.37, Db5 = 554.37, D5 = 587.33, Ds5 = 622.25, Eb5 = 622.25, E5 = 659.25, F5 = 698.46, Fs5 = 739.99, Gb5 = 739.99, G5 = 783.99, Gs5 = 830.61, Ab5 = 830.61, A5 = 880.00, As5 = 932.33, Bb5 = 932.33, B5 = 987.77;
+const C6 = 1046.50, Cs6 = 1108.73, Db6 = 1108.73, D6 = 1174.66, Ds6 = 1244.51, Eb6 = 1244.51, E6 = 1318.51, F6 = 1396.91, Fs6 = 1479.98, Gb6 = 1479.98, G6 = 1567.98, Gs6 = 1661.22, Ab6 = 1661.22, A6 = 1760.00, As6 = 1864.66, Bb6 = 1864.66, B6 = 1975.53;
+
 class SoundManager {
     constructor() {
         this.ctx = null;
@@ -212,97 +222,97 @@ class SoundManager {
 
     playStageClear() {
         if (this.muted) return;
-        this.stopMusic();
-        this.init();
-        if (!this.ctx) return;
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
+        try {
+            this.stopMusic();
+            this.init();
+            if (!this.ctx) return;
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+
+            // ==========================================
+            // FANFARRIA ÉPICA DE VICTORIA: SUPER MARIO LEVEL CLEAR FANFARE
+            // ==========================================
+            const fanfare = [
+                // Arpegio 1: Triada de Do Mayor ascendente triunfal
+                { f: G4,  d: 0.11, b: C3 },
+                { f: C5,  d: 0.11, b: C3 },
+                { f: E5,  d: 0.11, b: E3 },
+                { f: G5,  d: 0.11, b: G3 },
+                { f: C6,  d: 0.11, b: C4 },
+                { f: E6,  d: 0.18, b: E4 },
+                { f: G6,  d: 0.32, b: G4 },
+                { f: E6,  d: 0.22, b: E4 },
+
+                // Arpegio 2: Modulación a La Bemol Mayor
+                { f: Ab4, d: 0.11, b: Ab3 },
+                { f: C5,  d: 0.11, b: C4 },
+                { f: Eb5, d: 0.11, b: Eb4 },
+                { f: Ab5, d: 0.11, b: Ab4 },
+                { f: C6,  d: 0.11, b: C5 },
+                { f: Eb6, d: 0.18, b: Eb5 },
+                { f: Ab6, d: 0.32, b: Ab5 },
+                { f: Eb6, d: 0.22, b: Eb5 },
+
+                // Arpegio 3: Clímax en Si Bemol Mayor con fanfarria
+                { f: Bb4, d: 0.11, b: Bb3 },
+                { f: D5,  d: 0.11, b: D4 },
+                { f: F5,  d: 0.11, b: F4 },
+                { f: Bb5, d: 0.11, b: Bb4 },
+                { f: D6,  d: 0.11, b: D5 },
+                { f: F6,  d: 0.18, b: F5 },
+                { f: Bb6, d: 0.34, b: Bb5 },
+                { f: Bb6, d: 0.13, b: Bb5 },
+                { f: Bb6, d: 0.13, b: Bb5 },
+
+                // Gran Acorde final triunfal de Do Mayor sostenido
+                { f: C6,  d: 1.25, b: C3 }
+            ];
+
+            let offset = 0;
+            fanfare.forEach(note => {
+                const now = this.ctx.currentTime + offset;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(note.f, now);
+
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.012, now + note.d * 0.94);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + note.d * 0.98);
+
+                // Acompañamiento armónico y bajo
+                if (note.b) {
+                    const bOsc = this.ctx.createOscillator();
+                    const bGain = this.ctx.createGain();
+                    bOsc.type = 'triangle';
+                    bOsc.frequency.setValueAtTime(note.b, now);
+                    bGain.gain.setValueAtTime(0.24, now);
+                    bGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.90);
+                    bOsc.connect(bGain);
+                    bGain.connect(this.ctx.destination);
+                    bOsc.start(now);
+                    bOsc.stop(now + note.d * 0.95);
+                }
+
+                offset += note.d * 0.95;
+            });
+
+            // La música vuelve a sonar siempre automáticamente tras la fanfarria de victoria
+            setTimeout(() => {
+                if (!this.musicPlaying && !this.muted) {
+                    this.startMusic(this.currentWorld, false);
+                }
+            }, offset * 1000 + 400);
+        } catch (e) {
+            console.error("playStageClear note:", e);
         }
-
-        // ==========================================
-        // FANFARRIA ÉPICA DE VICTORIA: SUPER MARIO LEVEL CLEAR FANFARE
-        // ==========================================
-        const G3 = 196.00, C4 = 261.63, E4 = 329.63, G4 = 392.00, C5 = 523.25, E5 = 659.25, G5 = 783.99;
-        const Ab3 = 207.65, C5_2 = 523.25, Eb4 = 311.13, Ab4 = 415.30, Eb5 = 622.25, Ab5 = 830.61;
-        const Bb3 = 233.08, D4 = 293.66, F4 = 349.23, Bb4 = 466.16, D5 = 587.33, F5 = 698.46, Bb5 = 932.33;
-        const C6 = 1046.50, E6 = 1318.51, G6 = 1567.98, Ab6 = 1661.22, Bb6 = 1864.66;
-
-        const fanfare = [
-            // Arpegio 1: Triada de Do Mayor ascendente triunfal
-            { f: G4,  d: 0.11, b: C3 },
-            { f: C5,  d: 0.11, b: C3 },
-            { f: E5,  d: 0.11, b: E3 },
-            { f: G5,  d: 0.11, b: G3 },
-            { f: C6,  d: 0.11, b: C4 },
-            { f: E6,  d: 0.18, b: E4 },
-            { f: G6,  d: 0.32, b: G4 },
-            { f: E6,  d: 0.22, b: E4 },
-
-            // Arpegio 2: Modulación a La Bemol Mayor
-            { f: Ab4, d: 0.11, b: Ab3 },
-            { f: C5,  d: 0.11, b: C4 },
-            { f: Eb5, d: 0.11, b: Eb4 },
-            { f: Ab5, d: 0.11, b: Ab4 },
-            { f: C6,  d: 0.11, b: C5 },
-            { f: Eb6, d: 0.18, b: Eb5 },
-            { f: Ab6, d: 0.32, b: Ab5 },
-            { f: Eb6, d: 0.22, b: Eb5 },
-
-            // Arpegio 3: Clímax en Si Bemol Mayor con fanfarria
-            { f: Bb4, d: 0.11, b: Bb3 },
-            { f: D5,  d: 0.11, b: D4 },
-            { f: F5,  d: 0.11, b: F4 },
-            { f: Bb5, d: 0.11, b: Bb4 },
-            { f: D6,  d: 0.11, b: D5 },
-            { f: F6,  d: 0.18, b: F5 },
-            { f: Bb6, d: 0.34, b: Bb5 },
-            { f: Bb6, d: 0.13, b: Bb5 },
-            { f: Bb6, d: 0.13, b: Bb5 },
-
-            // Gran Acorde final triunfal de Do Mayor sostenido
-            { f: C6,  d: 1.25, b: C3 }
-        ];
-
-        let offset = 0;
-        fanfare.forEach(note => {
-            const now = this.ctx.currentTime + offset;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(note.f, now);
-
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.exponentialRampToValueAtTime(0.012, now + note.d * 0.94);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + note.d * 0.98);
-
-            // Acompañamiento armónico y bajo
-            if (note.b) {
-                const bOsc = this.ctx.createOscillator();
-                const bGain = this.ctx.createGain();
-                bOsc.type = 'triangle';
-                bOsc.frequency.setValueAtTime(note.b, now);
-                bGain.gain.setValueAtTime(0.24, now);
-                bGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.90);
-                bOsc.connect(bGain);
-                bGain.connect(this.ctx.destination);
-                bOsc.start(now);
-                bOsc.stop(now + note.d * 0.95);
-            }
-
-            offset += note.d * 0.95;
-        });
-
-        // La música vuelve a sonar siempre automáticamente tras la fanfarria de victoria
-        setTimeout(() => {
-            if (!this.musicPlaying && !this.muted) {
-                this.startMusic(this.currentWorld, false);
-            }
-        }, offset * 1000 + 400);
+    }
     }
 
     playGameOver() {
