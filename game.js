@@ -179,7 +179,11 @@ function loadLevel(worldNum, levelNum) {
     bossEntity = levelData.boss ? Object.assign({}, levelData.boss) : null;
 
     // La música suena SIEMPRE de forma continua
-    window.sounds.startMusic(worldNum, levelData.isBossLevel);
+    try {
+        window.sounds.startMusic(worldNum, levelData.isBossLevel);
+    } catch (e) {
+        console.error("startMusic error in loadLevel:", e);
+    }
     updateUI();
 }
 
@@ -895,6 +899,8 @@ function killPlayer() {
 }
 
 function handleRespawn() {
+    astro.isDying = false;
+    astro.deathTimer = 0;
     if (lives <= 0) {
         isGameOver = true;
         showGameOverModal();
@@ -3240,11 +3246,15 @@ function drawPlasmaBall(x, y) {
 // ==========================================
 let lastTime = 0;
 function gameLoop(time) {
-    const dt = Math.min((time - lastTime) / 1000, 0.1);
-    lastTime = time;
+    try {
+        const dt = Math.min((time - lastTime) / 1000, 0.1);
+        lastTime = time;
 
-    updateGame(dt);
-    render();
+        updateGame(dt);
+        render();
+    } catch (err) {
+        console.error("gameLoop safety catch:", err);
+    }
 
     requestAnimationFrame(gameLoop);
 }
@@ -3291,7 +3301,7 @@ function showVictoryModal(isBossDefeated) {
 
 function showGameOverModal() {
     const modal = document.getElementById('modalGameOver');
-    modal.classList.remove('hidden');
+    if (modal) modal.classList.remove('hidden');
 }
 
 function restartFromBeginning() {
@@ -3299,9 +3309,15 @@ function restartFromBeginning() {
     score = 0;
     crystals = 0;
     isGameOver = false;
-    document.getElementById('modalGameOver').classList.add('hidden');
+    astro.isDying = false;
+    astro.deathTimer = 0;
+    const modal = document.getElementById('modalGameOver');
+    if (modal) modal.classList.add('hidden');
     loadLevel(currentWorldNum, 1);
 }
+
+window.showGameOverModal = showGameOverModal;
+window.restartFromBeginning = restartFromBeginning;
 
 function openWorldSelector() {
     isPaused = true;
@@ -3705,6 +3721,15 @@ function initGame() {
 
     requestAnimationFrame(gameLoop);
 }
+
+window.goToMainMenu = goToMainMenu;
+window.openWorldSelector = openWorldSelector;
+window.closeWorldSelector = closeWorldSelector;
+window.togglePause = togglePause;
+window.toggleFullscreen = toggleFullscreen;
+window.restartFromBeginning = restartFromBeginning;
+window.showGameOverModal = showGameOverModal;
+window.startGameFromMenu = startGameFromMenu;
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     initGame();
