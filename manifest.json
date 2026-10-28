@@ -1,17 +1,17 @@
 {
-  "name": "Astro Runner: 9 Dimensions",
+  "name": "Astro Runner - Hugo SP Studios",
   "short_name": "Astro Runner",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#050814",
-  "theme_color": "#00f2fe",
-  "description": "Juego de plataformas retro-futurista con 9 dimensiones y 72 sectores con jefes espaciales.",
+  "background_color": "#050811",
+  "theme_color": "#38bdf8",
+  "description": "Juego de plataformas retro de 9 mundos desarrollado por Hugo SP Studios.",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
