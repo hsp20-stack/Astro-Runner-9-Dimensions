@@ -587,7 +587,7 @@ body, html {
     overflow: hidden;
 }
 
-/* El Canvas ocupa el 100% absoluto de la pantalla (Cero barras negras) */
+/* El Canvas ocupa el 100% absoluto de la pantalla con renderizado HD ultra suave */
 #gameCanvas {
     position: absolute;
     top: 0;
@@ -595,8 +595,7 @@ body, html {
     width: 100%;
     height: 100%;
     display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    image-rendering: auto;
     object-fit: fill;
 }
 

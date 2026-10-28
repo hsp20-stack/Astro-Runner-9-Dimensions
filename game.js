@@ -5,8 +5,28 @@ const ctx = canvas.getContext('2d');
 const TILE_SIZE = 32;
 const VIEW_WIDTH = 480;
 const VIEW_HEIGHT = 270;
-canvas.width = VIEW_WIDTH;
-canvas.height = VIEW_HEIGHT;
+const RENDER_SCALE = 2; // Renderizado Ultra-HD 2026 (960x540 supersampled con suavizado subpíxel)
+canvas.width = VIEW_WIDTH * RENDER_SCALE;
+canvas.height = VIEW_HEIGHT * RENDER_SCALE;
+
+// Efectos de pantalla modernos 2026 (Juice, Screen Shake, Textos flotantes)
+let screenShake = 0;
+let floatingTexts = [];
+
+function triggerScreenShake(intensity = 3) {
+    screenShake = Math.max(screenShake, intensity);
+}
+
+function addFloatingText(text, x, y, color = '#facc15') {
+    floatingTexts.push({
+        text,
+        x,
+        y,
+        vy: -1.3,
+        alpha: 1.0,
+        color
+    });
+}
 
 const SAVE_KEY = 'astro_runner_save_modern_v2';
 function loadProgress() {
@@ -166,6 +186,21 @@ function updateUI() {
 // ==========================================
 function updateGame(dt) {
     if (isPaused || isGameOver || isStageClear || !gameStartedFromMenu) return;
+
+    // Actualizar screen shake moderno 2026
+    if (screenShake > 0) {
+        screenShake = Math.max(0, screenShake - 0.25);
+    }
+
+    // Actualizar textos flotantes modernos
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.y += ft.vy;
+        ft.alpha -= 0.024;
+        if (ft.alpha <= 0) {
+            floatingTexts.splice(i, 1);
+        }
+    }
 
     // Si la secuencia de la bandera de meta está en marcha
     if (flagPoleAnimation.active) {
@@ -660,6 +695,8 @@ function updateEnemies() {
                     e.alive = false;
                     astro.vy = -6.8;
                     score += 200;
+                    triggerScreenShake(3.5);
+                    addFloatingText('+200', e.x + 10, e.y, '#facc15');
                     window.sounds.playStomp();
                     createDustPuffs(e.x + 10, e.y + 10);
                     updateUI();
@@ -746,6 +783,8 @@ function updateBoss() {
 function damageBoss(amount) {
     if (!bossEntity || !bossEntity.alive) return;
     bossEntity.hp -= amount;
+    triggerScreenShake(6);
+    addFloatingText('HIT!', bossEntity.x + bossEntity.w / 2, bossEntity.y, '#ef4444');
     window.sounds.playBossHurt();
     createExplosion(bossEntity.x + bossEntity.w / 2, bossEntity.y + bossEntity.h / 2, '#fbbf24');
 
@@ -847,6 +886,7 @@ function checkCrystalCollisions() {
             activeCrystals.splice(i, 1);
             crystals++;
             score += 100;
+            addFloatingText('+100', c.x + 8, c.y, '#fde047');
             window.sounds.playCoin();
             createCoinBurst(c.x + 8, c.y + 8);
             updateUI();
@@ -940,10 +980,21 @@ function updateParticles() {
 }
 
 // ==========================================
-// RENDERIZADO VISUAL MODERNO ESTILO NINTENDO
+// RENDERIZADO VISUAL MODERNO 2026 (AAA 2.5D ENGINE)
 // ==========================================
 function render() {
     if (!levelData) return;
+
+    ctx.save();
+    ctx.scale(RENDER_SCALE, RENDER_SCALE);
+
+    // Efecto Screen Shake moderno (Impact Feel 2026)
+    if (screenShake > 0) {
+        const shakeMag = screenShake * 1.5;
+        const sx = (Math.random() - 0.5) * shakeMag;
+        const sy = (Math.random() - 0.5) * shakeMag;
+        ctx.translate(sx, sy);
+    }
 
     // Cielo con degradado vertical moderno
     const skyGrad = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
@@ -952,7 +1003,7 @@ function render() {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 
-    // Fondo temático dinámico según el mundo (Fuego en Mundo 8, Desierto en Mundo 2, etc.)
+    // Fondo temático dinámico según el mundo
     renderThemedBackdrop();
 
     // Dibujar tiles
@@ -1042,6 +1093,150 @@ function render() {
             ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
         }
     }
+
+    // Textos flotantes modernos (Juice 2026)
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ctx.save();
+        ctx.font = '900 12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = ft.color;
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 5;
+        ctx.globalAlpha = Math.max(0, ft.alpha);
+        ctx.fillText(ft.text, ft.x - cameraX, ft.y);
+        ctx.restore();
+    }
+
+    // Iluminación ambiental volumétrica, God Rays y Viñeta cinematográfica 2026
+    renderModernLightingAndPostProcess();
+
+    ctx.restore();
+}
+
+function renderModernLightingAndPostProcess() {
+    // 1. RAYOS DE SOL / LUZ VOLUMÉTRICOS (GOD RAYS 2026)
+    ctx.save();
+    const rayBreath = Math.sin(Date.now() * 0.0015) * 0.025 + 0.055;
+    const rayGrad = ctx.createLinearGradient(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    rayGrad.addColorStop(0, `rgba(255, 255, 255, ${rayBreath + 0.04})`);
+    rayGrad.addColorStop(0.35, `rgba(255, 255, 255, ${rayBreath})`);
+    rayGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = rayGrad;
+    for (let r = 0; r < 4; r++) {
+        const rx = ((r * 130 + 30) - (cameraX * 0.15)) % (VIEW_WIDTH + 100);
+        ctx.beginPath();
+        ctx.moveTo(rx, 0);
+        ctx.lineTo(rx + 50, 0);
+        ctx.lineTo(rx + 150, VIEW_HEIGHT);
+        ctx.lineTo(rx + 80, VIEW_HEIGHT);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 2. ILUMINACIÓN DINÁMICA DE PUNTOS DE LUZ (POINT LIGHTS CON BLOOM)
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen'; // Mezcla lumínica vibrante
+
+    // Luz del jugador (Astro emite una suave aura lumínica moderna)
+    const playerLightRadius = 50;
+    const plx = Math.floor(astro.x - cameraX + astro.w / 2);
+    const ply = Math.floor(astro.y + astro.h / 2);
+    const playerLight = ctx.createRadialGradient(plx, ply, 3, plx, ply, playerLightRadius);
+    const auraColor = (astro.state === 'plasma') ? 'rgba(56, 189, 248, 0.32)' : (astro.state === 'super' ? 'rgba(251, 191, 36, 0.32)' : 'rgba(255, 255, 255, 0.22)');
+    playerLight.addColorStop(0, auraColor);
+    playerLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = playerLight;
+    ctx.beginPath();
+    ctx.arc(plx, ply, playerLightRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Luces de los cristales/monedas en pantalla
+    for (let c of activeCrystals) {
+        const cx = c.x - cameraX + 8;
+        if (cx > -20 && cx < VIEW_WIDTH + 20) {
+            const coinLight = ctx.createRadialGradient(cx, c.y + 8, 2, cx, c.y + 8, 22);
+            coinLight.addColorStop(0, 'rgba(253, 224, 71, 0.28)');
+            coinLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = coinLight;
+            ctx.beginPath();
+            ctx.arc(cx, c.y + 8, 22, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Luz térmica ardiente del Boss si está activo
+    if (bossEntity && bossEntity.alive) {
+        const bx = bossEntity.x - cameraX + bossEntity.w / 2;
+        const by = bossEntity.y + bossEntity.h / 2;
+        const bossPulse = Math.sin(Date.now() * 0.006) * 12 + 70;
+        const bossLight = ctx.createRadialGradient(bx, by, 10, bx, by, bossPulse);
+        bossLight.addColorStop(0, 'rgba(239, 68, 68, 0.38)');
+        bossLight.addColorStop(0.5, 'rgba(249, 115, 22, 0.2)');
+        bossLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = bossLight;
+        ctx.beginPath();
+        ctx.arc(bx, by, bossPulse, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // 3. PARTÍCULAS AMBIENTALES SEGÚN EL MUNDO
+    ctx.save();
+    const weatherTheme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
+    const now = Date.now();
+
+    if (weatherTheme === "grassland") {
+        for (let i = 0; i < 10; i++) {
+            const time = (now * 0.0006 + i * 0.3) % 1;
+            const wx = ((i * 48) - cameraX * 0.35 + Math.sin(time * 6 + i) * 15) % VIEW_WIDTH;
+            const wy = (time * VIEW_HEIGHT);
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(74, 222, 128, 0.45)' : 'rgba(254, 240, 138, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 2.5, 1.5, Math.sin(time * 4), 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "desert") {
+        for (let i = 0; i < 14; i++) {
+            const time = (now * 0.001 + i * 0.25) % 1;
+            const wx = ((i * 36) - cameraX * 0.5 + time * 60) % VIEW_WIDTH;
+            const wy = 40 + (i * 14) + Math.sin(time * 8) * 8;
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+            ctx.fillRect(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 2, 2);
+        }
+    } else if (weatherTheme === "ice") {
+        for (let i = 0; i < 16; i++) {
+            const time = (now * 0.0008 + i * 0.2) % 1;
+            const wx = ((i * 32) - cameraX * 0.3 + Math.sin(time * 5 + i) * 12) % VIEW_WIDTH;
+            const wy = (time * VIEW_HEIGHT);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.beginPath();
+            ctx.arc(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "space") {
+        for (let i = 0; i < 12; i++) {
+            const twinkle = Math.sin(now * 0.004 + i) * 0.5 + 0.5;
+            const sx = (i * 42 + 10) % VIEW_WIDTH;
+            const sy = (i * 24 + 15) % VIEW_HEIGHT;
+            ctx.fillStyle = `rgba(192, 132, 252, ${twinkle * 0.55})`;
+            ctx.fillRect(sx, sy, 2.2, 2.2);
+        }
+    }
+    ctx.restore();
+
+    // 4. VIÑETA CINEMATOGRÁFICA Y GRADIENTE DE PROFUNDIDAD
+    ctx.save();
+    const vignette = ctx.createRadialGradient(
+        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.36,
+        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.72
+    );
+    vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vignette.addColorStop(1, 'rgba(2, 6, 23, 0.45)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    ctx.restore();
 }
 
 function renderThemedBackdrop() {
@@ -1483,147 +1678,331 @@ function renderWavingFlag() {
 }
 
 // ==========================================
-// DIBUJO DE TILES ESTILO MARIO BROS
+// DIBUJO DE TILES ESTILO 2026 (AAA 2.5D PLATFORMS)
 // ==========================================
 function drawMarioTile(tile, x, y, c, r) {
     if (tile === 1) {
-        // SUELO CON HIERBA VERDE VIBRANTE Y TIERRA (ESTILO SUPER MARIO BROS)
-        // Fondo de tierra marrón rica
-        ctx.fillStyle = levelData.world.dirtColor;
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        // === 1. TIERRA ORGÁNICA ESTRATIFICADA CON CÉSPED 2.5D (2026 AAA GRAPHICS) ===
+        // Sombra de oclusión ambiental proyectada bajo el bloque si flota
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        ctx.fillRect(x + 2, y + TILE_SIZE, TILE_SIZE - 4, 5);
 
-        // Textura de guijarros en la tierra
+        // Bloque de tierra con degradado vertical de profundidad
+        const dirtGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+        dirtGrad.addColorStop(0, levelData.world.dirtColor);
+        dirtGrad.addColorStop(1, '#2b0c03');
+        ctx.fillStyle = dirtGrad;
+        ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+        // Minerales y guijarros incrustados con relieve y luz especular
         ctx.fillStyle = levelData.world.dirtPattern;
-        ctx.fillRect(x + 4, y + 16, 6, 5);
-        ctx.fillRect(x + 18, y + 22, 7, 5);
-
-        // Capa de césped superior verde
-        ctx.fillStyle = levelData.world.grassColor;
-        ctx.fillRect(x, y, TILE_SIZE, 11);
-
-        // Brillo superior del césped
-        ctx.fillStyle = levelData.world.grassHighlight;
-        ctx.fillRect(x, y, TILE_SIZE, 3);
-
-        // Borde ondulado de césped cayendo
-        ctx.fillStyle = levelData.world.grassColor;
         ctx.beginPath();
-        ctx.arc(x + 6, y + 11, 4, 0, Math.PI);
-        ctx.arc(x + 16, y + 11, 4, 0, Math.PI);
-        ctx.arc(x + 26, y + 11, 4, 0, Math.PI);
+        ctx.ellipse(x + 7, y + 20, 4, 3, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(x + 22, y + 24, 5, 3.5, -0.3, 0, Math.PI * 2);
         ctx.fill();
 
+        // Destello especular en los minerales
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(x + 6, y + 19, 2, 1);
+        ctx.fillRect(x + 21, y + 23, 2, 1);
+
+        // Sombra suave proyectada bajo el faldón de hierba
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+        ctx.beginPath();
+        ctx.arc(x + 6, y + 13, 5, 0, Math.PI);
+        ctx.arc(x + 16, y + 13, 5, 0, Math.PI);
+        ctx.arc(x + 26, y + 13, 5, 0, Math.PI);
+        ctx.fill();
+
+        // Capa de césped superior con degradado tridimensional
+        const grassGrad = ctx.createLinearGradient(x, y, x, y + 12);
+        grassGrad.addColorStop(0, levelData.world.grassHighlight);
+        grassGrad.addColorStop(0.35, levelData.world.grassColor);
+        grassGrad.addColorStop(1, '#14532d');
+        ctx.fillStyle = grassGrad;
+        ctx.fillRect(x, y, TILE_SIZE, 11);
+
+        // Lóbulos redondeados colgantes de hierba
+        ctx.beginPath();
+        ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+        ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+        ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+        ctx.fill();
+
+        // Borde superior biselado brillante (Rim Light 2026)
+        ctx.fillStyle = levelData.world.grassHighlight;
+        ctx.fillRect(x, y, TILE_SIZE, 2.5);
+
+        // Briznas de hierba animadas que ondean suavemente con el viento
+        const wind = Math.sin(Date.now() * 0.003 + c * 0.7) * 2;
+        ctx.strokeStyle = levelData.world.grassHighlight;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y);
+        ctx.lineTo(x + 6 + wind, y - 4);
+        ctx.moveTo(x + 14, y);
+        ctx.lineTo(x + 16 + wind, y - 5);
+        ctx.moveTo(x + 24, y);
+        ctx.lineTo(x + 26 + wind, y - 4);
+        ctx.stroke();
+
     } else if (tile === 13) {
-        // TIERRA PROFUNDA DEBAJO DEL SUELO
-        ctx.fillStyle = levelData.world.dirtColor;
+        // === 2. TIERRA SUBTERRÁNEA PROFUNDA CON VETAS CRISTALINAS ===
+        const deepGrad = ctx.createLinearGradient(x, y, x, y + TILE_SIZE);
+        deepGrad.addColorStop(0, levelData.world.dirtColor);
+        deepGrad.addColorStop(1, '#1a0502');
+        ctx.fillStyle = deepGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+        // Estratos geológicos y vetas minerales
         ctx.fillStyle = levelData.world.dirtPattern;
-        ctx.fillRect(x + 2, y + 6, 8, 6);
-        ctx.fillRect(x + 16, y + 18, 9, 7);
+        ctx.fillRect(x + 2, y + 8, 10, 5);
+        ctx.fillRect(x + 16, y + 18, 12, 6);
+
+        // Cristal mineral brillante incrustado
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(x + 18, y + 7);
+        ctx.lineTo(x + 21, y + 4);
+        ctx.lineTo(x + 24, y + 7);
+        ctx.lineTo(x + 21, y + 10);
+        ctx.fill();
+
+        // Oclusión ambiental sutil en las esquinas
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
 
     } else if (tile === 2) {
-        // BLOQUE DE LADRILLO MARIO 3D
-        ctx.fillStyle = levelData.world.blockColor;
+        // === 3. BLOQUE DE LADRILLO 3D BISELADO (MODERN BEVELED BLOCK) ===
+        // Sombra de oclusión ambiental bajo el ladrillo
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.26)';
+        ctx.fillRect(x + 1, y + TILE_SIZE, TILE_SIZE - 2, 5);
+
+        // Superficie con degradado del ladrillo
+        const blockGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
+        blockGrad.addColorStop(0, '#ea580c');
+        blockGrad.addColorStop(0.5, levelData.world.blockColor);
+        blockGrad.addColorStop(1, '#7c2d12');
+        ctx.fillStyle = blockGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Borde 3D con relieve
-        ctx.strokeStyle = '#7c2d12';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+        // Bisel de luz superior e izquierdo (Specular Highlight)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+        ctx.fillRect(x, y, TILE_SIZE, 2.5);
+        ctx.fillRect(x, y, 2.5, TILE_SIZE);
 
-        // Líneas de mortero de ladrillo
+        // Bisel de sombra inferior y derecho (Ambient Shadow)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(x, y + TILE_SIZE - 2.5, TILE_SIZE, 2.5);
+        ctx.fillRect(x + TILE_SIZE - 2.5, y, 2.5, TILE_SIZE);
+
+        // Mortero interior con profundidad
+        ctx.strokeStyle = '#450a0a';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(x, y + 16);
-        ctx.lineTo(x + TILE_SIZE, y + 16);
-        ctx.moveTo(x + 16, y);
-        ctx.lineTo(x + 16, y + 16);
-        ctx.moveTo(x + 8, y + 16);
-        ctx.lineTo(x + 8, y + TILE_SIZE);
-        ctx.moveTo(x + 24, y + 16);
-        ctx.lineTo(x + 24, y + TILE_SIZE);
+        ctx.moveTo(x + 2, y + 16);
+        ctx.lineTo(x + TILE_SIZE - 2, y + 16);
+        ctx.moveTo(x + 16, y + 2);
+        ctx.lineTo(x + 16, y + 15);
+        ctx.moveTo(x + 8, y + 17);
+        ctx.lineTo(x + 8, y + TILE_SIZE - 2);
+        ctx.moveTo(x + 24, y + 17);
+        ctx.lineTo(x + 24, y + TILE_SIZE - 2);
         ctx.stroke();
 
     } else if (tile === 3 || tile === 4) {
-        // BLOQUE '?' DORADO METÁLICO MODERNO
-        ctx.fillStyle = '#f59e0b';
+        // === 4. BLOQUE '?' HOLOGRÁFICO METÁLICO CON SHIMMER ANIMADO ===
+        // Sombra de oclusión ambiental
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fillRect(x + 2, y + TILE_SIZE, TILE_SIZE - 4, 5);
+
+        // Cuerpo dorado metálico con degradado
+        const goldGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
+        goldGrad.addColorStop(0, '#fef08a');
+        goldGrad.addColorStop(0.35, '#f59e0b');
+        goldGrad.addColorStop(1, '#b45309');
+        ctx.fillStyle = goldGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Brillo superior
-        ctx.fillStyle = '#fde68a';
-        ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, 4);
+        // Brillo diagonal animado (Shimmer de alta tecnología)
+        const shimmerPos = ((Date.now() * 0.05 + x * 2) % (TILE_SIZE * 3)) - TILE_SIZE;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(x + shimmerPos, y);
+        ctx.lineTo(x + shimmerPos + 10, y);
+        ctx.lineTo(x + shimmerPos + 22, y + TILE_SIZE);
+        ctx.lineTo(x + shimmerPos + 12, y + TILE_SIZE);
+        ctx.fill();
+        ctx.restore();
 
-        ctx.strokeStyle = '#b45309';
-        ctx.lineWidth = 2;
+        // Borde biselado metálico
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 1.5;
         ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
 
-        // Tornillos en las 4 esquinas
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(x + 3, y + 3, 3, 3);
-        ctx.fillRect(x + TILE_SIZE - 6, y + 3, 3, 3);
-        ctx.fillRect(x + 3, y + TILE_SIZE - 6, 3, 3);
-        ctx.fillRect(x + TILE_SIZE - 6, y + TILE_SIZE - 6, 3, 3);
+        // Remaches 3D esféricos en las 4 esquinas
+        const rivets = [
+            { rx: x + 4, ry: y + 4 },
+            { rx: x + TILE_SIZE - 6, ry: y + 4 },
+            { rx: x + 4, ry: y + TILE_SIZE - 6 },
+            { rx: x + TILE_SIZE - 6, ry: y + TILE_SIZE - 6 }
+        ];
+        rivets.forEach(rv => {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(rv.rx, rv.ry, 3, 3);
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(rv.rx, rv.ry, 1.5, 1.5);
+        });
 
-        // Símbolo '?' blanco con relieve
+        // Símbolo '?' blanco con resplandor neón
+        ctx.save();
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px monospace';
-        ctx.fillText('?', x + 9, y + 24);
+        ctx.font = '900 20px monospace';
+        ctx.shadowColor = '#fef08a';
+        ctx.shadowBlur = 8;
+        ctx.fillText('?', x + 9, y + 23);
+        ctx.restore();
 
     } else if (tile >= 5 && tile <= 8) {
-        // TUBERÍAS VERDES COMPACTAS Y BAJAS (FÁCILES DE SALTAR)
-        const pipeY = y + 6; // Altura reducida y compacta (26px) para saltar comodísimo
+        // === 5. TUBERÍA METÁLICA MODERNA CON REFLEJO CILÍNDRICO ===
+        const pipeY = y + 6;
         const pipeH = TILE_SIZE - 6;
-        ctx.fillStyle = '#16a34a';
+
+        // Cuerpo cilíndrico de la tubería con degradado realista
+        const pipeGrad = ctx.createLinearGradient(x, 0, x + TILE_SIZE, 0);
+        pipeGrad.addColorStop(0, '#14532d');
+        pipeGrad.addColorStop(0.18, '#16a34a');
+        pipeGrad.addColorStop(0.35, '#86efac'); // Franja de brillo especular
+        pipeGrad.addColorStop(0.65, '#22c55e');
+        pipeGrad.addColorStop(1, '#052e16');
+        ctx.fillStyle = pipeGrad;
         ctx.fillRect(x, pipeY, TILE_SIZE, pipeH);
 
-        // Borde superior o collar de la tubería
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(x, pipeY, TILE_SIZE, 6);
+        // Collarín o borde superior ensanchado
+        ctx.fillRect(x - 1, pipeY, TILE_SIZE + 2, 7);
 
-        // Brillo reflectante blanco vertical
-        ctx.fillStyle = '#86efac';
-        ctx.fillRect(x + 5, pipeY, 4, pipeH);
+        // Tira de luz de neón cian en el collarín (Estilo Sci-Fi 2026)
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x + 2, pipeY + 7, TILE_SIZE - 4, 1.5);
 
-        // Sombra lateral
-        ctx.fillStyle = '#14532d';
-        ctx.fillRect(x + TILE_SIZE - 5, pipeY, 5, pipeH);
-
+        // Contorno de alta definición
         ctx.strokeStyle = '#052e16';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(x - 1, pipeY, TILE_SIZE + 2, 7);
+        ctx.strokeRect(x, pipeY + 7, TILE_SIZE, pipeH - 7);
+
+    } else if (tile === 9) {
+        // === 6. LAVA FLUIDA ONDULANTE CON NÚCLEO INCANDESCENTE (NO MÁS CUADRADOS ROJOS) ===
+        // Fondo volcánico profundo
+        ctx.fillStyle = '#450a0a';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+        // Capa de lava media con ondas sinusoidales
+        const lavaTime = Date.now() * 0.005 + x * 0.1;
+        const wave1 = Math.sin(lavaTime) * 3;
+        const wave2 = Math.cos(lavaTime * 1.3) * 2;
+
+        const lavaGrad = ctx.createLinearGradient(x, y, x, y + TILE_SIZE);
+        lavaGrad.addColorStop(0, '#fef08a');
+        lavaGrad.addColorStop(0.2, '#f97316');
+        lavaGrad.addColorStop(0.6, '#dc2626');
+        lavaGrad.addColorStop(1, '#7f1d1d');
+        ctx.fillStyle = lavaGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y + 4 + wave1);
+        ctx.quadraticCurveTo(x + 16, y + 2 + wave2, x + TILE_SIZE, y + 4 + wave1);
+        ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+        ctx.lineTo(x, y + TILE_SIZE);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cresta viva incandescente de la lava
+        ctx.strokeStyle = '#fff7ed';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(x, pipeY, TILE_SIZE, pipeH);
+        ctx.beginPath();
+        ctx.moveTo(x, y + 4 + wave1);
+        ctx.quadraticCurveTo(x + 16, y + 2 + wave2, x + TILE_SIZE, y + 4 + wave1);
+        ctx.stroke();
+
+        // Burbuja de magma animada
+        const bubbleRise = (Date.now() * 0.003 + c) % 2;
+        if (bubbleRise < 1) {
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(x + 14, y + 16 - bubbleRise * 8, 3 - bubbleRise * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+    } else if (tile === 12) {
+        // === 7. PIEDRA OBSIDIANA DE FORTALEZA CON BISEL Y VETAS ===
+        const stoneGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
+        stoneGrad.addColorStop(0, '#334155');
+        stoneGrad.addColorStop(0.5, '#1e293b');
+        stoneGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = stoneGrad;
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+        // Bisel de luz y sombra
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(x, y, TILE_SIZE, 2);
+        ctx.fillRect(x, y, 2, TILE_SIZE);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(x, y + TILE_SIZE - 2, TILE_SIZE, 2);
+        ctx.fillRect(x + TILE_SIZE - 2, y, 2, TILE_SIZE);
+
+        // Línea rúnica o junta de mortero con leve brillo carmesí
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y + 16);
+        ctx.lineTo(x + TILE_SIZE - 4, y + 16);
+        ctx.stroke();
 
     } else if (tile === 10) {
-        // MÁSTIL DE META (TILE 10)
-        // Poste metálico plateado elegante con reflejo
-        ctx.fillStyle = '#64748b';
+        // === 8. MÁSTIL DE META CROMADO ELEGANTE ===
+        const mastGrad = ctx.createLinearGradient(x + 13, 0, x + 19, 0);
+        mastGrad.addColorStop(0, '#334155');
+        mastGrad.addColorStop(0.4, '#ffffff');
+        mastGrad.addColorStop(0.7, '#94a3b8');
+        mastGrad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = mastGrad;
         ctx.fillRect(x + 13, y, 6, TILE_SIZE);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(x + 15, y, 2, TILE_SIZE);
 
-        // Bola dorada superior (solo en la cima del mástil, fila r === 1)
+        // Bola dorada superior con brillo (solo en fila r === 1)
         if (r === 1) {
+            ctx.save();
             ctx.fillStyle = '#fbbf24';
+            ctx.shadowColor = '#fef08a';
+            ctx.shadowBlur = 10;
             ctx.beginPath();
-            ctx.arc(x + 16, y + 4, 7, 0, Math.PI * 2);
+            ctx.arc(x + 16, y + 4, 8, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(x + 14, y + 2, 2.5, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
         }
 
-        // Pedestal de piedra esculpida en la base (solo en fila r === 5)
+        // Pedestal de piedra esculpida en la base (r === 5)
         if (r === 5) {
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x + 4, y + 12, 24, 20);
             ctx.fillStyle = '#475569';
-            ctx.fillRect(x + 5, y + 14, 22, 18);
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillRect(x + 6, y + 14, 20, 3);
-            ctx.strokeStyle = '#1e293b';
+            ctx.fillRect(x + 6, y + 12, 20, 3);
+            ctx.strokeStyle = '#0f172a';
             ctx.lineWidth = 1.5;
-            ctx.strokeRect(x + 5, y + 14, 22, 18);
+            ctx.strokeRect(x + 4, y + 12, 24, 20);
         }
 
     } else if (tile === 11) {
-        // PUERTA DEL CASTILLO (ARCO ABIERTO PARA ENTRAR A LA META)
+        // === 9. PUERTA DEL CASTILLO GÓTICO ===
         ctx.fillStyle = '#020617';
         ctx.beginPath();
         ctx.arc(x + 16, y + 16, 14, Math.PI, 0, false);
@@ -1631,25 +2010,14 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.lineTo(x + 2, y + 32);
         ctx.closePath();
         ctx.fill();
-
-    } else if (tile === 12) {
-        // BLOQUE GASTADO / PIEDRA DURA DE CASTILLO
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#334155';
-        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
-
-    } else if (tile === 9) {
-        // LAVA
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        ctx.fillStyle = '#fde047';
-        ctx.fillRect(x, y, TILE_SIZE, 4);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.stroke();
     }
 }
 
 // ==========================================
-// DIBUJO DE ASTRO (SUPER VISIBLE Y ELEGANTE)
+// DIBUJO DE ASTRO 2026 (VOLUMÉTRICO Y ULTRA DETALLADO)
 // ==========================================
 function drawAstroModern() {
     const px = Math.floor(astro.x - cameraX);
@@ -1665,17 +2033,16 @@ function drawAstroModern() {
         ctx.translate(-px * 2 - astro.w, 0);
     }
 
-    // Traje y colores
+    // Traje y colores de alta fidelidad
     const isSuper = astro.state === 'super';
     const isPlasma = astro.state === 'plasma';
     const isTransforming = astro.transformationTimer > 0;
 
-    let suitColor = '#ffffff';
+    let suitColor = '#f8fafc';
     let armorColor = '#0284c7';
     let visorColor = '#38bdf8';
 
     if (isTransforming && Math.floor(astro.transformationTimer / 3) % 2 === 0) {
-        // Destello visual de transformación estilo Super Mario
         suitColor = '#ffffff';
         armorColor = '#fef08a';
         visorColor = '#f59e0b';
@@ -1689,55 +2056,90 @@ function drawAstroModern() {
         visorColor = '#38bdf8';
     }
 
+    // Estela de movimiento translúcida si corre a gran velocidad
+    if (Math.abs(astro.vx) > 2.5) {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(px - (astro.vx > 0 ? 6 : -6), py + 4, astro.w, astro.h);
+        ctx.restore();
+    }
+
     // Aura de poder si está transformado
     if (isSuper || isPlasma || isTransforming) {
-        ctx.strokeStyle = isPlasma ? 'rgba(56, 189, 248, 0.7)' : 'rgba(251, 191, 36, 0.7)';
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.strokeStyle = isPlasma ? 'rgba(56, 189, 248, 0.8)' : 'rgba(251, 191, 36, 0.8)';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = isPlasma ? '#38bdf8' : '#fbbf24';
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.ellipse(px + astro.w / 2, py + astro.h / 2, astro.w / 2 + 5, astro.h / 2 + 5, 0, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
     }
 
-    // Micro-Jetpack trasero con llama
-    ctx.fillStyle = '#475569';
-    ctx.fillRect(px - 4, py + 8, 6, astro.h - 14);
+    // Micro-Jetpack trasero con llama de plasma animada
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(px - 5, py + 8, 6, astro.h - 14);
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(px - 4, py + 9, 2, astro.h - 16); // Reflejo metálico del jetpack
 
     if (!astro.isGrounded) {
-        // Llama activa del jetpack
-        ctx.fillStyle = isPlasma ? '#ef4444' : '#38bdf8';
+        // Llama activa del jetpack con degradado
+        const flameLength = 8 + Math.sin(Date.now() * 0.03) * 3;
+        const thrusterGrad = ctx.createLinearGradient(px - 2, py + astro.h - 6, px - 2, py + astro.h + flameLength);
+        thrusterGrad.addColorStop(0, '#ffffff');
+        thrusterGrad.addColorStop(0.3, isPlasma ? '#f97316' : '#38bdf8');
+        thrusterGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+        ctx.fillStyle = thrusterGrad;
         ctx.beginPath();
-        ctx.moveTo(px - 3, py + astro.h - 6);
-        ctx.lineTo(px - 1, py + astro.h + 7);
-        ctx.lineTo(px + 1, py + astro.h - 6);
+        ctx.moveTo(px - 4, py + astro.h - 6);
+        ctx.lineTo(px - 2, py + astro.h + flameLength);
+        ctx.lineTo(px, py + astro.h - 6);
         ctx.fill();
     }
 
-    // Cuerpo / Torso
-    ctx.fillStyle = suitColor;
+    // Torso con degradado de volumen
+    const torsoGrad = ctx.createLinearGradient(px + 2, py + 12, px + astro.w - 2, py + 12);
+    torsoGrad.addColorStop(0, suitColor);
+    torsoGrad.addColorStop(0.7, suitColor);
+    torsoGrad.addColorStop(1, '#94a3b8');
+    ctx.fillStyle = torsoGrad;
     ctx.fillRect(px + 2, py + 12, astro.w - 4, astro.h - 14);
 
     // Cañón de Plasma montado en el brazo (solo en estado plasma)
     if (isPlasma) {
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(px + astro.w - 3, py + 14, 9, 6);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(px + astro.w - 3, py + 13, 10, 7);
         ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(px + astro.w + 3, py + 15, 4, 4);
+        ctx.fillRect(px + astro.w + 4, py + 14, 4, 5);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px + astro.w + 6, py + 15, 2, 3);
     }
 
-    // Cinturón y emblema
+    // Cinturón de combate y emblema reactor
     ctx.fillStyle = armorColor;
     ctx.fillRect(px + 2, py + 18, astro.w - 4, 3);
     ctx.fillStyle = visorColor;
-    ctx.fillRect(px + astro.w / 2 - 2, py + 14, 4, 4);
+    ctx.beginPath();
+    ctx.arc(px + astro.w / 2, py + 15, 2.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Botas
+    // Botas con suela reforzada
     ctx.fillStyle = armorColor;
     const footOffset = (astro.animFrame % 2 === 0) ? 0 : 3;
     ctx.fillRect(px + 1, py + astro.h - 4 + footOffset, 7, 4);
     ctx.fillRect(px + astro.w - 8, py + astro.h - 4 - footOffset, 7, 4);
+    ctx.fillStyle = '#0f172a'; // Suela
+    ctx.fillRect(px + 1, py + astro.h - 1 + footOffset, 7, 1.5);
+    ctx.fillRect(px + astro.w - 8, py + astro.h - 1 - footOffset, 7, 1.5);
 
-    // Casco espacial redondeado con brillo de cristal
-    ctx.fillStyle = suitColor;
+    // Casco espacial redondeado con volumen y brillo de cristal
+    const helmetGrad = ctx.createRadialGradient(px + astro.w / 2 - 2, py + 6, 2, px + astro.w / 2, py + 8, 9);
+    helmetGrad.addColorStop(0, '#ffffff');
+    helmetGrad.addColorStop(0.6, suitColor);
+    helmetGrad.addColorStop(1, '#64748b');
+    ctx.fillStyle = helmetGrad;
     ctx.beginPath();
     ctx.arc(px + astro.w / 2, py + 8, 9, 0, Math.PI * 2);
     ctx.fill();
@@ -1745,32 +2147,56 @@ function drawAstroModern() {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Visor brillante con ojos expresivos
-    ctx.fillStyle = '#0f172a';
+    // Visor curvo de alta tecnología con reflejo digital
+    ctx.fillStyle = '#090d16';
     ctx.beginPath();
-    ctx.ellipse(px + astro.w / 2 + 1, py + 8, 6, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(px + astro.w / 2 + 1, py + 8, 6.5, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Brillo del cristal del visor
     ctx.fillStyle = visorColor;
-    ctx.fillRect(px + astro.w / 2, py + 7, 5, 2); // Línea de visión
+    ctx.fillRect(px + astro.w / 2, py + 7, 5, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(px + astro.w / 2 + 3, py + 6, 2, 1);
 
     ctx.restore();
 }
 
+// ==========================================
+// MONEDA DE ORO 3D HOLOGRÁFICA (2026 SHINE)
+// ==========================================
 function drawGoldCoin(x, y) {
-    ctx.fillStyle = '#fbbf24';
+    const spinTime = Math.cos(Date.now() * 0.007 + x * 0.1);
+    const coinW = Math.max(2, Math.abs(spinTime) * 7.5);
+
+    ctx.save();
+    // Halo de luz dorada suave
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
     ctx.beginPath();
-    ctx.ellipse(x + 8, y + 8, 7, 9, 0, 0, Math.PI * 2);
+    ctx.arc(x + 8, y + 8, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#fef08a';
+    // Medallón de oro con degradado 3D
+    const goldGrad = ctx.createLinearGradient(x + 8 - coinW, y, x + 8 + coinW, y + 16);
+    goldGrad.addColorStop(0, '#fef08a');
+    goldGrad.addColorStop(0.5, '#f59e0b');
+    goldGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = goldGrad;
     ctx.beginPath();
-    ctx.ellipse(x + 7, y + 8, 4, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 8, y + 8, coinW, 8.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#b45309';
-    ctx.lineWidth = 1;
+    // Borde biselado reluciente
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.2;
     ctx.stroke();
+
+    // Emblema central de estrella cuando está de frente
+    if (coinW > 4) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 7, y + 6, 2, 4);
+    }
+    ctx.restore();
 }
 
 function drawCuteEnemy(x, y, type) {
@@ -2100,48 +2526,145 @@ function drawBossHealthBarModern() {
     ctx.textAlign = 'left';
 }
 
+// ==========================================
+// ESTRELLA DE VICTORIA HOLOGRÁFICA 2026
+// ==========================================
 function drawGoldenStar(x, y) {
-    ctx.fillStyle = '#fde047';
-    ctx.beginPath();
-    ctx.arc(x + 12, y + 12, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-}
+    ctx.save();
+    const pulse = Math.sin(Date.now() * 0.008) * 3 + 12;
 
-function drawPowerUpItem(x, y, type) {
-    if (type === 'battery') {
-        // Champiñón rojo estilo Mario
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(x + 10, y + 9, 9, Math.PI, 0, false);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 6, y + 9, 8, 8);
-        ctx.fillRect(x + 8, y + 4, 4, 4);
-    } else {
-        // Flor de fuego
-        ctx.fillStyle = '#f97316';
-        ctx.beginPath();
-        ctx.arc(x + 10, y + 10, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fde047';
-        ctx.beginPath();
-        ctx.arc(x + 10, y + 10, 4, 0, Math.PI * 2);
-        ctx.fill();
+    // Resplandor áureo con bloom
+    const starGlow = ctx.createRadialGradient(x + 12, y + 12, 2, x + 12, y + 12, pulse + 8);
+    starGlow.addColorStop(0, '#ffffff');
+    starGlow.addColorStop(0.3, '#fde047');
+    starGlow.addColorStop(0.7, '#f59e0b');
+    starGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = starGlow;
+    ctx.beginPath();
+    ctx.arc(x + 12, y + 12, pulse + 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Estrella de 5 puntas de alta definición
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const outerAngle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+        const innerAngle = outerAngle + Math.PI / 5;
+        const ox = x + 12 + Math.cos(outerAngle) * 11;
+        const oy = y + 12 + Math.sin(outerAngle) * 11;
+        const ix = x + 12 + Math.cos(innerAngle) * 5;
+        const iy = y + 12 + Math.sin(innerAngle) * 5;
+        if (i === 0) ctx.moveTo(ox, oy);
+        else ctx.lineTo(ox, oy);
+        ctx.lineTo(ix, iy);
     }
-}
-
-function drawPlasmaBall(x, y) {
-    ctx.fillStyle = '#38bdf8';
-    ctx.beginPath();
-    ctx.arc(x + 5, y + 5, 5, 0, Math.PI * 2);
+    ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Destello blanco en el núcleo
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(x + 5, y + 5, 2, 0, Math.PI * 2);
+    ctx.arc(x + 10, y + 10, 2.5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+}
+
+// ==========================================
+// POTENCIADORES 3D (CHAMPIÑÓN SUPER Y FLOR DE PLASMA)
+// ==========================================
+function drawPowerUpItem(x, y, type) {
+    ctx.save();
+    const bob = Math.sin(Date.now() * 0.006 + x) * 2.5;
+    const py = y + bob;
+
+    // Resplandor de energía
+    ctx.fillStyle = type === 'battery' ? 'rgba(239, 68, 68, 0.28)' : 'rgba(249, 115, 22, 0.28)';
+    ctx.beginPath();
+    ctx.arc(x + 10, py + 10, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (type === 'battery') {
+        // === SUPER CHAMPIÑÓN 3D MODERNO ===
+        // Tallo suave
+        ctx.fillStyle = '#ffedd5';
+        ctx.fillRect(x + 5, py + 9, 10, 9);
+        // Ojos negros adorables con reflejo
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 7, py + 11, 2, 4);
+        ctx.fillRect(x + 11, py + 11, 2, 4);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 7, py + 11, 1, 1.5);
+        ctx.fillRect(x + 11, py + 11, 1, 1.5);
+
+        // Sombrero redondeado rojo con degradado esférico y volumen 2026
+        const capGrad = ctx.createRadialGradient(x + 8, py + 6, 2, x + 10, py + 9, 10);
+        capGrad.addColorStop(0, '#f87171');
+        capGrad.addColorStop(0.5, '#ef4444');
+        capGrad.addColorStop(1, '#991b1b');
+        ctx.fillStyle = capGrad;
+        ctx.beginPath();
+        ctx.arc(x + 10, py + 9, 9.5, Math.PI, 0, false);
+        ctx.fill();
+
+        // Lunares blancos con relieve esférico
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x + 10, py + 4, 3, 0, Math.PI * 2);
+        ctx.arc(x + 3, py + 8, 2.5, 0, Math.PI * 2);
+        ctx.arc(x + 17, py + 8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // === FLOR DE PLASMA VÓRTICE (2026 SCI-FI POWER) ===
+        const coreRot = Date.now() * 0.005;
+        // Pétalos de fuego rotativos
+        ctx.save();
+        ctx.translate(x + 10, py + 10);
+        ctx.rotate(coreRot);
+        for (let p = 0; p < 4; p++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.ellipse(0, 6, 3.2, 5.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // Núcleo brillante incandescente
+        const flowerCore = ctx.createRadialGradient(x + 10, py + 10, 1, x + 10, py + 10, 6);
+        flowerCore.addColorStop(0, '#ffffff');
+        flowerCore.addColorStop(0.4, '#fde047');
+        flowerCore.addColorStop(1, '#ef4444');
+        ctx.fillStyle = flowerCore;
+        ctx.beginPath();
+        ctx.arc(x + 10, py + 10, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+// ==========================================
+// DISPARO DE PLASMA CON BLOOM Y ESTELA
+// ==========================================
+function drawPlasmaBall(x, y) {
+    ctx.save();
+    // Halo de plasma cian volumétrico
+    const plasmaGrad = ctx.createRadialGradient(x + 5, y + 5, 1, x + 5, y + 5, 9);
+    plasmaGrad.addColorStop(0, '#ffffff');
+    plasmaGrad.addColorStop(0.3, '#38bdf8');
+    plasmaGrad.addColorStop(0.7, '#0284c7');
+    plasmaGrad.addColorStop(1, 'rgba(2, 132, 199, 0)');
+    ctx.fillStyle = plasmaGrad;
+    ctx.beginPath();
+    ctx.arc(x + 5, y + 5, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Estela de microchispas
+    ctx.fillStyle = '#e0f2fe';
+    ctx.fillRect(x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5, 2, 2);
+    ctx.restore();
 }
 
 // ==========================================
