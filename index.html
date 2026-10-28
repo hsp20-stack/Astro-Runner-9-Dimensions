@@ -20,7 +20,7 @@
                 splash.classList.add('fade-out');
                 splash.style.pointerEvents = 'none';
                 setTimeout(function() {
-                    try { splash.remove(); } catch(e) { splash.style.display = 'none'; }
+                    splash.style.display = 'none';
                     if (menu) {
                         menu.classList.remove('hidden');
                         menu.style.pointerEvents = 'auto';
@@ -32,12 +32,19 @@
         setTimeout(dismissStudioSplash, 1400);
 
         function startGameFromMenu() {
+            var splash = document.getElementById('studioSplashScreen');
+            if (splash) {
+                splash.style.display = 'none';
+                splash.style.pointerEvents = 'none';
+            }
             var menu = document.getElementById('mainMenuScreen');
             if (menu) {
                 menu.classList.add('hidden');
                 menu.style.pointerEvents = 'none';
             }
-            if (window.playGameAction) {
+            if (window.startGameDirectly) {
+                window.startGameDirectly();
+            } else if (window.playGameAction) {
                 window.playGameAction();
             }
         }

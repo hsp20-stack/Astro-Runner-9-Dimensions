@@ -205,7 +205,19 @@ function updateUI() {
 // FÍSICAS Y ACTUALIZACIÓN
 // ==========================================
 function updateGame(dt) {
+    const menu = document.getElementById('mainMenuScreen');
+    if (menu && (menu.classList.contains('hidden') || menu.style.display === 'none')) {
+        gameStartedFromMenu = true;
+    }
     if (isPaused || isGameOver || !gameStartedFromMenu) return;
+
+    // Si la música aún no está sonando y el juego está activo, arrancar tema del mundo
+    if (!window.sounds.musicPlaying && !window.sounds.muted && gameStartedFromMenu) {
+        try {
+            window.sounds.init();
+            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        } catch (e) {}
+    }
 
     // Actualizar screen shake moderno 2026
     if (screenShake > 0) {
@@ -3480,57 +3492,59 @@ function setupControls() {
         const el = document.getElementById(elId);
         if (!el) return;
 
+        let isDown = false;
+
         const press = (e) => {
-            if (e) {
-                if (e.cancelable) e.preventDefault();
-                e.stopPropagation();
-            }
-            window.sounds.init();
+            if (e && e.cancelable) e.preventDefault();
+            if (isDown) return;
+            isDown = true;
+            try {
+                window.sounds.init();
+                if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
+                    window.sounds.ctx.resume();
+                }
+                if (!window.sounds.musicPlaying && !window.sounds.muted && gameStartedFromMenu) {
+                    window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+                }
+            } catch (err) {}
             if (navigator.vibrate && vibrationEnabled) navigator.vibrate(15);
             onDown();
         };
 
         const release = (e) => {
-            if (e) {
-                if (e.cancelable) e.preventDefault();
-                e.stopPropagation();
-            }
+            if (e && e.cancelable) e.preventDefault();
+            if (!isDown) return;
+            isDown = false;
             onUp();
         };
 
-        el.addEventListener('pointerdown', press, { passive: false });
-        el.addEventListener('pointerup', release, { passive: false });
-        el.addEventListener('pointercancel', release, { passive: false });
+        el.addEventListener('pointerdown', press);
+        el.addEventListener('pointerup', release);
+        el.addEventListener('pointercancel', release);
+        el.addEventListener('pointerleave', release);
 
         el.addEventListener('touchstart', press, { passive: false });
         el.addEventListener('touchend', release, { passive: false });
         el.addEventListener('touchcancel', release, { passive: false });
-
-        el.addEventListener('mousedown', press);
-        el.addEventListener('mouseup', release);
     };
 
-    // Reseteo global para que NUNCA se quede pegado ningún botón
-    window.addEventListener('pointerup', () => {
-        keys.left = false;
-        keys.right = false;
-        keys.up = false;
-        keys.down = false;
-        keys.actionB = false;
+    window.addEventListener('touchend', (e) => {
+        if (!e.touches || e.touches.length === 0) {
+            keys.left = false;
+            keys.right = false;
+            keys.up = false;
+            keys.down = false;
+            keys.actionB = false;
+        }
     });
-    window.addEventListener('touchend', () => {
-        keys.left = false;
-        keys.right = false;
-        keys.up = false;
-        keys.down = false;
-        keys.actionB = false;
-    });
-    window.addEventListener('touchcancel', () => {
-        keys.left = false;
-        keys.right = false;
-        keys.up = false;
-        keys.down = false;
-        keys.actionB = false;
+    window.addEventListener('touchcancel', (e) => {
+        if (!e.touches || e.touches.length === 0) {
+            keys.left = false;
+            keys.right = false;
+            keys.up = false;
+            keys.down = false;
+            keys.actionB = false;
+        }
     });
 
     bindTouch('btnLeft', () => keys.left = true, () => keys.left = false);
@@ -3580,99 +3594,107 @@ let gameStartedFromMenu = false;
 let vibrationEnabled = true;
 let sfxEnabled = true;
 
+function startGameDirectly() {
+    const splash = document.getElementById('studioSplashScreen');
+    if (splash) {
+        splash.classList.add('fade-out');
+        splash.style.display = 'none';
+        splash.style.pointerEvents = 'none';
+    }
+    const menu = document.getElementById('mainMenuScreen');
+    if (menu) {
+        menu.classList.add('hidden');
+        menu.style.pointerEvents = 'none';
+    }
+    gameStartedFromMenu = true;
+    isPaused = false;
+
+    try {
+        window.sounds.init();
+        if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
+            window.sounds.ctx.resume();
+        }
+        window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+    } catch (err) {
+        console.error("Audio error on start:", err);
+    }
+}
+window.startGameDirectly = startGameDirectly;
+window.startGameFromMenu = startGameDirectly;
+window.playGameAction = startGameDirectly;
+
 function setupGameFlow() {
     const splash = document.getElementById('studioSplashScreen');
     const mainMenu = document.getElementById('mainMenuScreen');
-    if (!splash || !mainMenu) return;
 
-    let isDismissed = false;
+    if (splash) {
+        let isDismissed = false;
 
-    const dismissSplash = (instant = false) => {
-        if (isDismissed) return;
-        isDismissed = true;
+        const dismissSplash = (instant = false) => {
+            if (isDismissed) return;
+            isDismissed = true;
 
-        try {
-            window.sounds.init();
-            window.sounds.playStudioIntroChime();
-        } catch (e) {}
+            try {
+                window.sounds.init();
+                window.sounds.playStudioIntroChime();
+            } catch (e) {}
 
-        splash.classList.add('fade-out');
-        splash.style.pointerEvents = 'none';
+            splash.classList.add('fade-out');
+            splash.style.pointerEvents = 'none';
 
-        const delay = instant ? 80 : 500;
+            const delay = instant ? 80 : 400;
+            setTimeout(() => {
+                splash.style.display = 'none';
+                if (mainMenu) {
+                    mainMenu.classList.remove('hidden');
+                    mainMenu.style.pointerEvents = 'auto';
+                }
+            }, delay);
+        };
+
+        splash.addEventListener('pointerdown', () => dismissSplash(true), { passive: true });
+        splash.addEventListener('touchstart', () => dismissSplash(true), { passive: true });
+        splash.addEventListener('click', () => dismissSplash(true), { passive: true });
+
         setTimeout(() => {
-            splash.style.display = 'none';
-            mainMenu.classList.remove('hidden');
-        }, delay);
-    };
-
-    // Toque o clic para avanzar inmediatamente sin congelarse
-    splash.addEventListener('pointerdown', () => dismissSplash(true), { passive: true });
-    splash.addEventListener('touchstart', () => dismissSplash(true), { passive: true });
-    splash.addEventListener('click', () => dismissSplash(true), { passive: true });
-
-    // Salto automático suave a los 1.6 segundos
-    setTimeout(() => {
-        dismissSplash(false);
-    }, 1600);
-
-    // Acciones globales del Menú Principal
-    const playAction = (e) => {
-        try { window.sounds.init(); } catch (err) {}
-        const menu = document.getElementById('mainMenuScreen');
-        if (menu) {
-            menu.classList.add('hidden');
-            menu.style.pointerEvents = 'none';
-        }
-        gameStartedFromMenu = true;
-        isPaused = false;
-        try {
-            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
-        } catch (err) {}
-    };
-
-    window.playGameAction = playAction;
-    window.startGameFromMenu = playAction;
-
-    const worldSelectAction = (e) => {
-        try { window.sounds.init(); } catch (err) {}
-        openWorldSelector();
-    };
-
-    const controlsAction = (e) => {
-        try { window.sounds.init(); } catch (err) {}
-        const modal = document.getElementById('modalControls');
-        if (modal) modal.classList.remove('hidden');
-    };
-
-    const settingsAction = (e) => {
-        try { window.sounds.init(); } catch (err) {}
-        const modal = document.getElementById('modalSettings');
-        if (modal) modal.classList.remove('hidden');
-    };
+            dismissSplash(false);
+        }, 1400);
+    }
 
     const btnPlay = document.getElementById('btnPlayGame');
     if (btnPlay) {
-        btnPlay.addEventListener('click', playAction);
-        btnPlay.addEventListener('pointerdown', playAction, { passive: true });
+        btnPlay.addEventListener('click', startGameDirectly);
+        btnPlay.addEventListener('pointerdown', startGameDirectly, { passive: true });
     }
 
     const btnWorldMenu = document.getElementById('btnOpenWorldSelectMenu');
     if (btnWorldMenu) {
-        btnWorldMenu.addEventListener('click', worldSelectAction);
-        btnWorldMenu.addEventListener('pointerdown', worldSelectAction, { passive: true });
+        btnWorldMenu.addEventListener('click', () => {
+            try { window.sounds.init(); } catch (err) {}
+            openWorldSelector();
+        });
+        btnWorldMenu.addEventListener('pointerdown', () => {
+            try { window.sounds.init(); } catch (err) {}
+            openWorldSelector();
+        }, { passive: true });
     }
 
     const btnCtrl = document.getElementById('btnOpenControls');
     if (btnCtrl) {
-        btnCtrl.addEventListener('click', controlsAction);
-        btnCtrl.addEventListener('pointerdown', controlsAction, { passive: true });
+        btnCtrl.addEventListener('click', () => {
+            try { window.sounds.init(); } catch (err) {}
+            const modal = document.getElementById('modalControls');
+            if (modal) modal.classList.remove('hidden');
+        });
     }
 
     const btnSet = document.getElementById('btnOpenSettings');
     if (btnSet) {
-        btnSet.addEventListener('click', settingsAction);
-        btnSet.addEventListener('pointerdown', settingsAction, { passive: true });
+        btnSet.addEventListener('click', () => {
+            try { window.sounds.init(); } catch (err) {}
+            const modal = document.getElementById('modalSettings');
+            if (modal) modal.classList.remove('hidden');
+        });
     }
 }
 
