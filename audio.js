@@ -40,34 +40,38 @@ class SoundManager {
 
     playStudioIntroChime() {
         if (this.muted) return;
-        this.init();
-        if (!this.ctx) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
 
-        // Intro cinemática estilo PlayStation / Unity
-        const chords = [
-            { f: 261.63, d: 1.2 }, // C4
-            { f: 329.63, d: 1.2 }, // E4
-            { f: 392.00, d: 1.2 }, // G4
-            { f: 523.25, d: 1.4 }  // C5
-        ];
+            // Intro cinemática estilo PlayStation / Unity
+            const chords = [
+                { f: 261.63, d: 1.2 }, // C4
+                { f: 329.63, d: 1.2 }, // E4
+                { f: 392.00, d: 1.2 }, // G4
+                { f: 523.25, d: 1.4 }  // C5
+            ];
 
-        chords.forEach((note) => {
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
+            chords.forEach((note) => {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(note.f, now);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note.f, now);
 
-            gain.gain.setValueAtTime(0.01, now);
-            gain.gain.linearRampToValueAtTime(0.35, now + 0.35); // Sonido de intro nítido y potente
-            gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.35, now + 0.35); // Sonido de intro nítido y potente
+                gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + note.d);
-        });
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + note.d);
+            });
+        } catch (e) {
+            console.log('Audio autoplay policy note:', e);
+        }
     }
 
     playJump(isSuper = false) {
@@ -465,14 +469,100 @@ class SoundManager {
             { f: 0,   d: 0.10, b: 0  }
         ];
 
-        // Medley completo para los niveles normales
-        const mainMedley = [
-            ...sm64Theme,
-            ...songOfStorms,
-            ...sunshineTheme,
-            ...sariasSong,
-            ...galaxyTheme
+        // ==========================================
+        // 6. ZELDA: OCARINA OF TIME - VALLE GERUDO (DESIERTO)
+        // ==========================================
+        const gerudoValley = [
+            { f: Fs4, d: 0.14, b: D3 },
+            { f: B4,  d: 0.14, b: B3 },
+            { f: Cs5, d: 0.14, b: Fs3 },
+            { f: D5,  d: 0.28, b: B3 },
+            { f: E5,  d: 0.14, b: G3 },
+            { f: D5,  d: 0.14, b: D3 },
+            { f: Cs5, d: 0.28, b: A3 },
+            { f: B4,  d: 0.14, b: B3 },
+            { f: A4,  d: 0.14, b: Fs3 },
+            { f: B4,  d: 0.28, b: B3 },
+            { f: Cs5, d: 0.28, b: A3 },
+            { f: Fs4, d: 0.45, b: D3 },
+            { f: 0,   d: 0.08, b: 0  }
         ];
+
+        // ==========================================
+        // 7. SUPER MARIO 64 - COOL COOL MOUNTAIN (NIEVE Y HIELO)
+        // ==========================================
+        const coolCoolMountain = [
+            { f: G4,  d: 0.16, b: G3 },
+            { f: A4,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.16, b: G3 },
+            { f: D5,  d: 0.28, b: B3 },
+            { f: B4,  d: 0.16, b: G3 },
+            { f: G4,  d: 0.28, b: E3 },
+            { f: E4,  d: 0.16, b: C3 },
+            { f: G4,  d: 0.28, b: G3 },
+            { f: A4,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.16, b: G3 },
+            { f: D5,  d: 0.16, b: B3 },
+            { f: E5,  d: 0.28, b: C3 },
+            { f: D5,  d: 0.16, b: G3 },
+            { f: B4,  d: 0.28, b: E3 },
+            { f: G4,  d: 0.44, b: G3 },
+            { f: 0,   d: 0.08, b: 0  }
+        ];
+
+        // ==========================================
+        // 8. SUPER MARIO 64 - KOOPA'S ROAD (CASTILLO DE LAVA)
+        // ==========================================
+        const koopasRoad = [
+            { f: C4,  d: 0.18, b: C2 },
+            { f: Eb4, d: 0.18, b: Eb2 },
+            { f: F4,  d: 0.18, b: F2 },
+            { f: Fs4, d: 0.26, b: Fs2 },
+            { f: G4,  d: 0.18, b: G2 },
+            { f: C5,  d: 0.36, b: C3 },
+            { f: Bb4, d: 0.18, b: Bb2 },
+            { f: Ab4, d: 0.18, b: Ab2 },
+            { f: G4,  d: 0.28, b: G2 },
+            { f: F4,  d: 0.18, b: F2 },
+            { f: Eb4, d: 0.18, b: Eb2 },
+            { f: D4,  d: 0.44, b: D3 },
+            { f: 0,   d: 0.08, b: 0  }
+        ];
+
+        // ==========================================
+        // 9. SUPER MARIO GALAXY - OBSERVATORIO DEL COMETA (ESPACIO CÓSMICO)
+        // ==========================================
+        const cometObservatory = [
+            { f: G4,  d: 0.24, b: C3 },
+            { f: B4,  d: 0.24, b: G3 },
+            { f: D5,  d: 0.24, b: E3 },
+            { f: G5,  d: 0.48, b: C3 },
+            { f: Fs5, d: 0.24, b: D3 },
+            { f: E5,  d: 0.48, b: G3 },
+            { f: D5,  d: 0.24, b: B3 },
+            { f: B4,  d: 0.48, b: E3 },
+            { f: C5,  d: 0.24, b: A3 },
+            { f: E5,  d: 0.24, b: C3 },
+            { f: G5,  d: 0.24, b: E3 },
+            { f: Fs5, d: 0.48, b: D3 },
+            { f: D5,  d: 0.60, b: G3 },
+            { f: 0,   d: 0.10, b: 0  }
+        ];
+
+        // Asignación de música exclusiva según el Mundo (1 al 9)
+        let worldSoundtrack = sm64Theme;
+        switch (Number(worldNum)) {
+            case 1: worldSoundtrack = sm64Theme; break;         // Mundo 1: Pradera Cósmica (Bob-omb Battlefield)
+            case 2: worldSoundtrack = gerudoValley; break;      // Mundo 2: Dunas Doradas (Zelda Gerudo Valley)
+            case 3: worldSoundtrack = sariasSong; break;        // Mundo 3: Caverna Neón (Zelda Lost Woods)
+            case 4: worldSoundtrack = sunshineTheme; break;     // Mundo 4: Costa Caribeña (Mario Sunshine Delfino)
+            case 5: worldSoundtrack = coolCoolMountain; break;  // Mundo 5: Cumbres Glaciales (SM64 Snow Mountain)
+            case 6: worldSoundtrack = songOfStorms; break;      // Mundo 6: Bosque Sombrío (Zelda Song of Storms)
+            case 7: worldSoundtrack = galaxyTheme; break;       // Mundo 7: Flota Celestial (Mario Galaxy Gusty Garden)
+            case 8: worldSoundtrack = koopasRoad; break;        // Mundo 8: Fortaleza de Magma (SM64 Koopa's Road)
+            case 9: worldSoundtrack = cometObservatory; break;  // Mundo 9: Reino Cósmico (Mario Galaxy Observatory)
+            default: worldSoundtrack = sm64Theme; break;
+        }
 
         // ==========================================
         // TEMA DEL JEFE FINAL: SUPER MARIO 64 - BATALLA FINAL CONTRA BOWSER
@@ -530,7 +620,7 @@ class SoundManager {
             { f: C4,  d: 0.50, b: C2 }
         ];
 
-        const sequence = isBoss ? bossBattleTheme : mainMedley;
+        const sequence = isBoss ? bossBattleTheme : worldSoundtrack;
         let index = 0;
 
         const playNextNote = () => {

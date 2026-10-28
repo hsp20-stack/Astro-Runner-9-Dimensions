@@ -1,5 +1,5 @@
-// sw.js - Service Worker para jugar sin conexión a Internet
-const CACHE_NAME = 'mario-9-mundos-v1';
+// sw.js - Service Worker Ultra-Rápido y Actualizable (Astro Runner 2026)
+const CACHE_NAME = 'astro-runner-v2026-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -7,7 +7,8 @@ const ASSETS_TO_CACHE = [
     './game.js',
     './levels.js',
     './audio.js',
-    './manifest.json'
+    './manifest.json',
+    './icon.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -34,10 +35,15 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
 });
 
+// Network-First para archivos de código para que las actualizaciones se apliquen al instante
 self.addEventListener('fetch', (e) => {
     e.respondWith(
-        caches.match(e.request).then((res) => {
-            return res || fetch(e.request);
-        })
+        fetch(e.request)
+            .then((res) => {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+                return res;
+            })
+            .catch(() => caches.match(e.request))
     );
 });

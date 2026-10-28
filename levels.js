@@ -286,16 +286,43 @@ class LevelBuilder {
                 grid[groundRow - 1][stairCol + 3] = 1; // Bajada suave
             }
 
-            // 5. ENEMIGOS EN ZONAS TOTALMENTE ABIERTAS (ESPACIOS DE 8+ BLOQUES)
-            // NUNCA atrapados ni entre tuberías estrechas
-            const enemySpawnCols = [23, 42, 59];
-            enemySpawnCols.forEach((col, idx) => {
-                if (col < mapWidth - 16) {
+            // 5. ENEMIGOS CON DIFICULTAD ESCALONADA Y DINÁMICA POR MUNDO
+            const baseEnemySpeed = -(0.9 + (worldIndex - 1) * 0.12 + (levelIndex - 1) * 0.04);
+            
+            // Cantidad y distribución de enemigos según el progreso del jugador
+            const enemyConfigs = [];
+            
+            // Patrullas terrestres principales
+            enemyConfigs.push({ col: 24, type: 'goomba' });
+            enemyConfigs.push({ col: 42, type: 'koopa' });
+            enemyConfigs.push({ col: 60, type: (worldIndex % 2 === 0) ? 'koopa' : 'goomba' });
+
+            if (worldIndex >= 2) {
+                enemyConfigs.push({ col: 34, type: 'goomba' });
+            }
+            if (worldIndex >= 4) {
+                enemyConfigs.push({ col: 50, type: 'koopa' });
+                // Enemigo volador (Paratroopa) en mundos avanzados
+                enemyConfigs.push({ col: 28, type: 'koopa', fly: true });
+            }
+            if (worldIndex >= 6) {
+                enemyConfigs.push({ col: 18, type: 'goomba' });
+                enemyConfigs.push({ col: 46, type: 'koopa', fly: true });
+            }
+            if (worldIndex >= 8) {
+                enemyConfigs.push({ col: 64, type: 'koopa' });
+            }
+
+            enemyConfigs.forEach(cfg => {
+                if (cfg.col < mapWidth - 16) {
                     enemies.push({
-                        x: col * 32,
-                        y: (groundRow - 1) * 32,
-                        type: (idx % 2 === 0) ? 'goomba' : 'koopa',
-                        vx: -0.9,
+                        x: cfg.col * 32,
+                        y: cfg.fly ? (groundRow - 3.5) * 32 : (groundRow - 1) * 32,
+                        type: cfg.type,
+                        fly: !!cfg.fly,
+                        baseY: cfg.fly ? (groundRow - 3.5) * 32 : (groundRow - 1) * 32,
+                        sinOffset: Math.random() * Math.PI * 2,
+                        vx: cfg.fly ? baseEnemySpeed * 0.85 : baseEnemySpeed,
                         vy: 0,
                         alive: true
                     });

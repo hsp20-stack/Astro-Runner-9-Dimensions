@@ -703,25 +703,34 @@ function updateEnemies() {
         }
 
         if (e.x > cameraX - 64 && e.x < cameraX + VIEW_WIDTH + 64) {
-            e.vy = (e.vy || 0) + 0.35;
-            e.x += e.vx;
+            if (e.fly) {
+                // Enemigo volador (Paratroopa) con oscilación sinusoidal suave
+                e.x += e.vx;
+                e.y = e.baseY + Math.sin(Date.now() * 0.005 + (e.sinOffset || 0)) * 22;
+                if (e.x < 10 * TILE_SIZE || e.x > (levelData.mapWidth - 10) * TILE_SIZE) {
+                    e.vx = -e.vx;
+                }
+            } else {
+                e.vy = (e.vy || 0) + 0.35;
+                e.x += e.vx;
 
-            const colAhead = Math.floor((e.vx > 0 ? e.x + 22 : e.x) / TILE_SIZE);
-            const rowAt = Math.floor((e.y + 10) / TILE_SIZE);
-            if (isSolidTile(getTileAt(colAhead, rowAt))) {
-                e.vx = -e.vx;
-            }
+                const colAhead = Math.floor((e.vx > 0 ? e.x + 22 : e.x) / TILE_SIZE);
+                const rowAt = Math.floor((e.y + 10) / TILE_SIZE);
+                if (isSolidTile(getTileAt(colAhead, rowAt))) {
+                    e.vx = -e.vx;
+                }
 
-            e.y += e.vy;
-            const bottomRow = Math.floor((e.y + 20) / TILE_SIZE);
-            const col = Math.floor((e.x + 10) / TILE_SIZE);
-            if (isSolidTile(getTileAt(col, bottomRow))) {
-                e.y = bottomRow * TILE_SIZE - 20;
-                e.vy = 0;
+                e.y += e.vy;
+                const bottomRow = Math.floor((e.y + 20) / TILE_SIZE);
+                const col = Math.floor((e.x + 10) / TILE_SIZE);
+                if (isSolidTile(getTileAt(col, bottomRow))) {
+                    e.y = bottomRow * TILE_SIZE - 20;
+                    e.vy = 0;
+                }
             }
 
             if (!astro.isDying && checkAABB(astro, { x: e.x, y: e.y, w: 22, h: 20 })) {
-                if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= e.y + 10) {
+                if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= e.y + 12) {
                     e.alive = false;
                     astro.vy = -6.8;
                     score += 200;
@@ -1085,7 +1094,7 @@ function render() {
     // Enemigos
     for (let e of activeEnemies) {
         if (e.alive && e.x > cameraX - 32 && e.x < cameraX + VIEW_WIDTH + 32) {
-            drawCuteEnemy(e.x - cameraX, e.y, e.type);
+            drawCuteEnemy(e.x - cameraX, e.y, e.type, e.fly);
         }
     }
 
@@ -2316,8 +2325,26 @@ function drawGoldCoin(x, y) {
     ctx.restore();
 }
 
-function drawCuteEnemy(x, y, type) {
+function drawCuteEnemy(x, y, type, isFlying = false) {
     const walkCycle = Math.sin(Date.now() * 0.01 + x);
+
+    // Alas cibernéticas animadas si es enemigo volador (Paratroopa)
+    if (isFlying) {
+        const wingFlap = Math.sin(Date.now() * 0.02) * 5;
+        ctx.fillStyle = '#ffffff';
+        // Ala izquierda
+        ctx.beginPath();
+        ctx.ellipse(x - 1, y + 6 + wingFlap, 5, 8, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Ala derecha
+        ctx.beginPath();
+        ctx.ellipse(x + 19, y + 6 - wingFlap, 5, 8, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
 
     if (type === 'goomba') {
         // === MECHA-GOOMBA AVANZADO (CHAMPIÑÓN ROBÓTICO DE ÉLITE) ===
@@ -2440,12 +2467,449 @@ function drawCuteEnemy(x, y, type) {
     }
 }
 
+// ==========================================
+// RENDERIZADO DE LOS 9 JEFES FINALES ÚNICOS
+// ==========================================
 function drawBossModern(x, y) {
     const b = bossEntity;
+    if (!b) return;
     const facingLeft = (b.vx <= 0);
+    const theme = (levelData && levelData.world) ? levelData.world.theme : 'lava_castle';
     const breath = Math.sin(Date.now() * 0.005) * 1.5;
-    const lavaPulse = (Math.sin(Date.now() * 0.007) + 1) * 0.5;
 
+    switch (theme) {
+        case 'grassland':
+            drawMechaKoopaPrime(x, y, b, facingLeft, breath);
+            break;
+        case 'desert':
+            drawFaraonEscorpion(x, y, b, facingLeft, breath);
+            break;
+        case 'neon_cave':
+            drawGolemCuantico(x, y, b, facingLeft, breath);
+            break;
+        case 'ocean':
+            drawCapitanKraken(x, y, b, facingLeft, breath);
+            break;
+        case 'ice':
+            drawYetiCriogenico(x, y, b, facingLeft, breath);
+            break;
+        case 'spooky_forest':
+            drawEspectroSombras(x, y, b, facingLeft, breath);
+            break;
+        case 'airship':
+            drawMecaDragon(x, y, b, facingLeft, breath);
+            break;
+        case 'space':
+            drawEmperadorSingularidad(x, y, b, facingLeft, breath);
+            break;
+        case 'lava_castle':
+        default:
+            drawLordLavaSupremo(x, y, b, facingLeft, breath);
+            break;
+    }
+}
+
+// 1. MUNDO 1: MECHA-KOOPA PRIME (TORTUGA CIBERNÉTICA CON TURBINAS)
+function drawMechaKoopaPrime(x, y, b, facingLeft, breath) {
+    // Turbinas y humo cian
+    for (let i = 0; i < 3; i++) {
+        const puff = (Date.now() * 0.003 + i * 0.3) % 1;
+        const px = (facingLeft ? x + 34 : x + 10) + Math.sin(puff * 4) * 4;
+        const py = y + 10 - puff * 24;
+        ctx.fillStyle = `rgba(56, 189, 248, ${1 - puff})`;
+        ctx.fillRect(px, py, 3, 3);
+    }
+
+    // Caparazón blindado esmeralda con remaches de titanio
+    const shellX = facingLeft ? x + 18 : x + 6;
+    const shellY = y + 10 + breath;
+    ctx.fillStyle = '#064e3b';
+    ctx.beginPath();
+    ctx.ellipse(shellX + 12, shellY + 16, 14, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Remaches de oro
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(shellX + 6, shellY + 8, 3, 3);
+    ctx.fillRect(shellX + 16, shellY + 8, 3, 3);
+    ctx.fillRect(shellX + 11, shellY + 22, 3, 3);
+
+    // Patas mecánicas hidráulicas con pistones
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x + 4, y + b.h - 12, 12, 12);
+    ctx.fillRect(x + b.w - 16, y + b.h - 12, 12, 12);
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(x + 2, y + b.h - 4, 16, 4);
+    ctx.fillRect(x + b.w - 18, y + b.h - 4, 16, 4);
+
+    // Cabeza de titanio y visor láser rojo
+    const headX = facingLeft ? x + 2 : x + 22;
+    const headY = y + 6 + breath;
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.roundRect(headX, headY, 22, 18, 4);
+    ctx.fill();
+
+    // Visor láser escaneador rojo
+    const laserScan = (Math.sin(Date.now() * 0.01) + 1) * 4;
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(headX + (facingLeft ? 2 : 6), headY + 5, 12, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(headX + (facingLeft ? 2 : 6) + laserScan, headY + 6, 2, 3);
+
+    // Mandíbula mecánica
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(facingLeft ? headX - 4 : headX + 14, headY + 12, 12, 6);
+}
+
+// 2. MUNDO 2: FARAÓN ESCORPIÓN (TITÁN ESCORPIÓN DE ORO Y LAPISLÁZULI)
+function drawFaraonEscorpion(x, y, b, facingLeft, breath) {
+    // Cola curvada dorada con aguijón solar
+    const tailBaseX = facingLeft ? x + 34 : x + 10;
+    const tailTipX = facingLeft ? x + 10 : x + 34;
+    const tailTipY = y - 10 + breath;
+
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(tailBaseX, y + 28);
+    ctx.quadraticCurveTo(facingLeft ? x + 44 : x, y - 2, tailTipX, tailTipY);
+    ctx.stroke();
+
+    // Aguijón solar incandescente
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.moveTo(tailTipX, tailTipY - 6);
+    ctx.lineTo(tailTipX - 6, tailTipY + 4);
+    ctx.lineTo(tailTipX + 6, tailTipY + 4);
+    ctx.fill();
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(tailTipX - 2, tailTipY - 8, 4, 4);
+
+    // Chispas del aguijón
+    if (Math.random() > 0.4) {
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(tailTipX + (Math.random() - 0.5) * 12, tailTipY + (Math.random() - 0.5) * 12, 2, 2);
+    }
+
+    // Carapacho de oro del faraón
+    const bodyX = x + 8;
+    const bodyY = y + 16 + breath;
+    ctx.fillStyle = '#eab308';
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 32, 24, 6);
+    ctx.fill();
+    ctx.strokeStyle = '#1e3a8a'; // Lapislázuli real
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Ojos de rubí
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(facingLeft ? bodyX + 4 : bodyX + 22, bodyY + 4, 6, 4);
+
+    // Pinzas mecánicas articuladas que chasquean
+    const snap = Math.sin(Date.now() * 0.008) * 4;
+    const pincerX = facingLeft ? x - 4 : x + 32;
+    ctx.fillStyle = '#ca8a04';
+    ctx.fillRect(pincerX, bodyY + 6, 16, 6);
+    // Pinza superior e inferior
+    ctx.fillRect(facingLeft ? pincerX - 4 : pincerX + 12, bodyY + 2 - snap, 6, 5);
+    ctx.fillRect(facingLeft ? pincerX - 4 : pincerX + 12, bodyY + 9 + snap, 6, 5);
+
+    // Patas doradas de escorpión
+    ctx.strokeStyle = '#854d0e';
+    ctx.lineWidth = 2;
+    for (let p = 0; p < 3; p++) {
+        ctx.beginPath();
+        ctx.moveTo(bodyX + p * 10 + 4, bodyY + 22);
+        ctx.lineTo(bodyX + p * 10, y + b.h);
+        ctx.stroke();
+    }
+}
+
+// 3. MUNDO 3: GÓLEM CUÁNTICO (MONOLITO DE CRISTAL NEÓN VIOLETA)
+function drawGolemCuantico(x, y, b, facingLeft, breath) {
+    const corePulse = Math.sin(Date.now() * 0.008) * 4 + 10;
+    const hoverY = Math.sin(Date.now() * 0.004) * 4;
+
+    // Fragmentos de cristal neón flotando alrededor en órbita
+    for (let i = 0; i < 4; i++) {
+        const ang = (Date.now() * 0.003 + i * (Math.PI / 2));
+        const cx = x + b.w / 2 + Math.cos(ang) * 26;
+        const cy = y + b.h / 2 + Math.sin(ang) * 20;
+        ctx.fillStyle = (i % 2 === 0) ? '#c084fc' : '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 5);
+        ctx.lineTo(cx + 4, cy);
+        ctx.lineTo(cx, cy + 5);
+        ctx.lineTo(cx - 4, cy);
+        ctx.fill();
+    }
+
+    // Torso de cristal monolítico violeta oscuro
+    const cx = x + 10;
+    const cy = y + 8 + hoverY;
+    ctx.fillStyle = '#3b0764';
+    ctx.beginPath();
+    ctx.moveTo(cx + 14, cy);
+    ctx.lineTo(cx + 28, cy + 12);
+    ctx.lineTo(cx + 22, cy + 34);
+    ctx.lineTo(cx + 6, cy + 34);
+    ctx.lineTo(cx, cy + 12);
+    ctx.fill();
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Núcleo cuántico radiante en el pecho
+    const grad = ctx.createRadialGradient(cx + 14, cy + 18, 1, cx + 14, cy + 18, corePulse);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.4, '#c084fc');
+    grad.addColorStop(1, 'rgba(147, 51, 234, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx + 14, cy + 18, corePulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ojo horizontal luminoso
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(cx + 8, cy + 8, 12, 3);
+
+    // Puños flotantes de cristal suspendidos
+    const fistY = y + 24 + hoverY + Math.sin(Date.now() * 0.006) * 3;
+    ctx.fillStyle = '#7e22ce';
+    ctx.fillRect(facingLeft ? x - 4 : x + b.w - 10, fistY, 12, 12);
+    ctx.strokeStyle = '#c084fc';
+    ctx.strokeRect(facingLeft ? x - 4 : x + b.w - 10, fistY, 12, 12);
+}
+
+// 4. MUNDO 4: CAPITÁN KRAKEN (DREADNOUGHT KRAKEN PIRATA)
+function drawCapitanKraken(x, y, b, facingLeft, breath) {
+    // Burbujas ascendentes
+    for (let i = 0; i < 3; i++) {
+        const bubbleTime = (Date.now() * 0.002 + i * 0.35) % 1;
+        const bx = x + 12 + i * 12;
+        const by = y + b.h - bubbleTime * 45;
+        ctx.strokeStyle = 'rgba(125, 211, 252, 0.7)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(bx, by, 3, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // Tentáculos ondulantes con cinemática sinusoidal
+    for (let t = 0; t < 4; t++) {
+        const wave = Math.sin(Date.now() * 0.006 + t * 0.9) * 8;
+        const tx = x + 8 + t * 8;
+        ctx.strokeStyle = '#0d9488';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(tx, y + 32);
+        ctx.quadraticCurveTo(tx + wave, y + 44, tx - wave, y + b.h + 4);
+        ctx.stroke();
+
+        // Ventosas luminiscentes
+        ctx.fillStyle = '#6ee7b7';
+        ctx.fillRect(tx + (wave * 0.5) - 2, y + 42, 3, 3);
+    }
+
+    // Manto cibernético del kraken
+    const headX = x + 8;
+    const headY = y + 6 + breath;
+    ctx.fillStyle = '#0f766e';
+    ctx.beginPath();
+    ctx.ellipse(headX + 16, headY + 14, 16, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#14b8a6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Sombrero bicornio pirata
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.moveTo(headX, headY + 4);
+    ctx.lineTo(headX + 16, headY - 12);
+    ctx.lineTo(headX + 32, headY + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(headX + 14, headY - 4, 4, 4); // Calavera de oro
+
+    // Ojo biónico con parche pirata
+    const eyeX = facingLeft ? headX + 6 : headX + 18;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(eyeX, headY + 10, 8, 8); // Parche
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(eyeX + 2, headY + 12, 4, 4); // Visor ocular
+}
+
+// 5. MUNDO 5: YETI CRIOGÉNICO (TITÁN DE HIELO PERPÉTUO)
+function drawYetiCriogenico(x, y, b, facingLeft, breath) {
+    // Vaho glacial helado saliendo del yeti
+    for (let i = 0; i < 4; i++) {
+        const mist = (Date.now() * 0.003 + i * 0.4) % 1;
+        const mx = (facingLeft ? x + 4 : x + 34) + Math.sin(mist * 5) * 6;
+        const my = y + 16 + mist * 16;
+        ctx.fillStyle = `rgba(224, 242, 254, ${0.8 - mist * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(mx, my, 4 + mist * 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Cuerpo macizo cubierto de pelaje ártico cibernético
+    const bodyX = x + 6;
+    const bodyY = y + 12 + breath;
+    ctx.fillStyle = '#f1f5f9';
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 36, 32, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Cuernos masivos de hielo cristalino azul zafiro
+    ctx.fillStyle = '#0284c7';
+    // Cuerno 1
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 6, bodyY);
+    ctx.lineTo(bodyX - 4, bodyY - 14);
+    ctx.lineTo(bodyX + 12, bodyY + 2);
+    ctx.fill();
+    // Cuerno 2
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 30, bodyY);
+    ctx.lineTo(bodyX + 40, bodyY - 14);
+    ctx.lineTo(bodyX + 24, bodyY + 2);
+    ctx.fill();
+
+    // Ojos glaciales luminosos
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect(facingLeft ? bodyX + 8 : bodyX + 22, bodyY + 8, 7, 5);
+
+    // Puños titánicos de hielo escarpado
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fillRect(x + 2, y + b.h - 12, 14, 12);
+    ctx.fillRect(x + b.w - 16, y + b.h - 12, 14, 12);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 4, y + b.h - 6, 4, 6);
+    ctx.fillRect(x + b.w - 14, y + b.h - 6, 4, 6);
+}
+
+// 6. MUNDO 6: ESPECTRO DE LAS SOMBRAS (WRAITH ESPECTRAL Y FANTASMA)
+function drawEspectroSombras(x, y, b, facingLeft, breath) {
+    const floatY = Math.sin(Date.now() * 0.005) * 5;
+
+    // Fuego fatuo y almas espectrales flotando
+    for (let i = 0; i < 3; i++) {
+        const soul = (Date.now() * 0.002 + i * 0.5) % 1;
+        const sx = x + 10 + i * 12 + Math.sin(soul * 6) * 6;
+        const sy = y + b.h - soul * 40;
+        ctx.fillStyle = `rgba(168, 85, 247, ${1 - soul})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Toga fantasmal ondulante oscura
+    const bodyX = x + 8;
+    const bodyY = y + 8 + floatY;
+    ctx.fillStyle = '#1e1b4b';
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 16, bodyY);
+    ctx.lineTo(bodyX + 32, bodyY + 20);
+    ctx.lineTo(bodyX + 26, bodyY + 40);
+    ctx.lineTo(bodyX + 6, bodyY + 40);
+    ctx.lineTo(bodyX, bodyY + 20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#7e22ce';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Calavera fantasmal flotante
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.arc(bodyX + 16, bodyY + 12, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cuencas oculares con fuego demoníaco lila
+    ctx.fillStyle = '#9333ea';
+    ctx.fillRect(bodyX + 11, bodyY + 9, 4, 5);
+    ctx.fillRect(bodyX + 17, bodyY + 9, 4, 5);
+    ctx.fillStyle = '#4ade80'; // Fuego espectral verde
+    ctx.fillRect(bodyX + 12, bodyY + 10, 2, 2);
+    ctx.fillRect(bodyX + 18, bodyY + 10, 2, 2);
+
+    // Garras espectrales flotantes
+    ctx.fillStyle = '#c084fc';
+    const clawX = facingLeft ? x - 2 : x + b.w - 8;
+    ctx.fillRect(clawX, bodyY + 20, 8, 4);
+    ctx.fillRect(clawX + (facingLeft ? -3 : 7), bodyY + 18, 3, 8);
+}
+
+// 7. MUNDO 7: MECA-DRAGÓN SUPREMO (WYVERN ROJO CON PROPULSORES)
+function drawMecaDragon(x, y, b, facingLeft, breath) {
+    const wingFlap = Math.sin(Date.now() * 0.012) * 10;
+
+    // Fuego de los postquemadores / reactores en las alas
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(x + (facingLeft ? 32 : 8), y + 16, 8, 6);
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(x + (facingLeft ? 36 : 4), y + 17, 6, 4);
+
+    // Alas mecánicas articuladas con placas de acero rojo
+    ctx.fillStyle = '#991b1b';
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + 16);
+    ctx.lineTo(facingLeft ? x + 44 : x - 4, y - 6 + wingFlap);
+    ctx.lineTo(facingLeft ? x + 38 : x + 2, y + 26);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Torso blindado de dragón
+    const bodyX = x + 10;
+    const bodyY = y + 14 + breath;
+    ctx.fillStyle = '#b91c1c';
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 28, 26, 6);
+    ctx.fill();
+
+    // Cabeza de dragón acorazada y cuernos de acero
+    const headX = facingLeft ? x + 2 : x + 24;
+    const headY = y + 4 + breath;
+    ctx.fillStyle = '#7f1d1d';
+    ctx.beginPath();
+    ctx.roundRect(headX, headY, 22, 16, 4);
+    ctx.fill();
+
+    // Cuerno de dragón afilado
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.moveTo(headX + 12, headY);
+    ctx.lineTo(headX + (facingLeft ? 22 : 2), headY - 12);
+    ctx.lineTo(headX + 16, headY + 4);
+    ctx.fill();
+
+    // Ojo reptiliano amarillo brillante
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 5, 5, 4);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(headX + (facingLeft ? 6 : 16), headY + 5, 2, 4);
+
+    // Patas con garras afiladas de acero
+    ctx.fillStyle = '#450a0a';
+    ctx.fillRect(x + 6, y + b.h - 10, 12, 10);
+    ctx.fillRect(x + b.w - 18, y + b.h - 10, 12, 10);
+}
+
+// 8. MUNDO 8: LORD DE LAVA SUPREMO (BOWSER TITÁN DE MAGMA OBSIDIANA)
+function drawLordLavaSupremo(x, y, b, facingLeft, breath) {
     // Partículas de ascuas y fuego flotando alrededor del boss
     for (let i = 0; i < 4; i++) {
         const emberTime = (Date.now() * 0.002 + i * 0.6) % 1;
@@ -2455,25 +2919,22 @@ function drawBossModern(x, y) {
         ctx.fillRect(ex, ey, 2.5, 2.5);
     }
 
-    // === 1. CAPARAZÓN VOLCÁNICO CON ESPINAS (MAGMA BOWSER) ===
+    // Caparazón volcánico con espinas de obsidiana
     const shellX = facingLeft ? x + 18 : x + 4;
     const shellY = y + 8 + breath;
     const shellW = 26;
     const shellH = 34;
 
-    // Base del caparazón de roca obsidiana oscura
     ctx.fillStyle = '#1c1917';
     ctx.beginPath();
     ctx.ellipse(shellX + shellW / 2, shellY + shellH / 2, shellW / 2, shellH / 2, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    // Borde de roca volcánica
     ctx.strokeStyle = '#b91c1c';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Espinas volcánicas afiladas saliendo del caparazón
-    ctx.fillStyle = '#292524';
+    // Espinas volcánicas
+    ctx.fillStyle = '#ea580c';
     const spikePositions = [
         { sx: shellX + 4, sy: shellY + 6 },
         { sx: shellX + shellW - 6, sy: shellY + 6 },
@@ -2482,137 +2943,119 @@ function drawBossModern(x, y) {
         { sx: shellX + 3, sy: shellY + shellH / 2 },
         { sx: shellX + shellW - 5, sy: shellY + shellH / 2 }
     ];
-
     spikePositions.forEach(sp => {
-        ctx.beginPath();
-        ctx.moveTo(sp.sx - 3, sp.sy + 4);
-        ctx.lineTo(sp.sx, sp.sy - 5);
-        ctx.lineTo(sp.sx + 3, sp.sy + 4);
-        ctx.fill();
-
-        // Punta incandescente de la espina
-        ctx.fillStyle = '#ea580c';
-        ctx.fillRect(sp.sx - 1, sp.sy - 5, 2, 2);
-        ctx.fillStyle = '#292524';
+        ctx.fillRect(sp.sx - 1, sp.sy - 3, 3, 3);
     });
 
-    // === 2. PIES Y GARRAS TITÁNICAS DE OBSIDIANA ===
-    ctx.fillStyle = '#1c1917';
-    // Pie izquierdo
-    ctx.fillRect(x + 6, y + b.h - 10, 14, 10);
-    // Pie derecho
-    ctx.fillRect(x + b.w - 20, y + b.h - 10, 14, 10);
-
-    // Garras afiladas de lava
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(x + 4, y + b.h - 4, 3, 4);
-    ctx.fillRect(x + 9, y + b.h - 4, 3, 4);
-    ctx.fillRect(x + 14, y + b.h - 4, 3, 4);
-    ctx.fillRect(x + b.w - 22, y + b.h - 4, 3, 4);
-    ctx.fillRect(x + b.w - 17, y + b.h - 4, 3, 4);
-    ctx.fillRect(x + b.w - 12, y + b.h - 4, 3, 4);
-
-    // === 3. TORSO Y CORAZÓN DE MAGMA PULSANTE ===
+    // Torso y corazón de magma pulsante
     const bodyX = facingLeft ? x + 10 : x + 14;
     const bodyY = y + 16 + breath;
-    ctx.fillStyle = '#292524'; // Roca volcánica pesada
+    ctx.fillStyle = '#292524';
     ctx.beginPath();
     ctx.ellipse(bodyX + 12, bodyY + 14, 14, 16, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Grietas de lava incandescente en el pecho
-    const coreGrad = ctx.createRadialGradient(bodyX + 12, bodyY + 14, 2, bodyX + 12, bodyY + 14, 12);
+    // Corazón ardiente de magma
+    const lavaPulse = (Math.sin(Date.now() * 0.007) + 1) * 0.5;
+    const coreGrad = ctx.createRadialGradient(bodyX + 12, bodyY + 14, 1, bodyX + 12, bodyY + 14, 10 + lavaPulse * 4);
     coreGrad.addColorStop(0, '#fef08a');
-    coreGrad.addColorStop(0.4, '#f97316');
-    coreGrad.addColorStop(0.8, '#dc2626');
-    coreGrad.addColorStop(1, 'transparent');
+    coreGrad.addColorStop(0.5, '#ea580c');
+    coreGrad.addColorStop(1, '#991b1b');
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(bodyX + 12, bodyY + 14, 10 + lavaPulse * 2, 0, Math.PI * 2);
+    ctx.arc(bodyX + 12, bodyY + 14, 8 + lavaPulse * 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fisuras de magma conectadas a los brazos
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(bodyX + 8, bodyY + 12);
-    ctx.lineTo(bodyX + 4, bodyY + 20);
-    ctx.moveTo(bodyX + 16, bodyY + 12);
-    ctx.lineTo(bodyX + 20, bodyY + 20);
-    ctx.stroke();
-
-    // Brazos titánicos musculosos con puños
-    ctx.fillStyle = '#1c1917';
-    if (facingLeft) {
-        ctx.fillRect(x + 2, bodyY + 8, 10, 14);
-        ctx.fillStyle = '#ea580c';
-        ctx.fillRect(x + 1, bodyY + 18, 10, 4); // Brazalete de fuego
-    } else {
-        ctx.fillRect(x + b.w - 12, bodyY + 8, 10, 14);
-        ctx.fillStyle = '#ea580c';
-        ctx.fillRect(x + b.w - 11, bodyY + 18, 10, 4); // Brazalete de fuego
-    }
-
-    // === 4. CABEZA DE DRAGÓN DE LAVA / BOWSER TITÁN ===
+    // Cabeza de dragón de magma
     const headX = facingLeft ? x + 4 : x + 20;
     const headY = y + 2 + breath;
-
-    // Mandíbula y cráneo de obsidiana
     ctx.fillStyle = '#1c1917';
     ctx.beginPath();
     ctx.roundRect(headX, headY, 24, 18, 4);
     ctx.fill();
 
-    // Hocico pronunciado
-    const snoutX = facingLeft ? headX - 6 : headX + 16;
-    ctx.fillRect(snoutX, headY + 7, 14, 11);
-
-    // Dientes afilados de lava
+    // Ojos con pupilas de fuego
     ctx.fillStyle = '#fef08a';
-    for (let t = 0; t < 3; t++) {
-        const tx = snoutX + (t * 4) + 1;
-        ctx.fillRect(tx, headY + 16, 2, 3); // Dientes inferiores
-        ctx.fillRect(tx, headY + 8, 2, 2);  // Dientes superiores
-    }
-
-    // Ojos feroces demoníacos con pupilas de fuego
-    const eyeX = facingLeft ? headX + 4 : headX + 14;
-    ctx.fillStyle = '#fef08a';
-    ctx.fillRect(eyeX, headY + 5, 6, 5);
+    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 5, 6, 5);
     ctx.fillStyle = '#dc2626';
-    ctx.fillRect(eyeX + (facingLeft ? 1 : 3), headY + 6, 2, 3); // Pupila vertical de dragón
+    ctx.fillRect(headX + (facingLeft ? 6 : 16), headY + 6, 2, 3);
 
-    // === 5. CUERNOS CURVOS DE OBSIDIANA Y CRESTA DE FUEGO ===
-    // Cuernos
+    // Cuernos y melena de fuego
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
-    // Cuerno trasero
     ctx.moveTo(headX + 14, headY);
     ctx.lineTo(headX + (facingLeft ? 22 : 6), headY - 12);
     ctx.lineTo(headX + 18, headY + 2);
-    // Cuerno delantero
-    ctx.moveTo(headX + 6, headY);
-    ctx.lineTo(headX + (facingLeft ? -2 : 28), headY - 10);
-    ctx.lineTo(headX + 10, headY + 2);
     ctx.fill();
-
-    // Puntas de los cuernos con lava ardiendo
     ctx.fillStyle = '#f97316';
     ctx.fillRect(headX + (facingLeft ? 21 : 5), headY - 12, 3, 3);
-    ctx.fillRect(headX + (facingLeft ? -3 : 27), headY - 10, 3, 3);
 
-    // Melena de fuego ardiente animada sobre la cabeza
-    const flameFlicker = Math.sin(Date.now() * 0.02) * 2;
-    const fireGrad = ctx.createLinearGradient(headX + 8, headY - 14, headX + 8, headY);
-    fireGrad.addColorStop(0, '#fef08a');
-    fireGrad.addColorStop(0.5, '#ea580c');
-    fireGrad.addColorStop(1, '#b91c1c');
-    ctx.fillStyle = fireGrad;
+    // Pies con garras de magma
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(x + 6, y + b.h - 10, 14, 10);
+    ctx.fillRect(x + b.w - 20, y + b.h - 10, 14, 10);
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(x + 4, y + b.h - 4, 4, 4);
+    ctx.fillRect(x + b.w - 18, y + b.h - 4, 4, 4);
+}
+
+// 9. MUNDO 9: EMPERADOR DE LA SINGULARIDAD (OVERLORD CÓSMICO SUPREMO)
+function drawEmperadorSingularidad(x, y, b, facingLeft, breath) {
+    const floatY = Math.sin(Date.now() * 0.004) * 4;
+    const ringAngle = Date.now() * 0.002;
+
+    // Anillos de acreción cósmica orbitando alrededor del emperador
+    ctx.save();
+    ctx.translate(x + b.w / 2, y + b.h / 2 + floatY);
+    ctx.rotate(ringAngle);
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(headX + 6, headY);
-    ctx.quadraticCurveTo(headX + 10 + flameFlicker, headY - 16, headX + 14, headY - 4);
-    ctx.quadraticCurveTo(headX + 18 - flameFlicker, headY - 14, headX + 22, headY);
+    ctx.ellipse(0, 0, 32, 12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Satélite / orbe estelar en órbita
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(32, 0, 3.5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+
+    // Manto estelar de nebulosa oscura
+    const bodyX = x + 8;
+    const bodyY = y + 10 + floatY;
+    ctx.fillStyle = '#020617';
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 32, 32, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Singularidad del agujero negro en el pecho
+    const singRadius = Math.sin(Date.now() * 0.009) * 3 + 8;
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(bodyX + 16, bodyY + 18, singRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Corona cósmica de estrellas
+    ctx.fillStyle = '#fbbf24';
+    for (let c = 0; c < 3; c++) {
+        const cx = bodyX + 8 + c * 8;
+        ctx.beginPath();
+        ctx.moveTo(cx, bodyY);
+        ctx.lineTo(cx + 3, bodyY - 10);
+        ctx.lineTo(cx + 6, bodyY);
+        ctx.fill();
+    }
+
+    // Ojos cósmicos de energía pura
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect(bodyX + (facingLeft ? 6 : 18), bodyY + 8, 8, 3);
 }
 
 function drawBossHealthBarModern() {
@@ -3072,34 +3515,43 @@ let sfxEnabled = true;
 function setupGameFlow() {
     const splash = document.getElementById('studioSplashScreen');
     const mainMenu = document.getElementById('mainMenuScreen');
+    if (!splash || !mainMenu) return;
 
-    let splashFinished = false;
+    let isDismissed = false;
 
-    const endSplashAndShowMenu = () => {
-        if (splashFinished) return;
-        splashFinished = true;
+    const dismissSplash = (instant = false) => {
+        if (isDismissed) return;
+        isDismissed = true;
 
-        window.sounds.init();
-        window.sounds.playStudioIntroChime();
+        try {
+            window.sounds.init();
+            window.sounds.playStudioIntroChime();
+        } catch (e) {}
 
+        splash.classList.add('fade-out');
+        splash.style.pointerEvents = 'none';
+
+        const delay = instant ? 80 : 500;
         setTimeout(() => {
-            splash.classList.add('fade-out');
-            setTimeout(() => {
-                splash.style.display = 'none';
-                mainMenu.classList.remove('hidden');
-            }, 700);
-        }, 2200);
+            splash.style.display = 'none';
+            mainMenu.classList.remove('hidden');
+        }, delay);
     };
 
-    // Toque para avanzar la intro de Hugo SP Studios
-    splash.addEventListener('click', endSplashAndShowMenu);
-    splash.addEventListener('touchstart', endSplashAndShowMenu, { passive: true });
-    setTimeout(endSplashAndShowMenu, 600);
+    // Toque o clic para avanzar inmediatamente sin congelarse
+    splash.addEventListener('pointerdown', () => dismissSplash(true), { passive: true });
+    splash.addEventListener('touchstart', () => dismissSplash(true), { passive: true });
+    splash.addEventListener('click', () => dismissSplash(true), { passive: true });
+
+    // Salto automático suave a los 1.6 segundos
+    setTimeout(() => {
+        dismissSplash(false);
+    }, 1600);
 
     // Botones del Menú Principal
     const playAction = (e) => {
         if (e) e.preventDefault();
-        window.sounds.init();
+        try { window.sounds.init(); } catch (err) {}
         mainMenu.classList.add('hidden');
         gameStartedFromMenu = true;
         isPaused = false;
@@ -3108,19 +3560,19 @@ function setupGameFlow() {
 
     const worldSelectAction = (e) => {
         if (e) e.preventDefault();
-        window.sounds.init();
+        try { window.sounds.init(); } catch (err) {}
         openWorldSelector();
     };
 
     const controlsAction = (e) => {
         if (e) e.preventDefault();
-        window.sounds.init();
+        try { window.sounds.init(); } catch (err) {}
         document.getElementById('modalControls').classList.remove('hidden');
     };
 
     const settingsAction = (e) => {
         if (e) e.preventDefault();
-        window.sounds.init();
+        try { window.sounds.init(); } catch (err) {}
         document.getElementById('modalSettings').classList.remove('hidden');
     };
 
@@ -3204,24 +3656,37 @@ function goToMainMenu() {
     window.sounds.startMusic(currentWorldNum, false);
 }
 
-window.addEventListener('load', () => {
+let gameInitialized = false;
+function initGame() {
+    if (gameInitialized) return;
+    gameInitialized = true;
     setupControls();
     loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1);
     setupGameFlow();
 
-    // La música suena SIEMPRE: se activa con el primer toque o clic y no para
+    // La música suena SIEMPRE: se activa con cualquier interacción inicial y no para
     const ensureMusicAlways = () => {
-        window.sounds.init();
-        if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
-            window.sounds.ctx.resume();
-        }
-        if (!window.sounds.musicPlaying && !window.sounds.muted) {
-            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
-        }
+        try {
+            window.sounds.init();
+            if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
+                window.sounds.ctx.resume();
+            }
+            if (!window.sounds.musicPlaying && !window.sounds.muted) {
+                window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+            }
+        } catch (e) {}
     };
-    window.addEventListener('pointerdown', ensureMusicAlways);
-    window.addEventListener('keydown', ensureMusicAlways);
-    window.addEventListener('click', ensureMusicAlways);
+    window.addEventListener('pointerdown', ensureMusicAlways, { passive: true });
+    window.addEventListener('touchstart', ensureMusicAlways, { passive: true });
+    window.addEventListener('keydown', ensureMusicAlways, { passive: true });
+    window.addEventListener('click', ensureMusicAlways, { passive: true });
 
     requestAnimationFrame(gameLoop);
-});
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initGame();
+} else {
+    window.addEventListener('DOMContentLoaded', initGame);
+    window.addEventListener('load', initGame);
+}
