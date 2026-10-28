@@ -11,22 +11,56 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <!-- Script infalible e instantáneo para la pantalla de inicio Hugo SP Studios -->
+    <!-- Script infalible e instantáneo para la pantalla de inicio Hugo SP Studios y el menú -->
     <script>
         function dismissStudioSplash() {
             var splash = document.getElementById('studioSplashScreen');
             var menu = document.getElementById('mainMenuScreen');
-            if (splash && splash.style.display !== 'none') {
+            if (splash) {
                 splash.classList.add('fade-out');
                 splash.style.pointerEvents = 'none';
                 setTimeout(function() {
-                    splash.style.display = 'none';
-                    if (menu) menu.classList.remove('hidden');
-                }, 120);
+                    try { splash.remove(); } catch(e) { splash.style.display = 'none'; }
+                    if (menu) {
+                        menu.classList.remove('hidden');
+                        menu.style.pointerEvents = 'auto';
+                    }
+                }, 100);
             }
         }
         // Salto automático garantizado tras 1.4 segundos
         setTimeout(dismissStudioSplash, 1400);
+
+        function startGameFromMenu() {
+            var menu = document.getElementById('mainMenuScreen');
+            if (menu) {
+                menu.classList.add('hidden');
+                menu.style.pointerEvents = 'none';
+            }
+            if (window.playGameAction) {
+                window.playGameAction();
+            }
+        }
+
+        function openControlsModal() {
+            var m = document.getElementById('modalControls');
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeControlsModal() {
+            var m = document.getElementById('modalControls');
+            if (m) m.classList.add('hidden');
+        }
+
+        function openSettingsModal() {
+            var m = document.getElementById('modalSettings');
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            var m = document.getElementById('modalSettings');
+            if (m) m.classList.add('hidden');
+        }
     </script>
 </head>
 <body>
@@ -74,16 +108,16 @@
 
             <!-- Botones Principales -->
             <div class="menu-buttons-list">
-                <button id="btnPlayGame" class="menu-btn primary-btn">
+                <button id="btnPlayGame" class="menu-btn primary-btn" onclick="startGameFromMenu()">
                     <span class="btn-icon">▶</span> JUGAR (MUNDO 1)
                 </button>
-                <button id="btnOpenWorldSelectMenu" class="menu-btn highlight-btn">
+                <button id="btnOpenWorldSelectMenu" class="menu-btn highlight-btn" onclick="openWorldSelector()">
                     <span class="btn-icon">🌍</span> ELEGIR MUNDO (1 AL 9)
                 </button>
-                <button id="btnOpenControls" class="menu-btn secondary-btn">
+                <button id="btnOpenControls" class="menu-btn secondary-btn" onclick="openControlsModal()">
                     <span class="btn-icon">🕹️</span> CONTROLES
                 </button>
-                <button id="btnOpenSettings" class="menu-btn secondary-btn">
+                <button id="btnOpenSettings" class="menu-btn secondary-btn" onclick="openSettingsModal()">
                     <span class="btn-icon">⚙️</span> AJUSTES
                 </button>
             </div>

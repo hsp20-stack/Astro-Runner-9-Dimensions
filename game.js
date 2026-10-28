@@ -3556,51 +3556,64 @@ function setupGameFlow() {
         dismissSplash(false);
     }, 1600);
 
-    // Botones del Menú Principal
+    // Acciones globales del Menú Principal
     const playAction = (e) => {
-        if (e) e.preventDefault();
         try { window.sounds.init(); } catch (err) {}
-        mainMenu.classList.add('hidden');
+        const menu = document.getElementById('mainMenuScreen');
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.style.pointerEvents = 'none';
+        }
         gameStartedFromMenu = true;
         isPaused = false;
-        window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        try {
+            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        } catch (err) {}
     };
 
+    window.playGameAction = playAction;
+    window.startGameFromMenu = playAction;
+
     const worldSelectAction = (e) => {
-        if (e) e.preventDefault();
         try { window.sounds.init(); } catch (err) {}
         openWorldSelector();
     };
 
     const controlsAction = (e) => {
-        if (e) e.preventDefault();
         try { window.sounds.init(); } catch (err) {}
-        document.getElementById('modalControls').classList.remove('hidden');
+        const modal = document.getElementById('modalControls');
+        if (modal) modal.classList.remove('hidden');
     };
 
     const settingsAction = (e) => {
-        if (e) e.preventDefault();
         try { window.sounds.init(); } catch (err) {}
-        document.getElementById('modalSettings').classList.remove('hidden');
+        const modal = document.getElementById('modalSettings');
+        if (modal) modal.classList.remove('hidden');
     };
 
     const btnPlay = document.getElementById('btnPlayGame');
-    btnPlay.addEventListener('click', playAction);
-    btnPlay.addEventListener('touchstart', playAction, { passive: false });
+    if (btnPlay) {
+        btnPlay.addEventListener('click', playAction);
+        btnPlay.addEventListener('pointerdown', playAction, { passive: true });
+    }
 
     const btnWorldMenu = document.getElementById('btnOpenWorldSelectMenu');
     if (btnWorldMenu) {
         btnWorldMenu.addEventListener('click', worldSelectAction);
-        btnWorldMenu.addEventListener('touchstart', worldSelectAction, { passive: false });
+        btnWorldMenu.addEventListener('pointerdown', worldSelectAction, { passive: true });
     }
 
     const btnCtrl = document.getElementById('btnOpenControls');
-    btnCtrl.addEventListener('click', controlsAction);
-    btnCtrl.addEventListener('touchstart', controlsAction, { passive: false });
+    if (btnCtrl) {
+        btnCtrl.addEventListener('click', controlsAction);
+        btnCtrl.addEventListener('pointerdown', controlsAction, { passive: true });
+    }
 
     const btnSet = document.getElementById('btnOpenSettings');
-    btnSet.addEventListener('click', settingsAction);
-    btnSet.addEventListener('touchstart', settingsAction, { passive: false });
+    if (btnSet) {
+        btnSet.addEventListener('click', settingsAction);
+        btnSet.addEventListener('pointerdown', settingsAction, { passive: true });
+    }
 }
 
 function closeControlsModal() {
@@ -3668,9 +3681,10 @@ let gameInitialized = false;
 function initGame() {
     if (gameInitialized) return;
     gameInitialized = true;
-    setupControls();
-    loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1);
-    setupGameFlow();
+
+    try { setupControls(); } catch (e) { console.error("setupControls note:", e); }
+    try { loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1); } catch (e) { console.error("loadLevel note:", e); }
+    try { setupGameFlow(); } catch (e) { console.error("setupGameFlow note:", e); }
 
     // La música suena SIEMPRE: se activa con cualquier interacción inicial y no para
     const ensureMusicAlways = () => {
