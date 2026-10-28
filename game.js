@@ -81,6 +81,15 @@ let flagPoleAnimation = {
     astroWalkingToCastle: false
 };
 
+// Secuencia y animación triunfal de Nivel Completado (Victory Celebration 2026)
+let victorySequence = {
+    active: false,
+    timer: 0,
+    isBossVictory: false,
+    bannerScale: 0,
+    fireworkTimer: 0
+};
+
 // Protagonista: Astro (Explorador Galáctico)
 const astro = {
     x: 64,
@@ -152,6 +161,7 @@ function loadLevel(worldNum, levelNum) {
     flagPoleAnimation.active = false;
     flagPoleAnimation.astroSliding = false;
     flagPoleAnimation.astroWalkingToCastle = false;
+    victorySequence.active = false;
 
     activeEnemies = JSON.parse(JSON.stringify(levelData.enemies));
     activeCrystals = JSON.parse(JSON.stringify(levelData.coins));
@@ -160,10 +170,8 @@ function loadLevel(worldNum, levelNum) {
     particles = [];
     bossEntity = levelData.boss ? Object.assign({}, levelData.boss) : null;
 
-    // Música de Zelda (solo si ya se pulsó JUGAR en el menú)
-    if (gameStartedFromMenu) {
-        window.sounds.startMusic(worldNum, levelData.isBossLevel);
-    }
+    // La música suena SIEMPRE de forma continua
+    window.sounds.startMusic(worldNum, levelData.isBossLevel);
     updateUI();
 }
 
@@ -185,7 +193,7 @@ function updateUI() {
 // FÍSICAS Y ACTUALIZACIÓN
 // ==========================================
 function updateGame(dt) {
-    if (isPaused || isGameOver || isStageClear || !gameStartedFromMenu) return;
+    if (isPaused || isGameOver || !gameStartedFromMenu) return;
 
     // Actualizar screen shake moderno 2026
     if (screenShake > 0) {
@@ -201,6 +209,28 @@ function updateGame(dt) {
             floatingTexts.splice(i, 1);
         }
     }
+
+    // Si la secuencia triunfal de Nivel Completado está activa (animación festiva 2026)
+    if (victorySequence.active) {
+        victorySequence.timer++;
+        victorySequence.fireworkTimer++;
+
+        // Explosiones festivas periódicas de fuegos artificiales
+        if (victorySequence.fireworkTimer % 18 === 0) {
+            const fx = cameraX + 40 + Math.random() * (VIEW_WIDTH - 80);
+            const fy = 35 + Math.random() * 80;
+            triggerCelebrationFireworks(fx, fy);
+        }
+
+        updateParticles();
+
+        if (victorySequence.timer === 150) {
+            showVictoryModal(victorySequence.isBossVictory);
+        }
+        return;
+    }
+
+    if (isStageClear) return;
 
     // Si la secuencia de la bandera de meta está en marcha
     if (flagPoleAnimation.active) {
@@ -380,7 +410,7 @@ function startFlagPoleSequence() {
     score += 5000;
     updateUI();
 
-    window.sounds.playStageClear();
+    window.sounds.playPowerUp();
 }
 
 function updateFlagPoleSequence() {
@@ -857,8 +887,19 @@ function handleRespawn() {
 }
 
 function triggerStageClear(isWorldVictory) {
+    if (isStageClear) return;
     isStageClear = true;
     window.sounds.playStageClear();
+
+    // Iniciar secuencia festiva de victoria 2026
+    victorySequence.active = true;
+    victorySequence.timer = 0;
+    victorySequence.isBossVictory = isWorldVictory;
+    victorySequence.bannerScale = 0;
+    victorySequence.fireworkTimer = 0;
+
+    // Lanzar primera salva de fuegos artificiales festivos
+    triggerCelebrationFireworks(cameraX + VIEW_WIDTH / 2, 65);
 
     if (isWorldVictory) {
         if (currentWorldNum < 9) {
@@ -876,7 +917,7 @@ function triggerStageClear(isWorldVictory) {
         }
     }
     saveProgress(saveState);
-    showVictoryModal(isWorldVictory);
+    // Nota: El modal de victoria se mostrará automáticamente tras la animación festiva
 }
 
 function checkCrystalCollisions() {
@@ -1108,6 +1149,11 @@ function render() {
         ctx.restore();
     }
 
+    // Animación y banner triunfal de victoria en pantalla (si la secuencia de victoria está activa)
+    if (victorySequence.active) {
+        renderVictoryAnimation();
+    }
+
     // Iluminación ambiental volumétrica, God Rays y Viñeta cinematográfica 2026
     renderModernLightingAndPostProcess();
 
@@ -1236,6 +1282,77 @@ function renderModernLightingAndPostProcess() {
     vignette.addColorStop(1, 'rgba(2, 6, 23, 0.45)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    ctx.restore();
+}
+
+// ==========================================
+// ANIMACIÓN FESTIVA Y FUEGOS ARTIFICIALES DE VICTORIA (2026 CELEBRATION)
+// ==========================================
+function triggerCelebrationFireworks(x, y) {
+    triggerScreenShake(2.5);
+    const colors = ['#fde047', '#38bdf8', '#f43f5e', '#22c55e', '#a855f7', '#fb923c', '#ffffff'];
+    for (let i = 0; i < 28; i++) {
+        const angle = (i / 28) * Math.PI * 2 + (Math.random() * 0.25);
+        const speed = 1.4 + Math.random() * 3.8;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 0.7,
+            color: colors[i % colors.length],
+            life: 38 + Math.floor(Math.random() * 22),
+            size: 3.5
+        });
+    }
+}
+
+function renderVictoryAnimation() {
+    ctx.save();
+    victorySequence.bannerScale += (1.0 - victorySequence.bannerScale) * 0.12;
+    const scale = victorySequence.bannerScale;
+
+    // Centro fijo de la pantalla en coordenadas lógicas
+    const cx = VIEW_WIDTH / 2;
+    const cy = VIEW_HEIGHT / 2 - 24;
+
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    const bannerW = 290;
+    const bannerH = 78;
+
+    // Placa translúcida con fondo elegante
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH, 16);
+    ctx.fill();
+
+    // Borde dorado con resplandor neón
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#fde047';
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+
+    // Texto superior de la insignia
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '900 11px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(victorySequence.isBossVictory ? '★ ¡LORD DE LAVA DERROTADO! ★' : '★ ¡MISIÓN ESPACIAL CUMPLIDA! ★', 0, -14);
+
+    // Título principal triunfal
+    ctx.fillStyle = '#fef08a';
+    ctx.font = '900 22px Impact, system-ui, sans-serif';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 6;
+    ctx.fillText(victorySequence.isBossVictory ? '¡MUNDO SUPERADO!' : '¡NIVEL COMPLETADO!', 0, 10);
+
+    // Subtítulo con bonificación
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.fillText('+5000 PUNTOS DE BONIFICACIÓN', 0, 27);
+
     ctx.restore();
 }
 
@@ -3079,16 +3196,32 @@ function resetSaveData() {
 
 function goToMainMenu() {
     isPaused = true;
-    window.sounds.stopMusic();
     document.getElementById('pauseOverlay').classList.add('hidden');
     document.getElementById('modalGameOver').classList.add('hidden');
     document.getElementById('modalVictory').classList.add('hidden');
     document.getElementById('mainMenuScreen').classList.remove('hidden');
+    // La música suena SIEMPRE sin cortes
+    window.sounds.startMusic(currentWorldNum, false);
 }
 
 window.addEventListener('load', () => {
     setupControls();
     loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1);
     setupGameFlow();
+
+    // La música suena SIEMPRE: se activa con el primer toque o clic y no para
+    const ensureMusicAlways = () => {
+        window.sounds.init();
+        if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
+            window.sounds.ctx.resume();
+        }
+        if (!window.sounds.musicPlaying && !window.sounds.muted) {
+            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        }
+    };
+    window.addEventListener('pointerdown', ensureMusicAlways);
+    window.addEventListener('keydown', ensureMusicAlways);
+    window.addEventListener('click', ensureMusicAlways);
+
     requestAnimationFrame(gameLoop);
 });

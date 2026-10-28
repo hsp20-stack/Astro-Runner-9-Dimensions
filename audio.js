@@ -211,18 +211,52 @@ class SoundManager {
         this.stopMusic();
         this.init();
         if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
 
-        // Zelda Secret / Puzzle Solved Fanfare!
-        // G5, F#5, D#5, A4, G#4, E5, G#5, C6
+        // ==========================================
+        // FANFARRIA ÉPICA DE VICTORIA: SUPER MARIO LEVEL CLEAR FANFARE
+        // ==========================================
+        const G3 = 196.00, C4 = 261.63, E4 = 329.63, G4 = 392.00, C5 = 523.25, E5 = 659.25, G5 = 783.99;
+        const Ab3 = 207.65, C5_2 = 523.25, Eb4 = 311.13, Ab4 = 415.30, Eb5 = 622.25, Ab5 = 830.61;
+        const Bb3 = 233.08, D4 = 293.66, F4 = 349.23, Bb4 = 466.16, D5 = 587.33, F5 = 698.46, Bb5 = 932.33;
+        const C6 = 1046.50, E6 = 1318.51, G6 = 1567.98, Ab6 = 1661.22, Bb6 = 1864.66;
+
         const fanfare = [
-            { f: 783.99, d: 0.12 },
-            { f: 739.99, d: 0.12 },
-            { f: 622.25, d: 0.12 },
-            { f: 440.00, d: 0.12 },
-            { f: 415.30, d: 0.12 },
-            { f: 659.25, d: 0.12 },
-            { f: 830.61, d: 0.14 },
-            { f: 1046.50, d: 0.45 }
+            // Arpegio 1: Triada de Do Mayor ascendente triunfal
+            { f: G4,  d: 0.11, b: C3 },
+            { f: C5,  d: 0.11, b: C3 },
+            { f: E5,  d: 0.11, b: E3 },
+            { f: G5,  d: 0.11, b: G3 },
+            { f: C6,  d: 0.11, b: C4 },
+            { f: E6,  d: 0.18, b: E4 },
+            { f: G6,  d: 0.32, b: G4 },
+            { f: E6,  d: 0.22, b: E4 },
+
+            // Arpegio 2: Modulación a La Bemol Mayor
+            { f: Ab4, d: 0.11, b: Ab3 },
+            { f: C5,  d: 0.11, b: C4 },
+            { f: Eb5, d: 0.11, b: Eb4 },
+            { f: Ab5, d: 0.11, b: Ab4 },
+            { f: C6,  d: 0.11, b: C5 },
+            { f: Eb6, d: 0.18, b: Eb5 },
+            { f: Ab6, d: 0.32, b: Ab5 },
+            { f: Eb6, d: 0.22, b: Eb5 },
+
+            // Arpegio 3: Clímax en Si Bemol Mayor con fanfarria
+            { f: Bb4, d: 0.11, b: Bb3 },
+            { f: D5,  d: 0.11, b: D4 },
+            { f: F5,  d: 0.11, b: F4 },
+            { f: Bb5, d: 0.11, b: Bb4 },
+            { f: D6,  d: 0.11, b: D5 },
+            { f: F6,  d: 0.18, b: F5 },
+            { f: Bb6, d: 0.34, b: Bb5 },
+            { f: Bb6, d: 0.13, b: Bb5 },
+            { f: Bb6, d: 0.13, b: Bb5 },
+
+            // Gran Acorde final triunfal de Do Mayor sostenido
+            { f: C6,  d: 1.25, b: C3 }
         ];
 
         let offset = 0;
@@ -234,15 +268,37 @@ class SoundManager {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(note.f, now);
 
-            gain.gain.setValueAtTime(0.28, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + note.d);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.012, now + note.d * 0.94);
 
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
-            osc.stop(now + note.d);
-            offset += note.d + 0.02;
+            osc.stop(now + note.d * 0.98);
+
+            // Acompañamiento armónico y bajo
+            if (note.b) {
+                const bOsc = this.ctx.createOscillator();
+                const bGain = this.ctx.createGain();
+                bOsc.type = 'triangle';
+                bOsc.frequency.setValueAtTime(note.b, now);
+                bGain.gain.setValueAtTime(0.24, now);
+                bGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.90);
+                bOsc.connect(bGain);
+                bGain.connect(this.ctx.destination);
+                bOsc.start(now);
+                bOsc.stop(now + note.d * 0.95);
+            }
+
+            offset += note.d * 0.95;
         });
+
+        // La música vuelve a sonar siempre automáticamente tras la fanfarria de victoria
+        setTimeout(() => {
+            if (!this.musicPlaying && !this.muted) {
+                this.startMusic(this.currentWorld, false);
+            }
+        }, offset * 1000 + 400);
     }
 
     playGameOver() {
@@ -287,7 +343,17 @@ class SoundManager {
         if (this.muted) return;
         this.init();
         if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+
+        // Si ya está sonando la música correspondiente, continuarla fluidamente sin reiniciar
+        if (this.musicPlaying && this.currentWorld === worldNum && this.isBossMusic === isBoss) {
+            return;
+        }
+
         this.currentWorld = worldNum;
+        this.isBossMusic = isBoss;
         this.stopMusic();
         this.musicPlaying = true;
 
