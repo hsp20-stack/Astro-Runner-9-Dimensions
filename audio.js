@@ -313,7 +313,6 @@ class SoundManager {
             console.error("playStageClear note:", e);
         }
     }
-    }
 
     playGameOver() {
         if (this.muted) return;

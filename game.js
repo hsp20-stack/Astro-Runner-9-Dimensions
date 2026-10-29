@@ -212,7 +212,7 @@ function updateGame(dt) {
     if (isPaused || isGameOver || !gameStartedFromMenu) return;
 
     // Si la música aún no está sonando y el juego está activo, arrancar tema del mundo
-    if (!window.sounds.musicPlaying && !window.sounds.muted && gameStartedFromMenu) {
+    if (window.sounds && !window.sounds.musicPlaying && !window.sounds.muted && gameStartedFromMenu) {
         try {
             window.sounds.init();
             window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
@@ -3266,14 +3266,19 @@ function drawPlasmaBall(x, y) {
 // ==========================================
 let lastTime = 0;
 function gameLoop(time) {
-    try {
-        const dt = Math.min((time - lastTime) / 1000, 0.1);
-        lastTime = time;
+    const dt = Math.min((time - lastTime) / 1000, 0.1);
+    lastTime = time;
 
+    try {
         updateGame(dt);
+    } catch (err) {
+        console.error("updateGame error:", err);
+    }
+
+    try {
         render();
     } catch (err) {
-        console.error("gameLoop safety catch:", err);
+        console.error("render error:", err);
     }
 
     requestAnimationFrame(gameLoop);
