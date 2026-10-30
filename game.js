@@ -806,6 +806,7 @@ function updateBoss() {
         b.isGrounded = true;
     }
 
+    if (b.hitTimer > 0) b.hitTimer--;
     bossAttackTimer++;
     if (bossAttackTimer % 75 === 0 && b.isGrounded) {
         b.vy = -8.0;
@@ -852,7 +853,8 @@ function updateBoss() {
 function damageBoss(amount) {
     if (!bossEntity || !bossEntity.alive) return;
     bossEntity.hp -= amount;
-    triggerScreenShake(6);
+    bossEntity.hitTimer = 18; // Flash de impacto AAA
+    triggerScreenShake(7);
     addFloatingText('HIT!', bossEntity.x + bossEntity.w / 2, bossEntity.y, '#ef4444');
     window.sounds.playBossHurt();
     createExplosion(bossEntity.x + bossEntity.w / 2, bossEntity.y + bossEntity.h / 2, '#fbbf24');
@@ -2544,15 +2546,30 @@ function drawMarioTile(tile, x, y, c, r) {
 }
 
 // ==========================================
-// DIBUJO DE ASTRO 2026 (VOLUMÉTRICO Y ULTRA DETALLADO)
+// DIBUJO DE ASTRO 2026 (AAA 2.5D CON ANATOMÍA ARTICULADA Y EFECTOS)
 // ==========================================
 function drawAstroModern() {
     const px = Math.floor(astro.x - cameraX);
     const py = Math.floor(astro.y);
 
     ctx.save();
+
+    // 1. Parpadeo de invulnerabilidad tras recibir daño
+    if (astro.invulnerableTimer > 0) {
+        if (Math.floor(astro.invulnerableTimer / 3) % 2 === 0) {
+            ctx.globalAlpha = 0.35;
+        }
+    }
+
+    // 2. Squash, Stretch y Orientación
     ctx.translate(px + astro.w / 2, py + astro.h);
     ctx.scale(astro.squash, astro.stretch);
+
+    // Inclinación aerodinámica al correr
+    if (Math.abs(astro.vx) > 0.5) {
+        const lean = (astro.vx > 0 ? 0.08 : -0.08);
+        ctx.rotate(lean);
+    }
     ctx.translate(-(px + astro.w / 2), -(py + astro.h));
 
     if (astro.facing === 'left') {
@@ -2560,131 +2577,281 @@ function drawAstroModern() {
         ctx.translate(-px * 2 - astro.w, 0);
     }
 
-    // Traje y colores de alta fidelidad
-    const isSuper = astro.state === 'super';
-    const isPlasma = astro.state === 'plasma';
-    const isTransforming = astro.transformationTimer > 0;
+    // Estados y paleta de colores de armadura de nueva generación
+    const isSuper = (astro.state === 'super');
+    const isPlasma = (astro.state === 'plasma');
+    const isTransforming = (astro.transformationTimer > 0);
+    const isMoving = Math.abs(astro.vx) > 0.3 && astro.isGrounded;
+    const isJumping = !astro.isGrounded;
+    const runCycle = isMoving ? (Date.now() * 0.016) : 0;
+    const legSwing = Math.sin(runCycle) * 4.5;
+    const armSwing = Math.cos(runCycle) * 4.5;
 
-    let suitColor = '#f8fafc';
-    let armorColor = '#0284c7';
-    let visorColor = '#38bdf8';
+    let suitColor = '#f8fafc';       // Titanio blanco perlado
+    let armorColor = '#0284c7';      // Azul espacial profundo
+    let highlightColor = '#38bdf8';  // Cian neón
+    let visorColor = '#0ea5e9';      // Visor cian holográfico
+    let reactorColor = '#38bdf8';    // Reactor cian de serie
 
     if (isTransforming && Math.floor(astro.transformationTimer / 3) % 2 === 0) {
         suitColor = '#ffffff';
-        armorColor = '#fef08a';
-        visorColor = '#f59e0b';
+        armorColor = '#fde047';
+        highlightColor = '#f59e0b';
+        visorColor = '#fbbf24';
+        reactorColor = '#fef08a';
     } else if (isSuper) {
-        suitColor = '#fbbf24'; // Armadura dorada resplandeciente
-        armorColor = '#b45309';
-        visorColor = '#fef08a';
+        suitColor = '#fef08a';       // Oro estelar resplandeciente
+        armorColor = '#eab308';      // Oro bruñido
+        highlightColor = '#fbbf24';  // Amarillo solar
+        visorColor = '#f59e0b';      // Ámbar reflectante
+        reactorColor = '#fde047';
     } else if (isPlasma) {
-        suitColor = '#ef4444'; // Exo-traje carmesí de combate
-        armorColor = '#991b1b';
-        visorColor = '#38bdf8';
+        suitColor = '#ef4444';       // Exo-armadura carmesí
+        armorColor = '#991b1b';      // Granate de combate
+        highlightColor = '#f87171';  // Bermellón
+        visorColor = '#38bdf8';      // Visor plasma cian
+        reactorColor = '#f97316';    // Reactor fuego plasma
     }
 
-    // Estela de movimiento translúcida si corre a gran velocidad
-    if (Math.abs(astro.vx) > 2.5) {
+    // 3. Estela holográfica ultranítida al esprintar a velocidad punta
+    if (Math.abs(astro.vx) > 2.6) {
         ctx.save();
-        ctx.globalAlpha = 0.25;
-        ctx.fillStyle = armorColor;
-        ctx.fillRect(px - (astro.vx > 0 ? 6 : -6), py + 4, astro.w, astro.h);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = highlightColor;
+        ctx.beginPath();
+        ctx.roundRect(px - (astro.vx > 0 ? 8 : -8), py + 2, astro.w, astro.h - 2, 6);
+        ctx.fill();
         ctx.restore();
     }
 
-    // Aura de poder si está transformado
+    // 4. Aura de Poder & Partículas Orbitales (Super / Plasma)
     if (isSuper || isPlasma || isTransforming) {
         ctx.save();
-        ctx.strokeStyle = isPlasma ? 'rgba(56, 189, 248, 0.8)' : 'rgba(251, 191, 36, 0.8)';
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = isPlasma ? '#38bdf8' : '#fbbf24';
-        ctx.shadowBlur = 8;
+        const auraPulse = Math.sin(Date.now() * 0.01) * 3 + (isSuper ? 8 : 6);
+        ctx.strokeStyle = isSuper ? 'rgba(251, 191, 36, 0.75)' : 'rgba(56, 189, 248, 0.75)';
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = isSuper ? '#fbbf24' : '#38bdf8';
+        ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.ellipse(px + astro.w / 2, py + astro.h / 2, astro.w / 2 + 5, astro.h / 2 + 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(px + astro.w / 2, py + astro.h / 2, astro.w / 2 + auraPulse, astro.h / 2 + auraPulse, 0, 0, Math.PI * 2);
         ctx.stroke();
+
+        // Destellos de energía orbitando
+        for (let s = 0; s < 3; s++) {
+            const starAng = Date.now() * 0.005 + s * (Math.PI * 2 / 3);
+            const sx = px + astro.w / 2 + Math.cos(starAng) * (astro.w / 2 + auraPulse + 2);
+            const sy = py + astro.h / 2 + Math.sin(starAng) * (astro.h / 2 + auraPulse + 2);
+            ctx.fillStyle = isSuper ? '#fef08a' : '#e0f2fe';
+            ctx.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+        }
         ctx.restore();
     }
 
-    // Micro-Jetpack trasero con llama de plasma animada
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(px - 5, py + 8, 6, astro.h - 14);
-    ctx.fillStyle = '#64748b';
-    ctx.fillRect(px - 4, py + 9, 2, astro.h - 16); // Reflejo metálico del jetpack
+    // 5. JETPACK DUAL TRASERO CON BOQUILLAS CROMADAS Y LLAMA ANIMADA
+    const jpX = px - 6;
+    const jpY = py + 7;
+    // Carcasa del cilindro del jetpack
+    const jpGrad = ctx.createLinearGradient(jpX, jpY, jpX + 6, jpY);
+    jpGrad.addColorStop(0, '#1e293b');
+    jpGrad.addColorStop(0.5, '#475569');
+    jpGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = jpGrad;
+    ctx.beginPath();
+    ctx.roundRect(jpX, jpY, 6, astro.h - 13, 2);
+    ctx.fill();
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-    if (!astro.isGrounded) {
-        // Llama activa del jetpack con degradado
-        const flameLength = 8 + Math.sin(Date.now() * 0.03) * 3;
-        const thrusterGrad = ctx.createLinearGradient(px - 2, py + astro.h - 6, px - 2, py + astro.h + flameLength);
-        thrusterGrad.addColorStop(0, '#ffffff');
-        thrusterGrad.addColorStop(0.3, isPlasma ? '#f97316' : '#38bdf8');
-        thrusterGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
-        ctx.fillStyle = thrusterGrad;
+    // Anillo de luz en el jetpack
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(jpX + 1, jpY + 4, 4, 1.5);
+
+    // Boquilla inferior del propulsor
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(jpX + 1, jpY + astro.h - 13, 4, 3);
+
+    // Llamas de propulsión activas (en el aire o corriendo)
+    if (isJumping || Math.abs(astro.vx) > 2.0) {
+        const flameFlicker = Math.sin(Date.now() * 0.035) * 3;
+        const flameLen = (isJumping ? 12 : 7) + flameFlicker;
+        const flameGrad = ctx.createLinearGradient(jpX + 3, jpY + astro.h - 10, jpX + 3, jpY + astro.h - 10 + flameLen);
+        flameGrad.addColorStop(0, '#ffffff');
+        flameGrad.addColorStop(0.25, isPlasma ? '#f97316' : '#38bdf8');
+        flameGrad.addColorStop(0.7, isPlasma ? '#ef4444' : '#0284c7');
+        flameGrad.addColorStop(1, 'rgba(2, 132, 199, 0)');
+        ctx.fillStyle = flameGrad;
         ctx.beginPath();
-        ctx.moveTo(px - 4, py + astro.h - 6);
-        ctx.lineTo(px - 2, py + astro.h + flameLength);
-        ctx.lineTo(px, py + astro.h - 6);
+        ctx.moveTo(jpX + 1, jpY + astro.h - 10);
+        ctx.lineTo(jpX + 5, jpY + astro.h - 10);
+        ctx.lineTo(jpX + 3, jpY + astro.h - 10 + flameLen);
+        ctx.closePath();
         ctx.fill();
     }
 
-    // Torso con degradado de volumen
-    const torsoGrad = ctx.createLinearGradient(px + 2, py + 12, px + astro.w - 2, py + 12);
-    torsoGrad.addColorStop(0, suitColor);
-    torsoGrad.addColorStop(0.7, suitColor);
-    torsoGrad.addColorStop(1, '#94a3b8');
-    ctx.fillStyle = torsoGrad;
-    ctx.fillRect(px + 2, py + 12, astro.w - 4, astro.h - 14);
-
-    // Cañón de Plasma montado en el brazo (solo en estado plasma)
-    if (isPlasma) {
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(px + astro.w - 3, py + 13, 10, 7);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(px + astro.w + 4, py + 14, 4, 5);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(px + astro.w + 6, py + 15, 2, 3);
-    }
-
-    // Cinturón de combate y emblema reactor
+    // 6. PIERNAS Y BOTAS CIBERNÉTICAS ARTICULADAS (PASO NATURAL)
+    const legY = py + astro.h - 9;
+    // Pierna trasera (izquierda en perspectiva)
     ctx.fillStyle = armorColor;
-    ctx.fillRect(px + 2, py + 18, astro.w - 4, 3);
-    ctx.fillStyle = visorColor;
-    ctx.beginPath();
-    ctx.arc(px + astro.w / 2, py + 15, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(px + 2, legY - (isMoving ? legSwing * 0.6 : 0), 6, 6);
+    // Bota trasera con suela amortiguadora
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(px + 1, legY + 5 - (isMoving ? legSwing : 0), 7, 4);
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(px + 1, legY + 8 - (isMoving ? legSwing : 0), 7, 1.2); // Tira de neón en la suela
 
-    // Botas con suela reforzada
+    // Pierna delantera (derecha en perspectiva)
+    ctx.fillStyle = suitColor;
+    ctx.fillRect(px + astro.w - 8, legY + (isMoving ? legSwing * 0.6 : 0), 6, 6);
+    // Bota delantera reforzada
     ctx.fillStyle = armorColor;
-    const footOffset = (astro.animFrame % 2 === 0) ? 0 : 3;
-    ctx.fillRect(px + 1, py + astro.h - 4 + footOffset, 7, 4);
-    ctx.fillRect(px + astro.w - 8, py + astro.h - 4 - footOffset, 7, 4);
-    ctx.fillStyle = '#0f172a'; // Suela
-    ctx.fillRect(px + 1, py + astro.h - 1 + footOffset, 7, 1.5);
-    ctx.fillRect(px + astro.w - 8, py + astro.h - 1 - footOffset, 7, 1.5);
+    ctx.fillRect(px + astro.w - 9, legY + 5 + (isMoving ? legSwing : 0), 8, 4);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(px + astro.w - 9, legY + 8 + (isMoving ? legSwing : 0), 8, 2);
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(px + astro.w - 9, legY + 9 + (isMoving ? legSwing : 0), 8, 1.2); // Tira neón delantera
 
-    // Casco espacial redondeado con volumen y brillo de cristal
-    const helmetGrad = ctx.createRadialGradient(px + astro.w / 2 - 2, py + 6, 2, px + astro.w / 2, py + 8, 9);
-    helmetGrad.addColorStop(0, '#ffffff');
-    helmetGrad.addColorStop(0.6, suitColor);
-    helmetGrad.addColorStop(1, '#64748b');
-    ctx.fillStyle = helmetGrad;
+    // 7. TORSO CON CORAZA DE VOLUMEN 2.5D Y HOMBRERAS METÁLICAS
+    const chestX = px + 1;
+    const chestY = py + 11;
+    const chestW = astro.w - 2;
+    const chestH = astro.h - 18;
+
+    const chestGrad = ctx.createLinearGradient(chestX, chestY, chestX + chestW, chestY + chestH);
+    chestGrad.addColorStop(0, suitColor);
+    chestGrad.addColorStop(0.55, suitColor);
+    chestGrad.addColorStop(1, armorColor);
+    ctx.fillStyle = chestGrad;
     ctx.beginPath();
-    ctx.arc(px + astro.w / 2, py + 8, 9, 0, Math.PI * 2);
+    ctx.roundRect(chestX, chestY, chestW, chestH, 5);
     ctx.fill();
     ctx.strokeStyle = armorColor;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Visor curvo de alta tecnología con reflejo digital
-    ctx.fillStyle = '#090d16';
+    // Hombrera aerodinámica
+    ctx.fillStyle = armorColor;
     ctx.beginPath();
-    ctx.ellipse(px + astro.w / 2 + 1, py + 8, 6.5, 4.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(chestX + 3, chestY + 2, 4.5, 3.5, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(chestX + chestW - 3, chestY + 2, 4.5, 3.5, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Brillo del cristal del visor
+    // Cinturón táctico con módulo de batería
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(chestX, chestY + chestH - 3, chestW, 3);
+    ctx.fillStyle = highlightColor;
+    ctx.fillRect(chestX + chestW / 2 - 2, chestY + chestH - 3, 4, 3); // Hebilla iluminada
+
+    // REACTOR DE PECHO ARC-CORE RESPLANDECIENTE
+    const rcX = chestX + chestW / 2;
+    const rcY = chestY + chestH / 2 - 1;
+    const rcPulse = Math.sin(Date.now() * 0.008) * 0.5 + 2.8;
+    const rcGrad = ctx.createRadialGradient(rcX, rcY, 0.5, rcX, rcY, rcPulse);
+    rcGrad.addColorStop(0, '#ffffff');
+    rcGrad.addColorStop(0.5, reactorColor);
+    rcGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = rcGrad;
+    ctx.beginPath();
+    ctx.arc(rcX, rcY, rcPulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 8. BRAZOS Y MANOS CON ARMAS O GUANTES
+    if (isPlasma) {
+        // CAÑÓN DE PLASMA MONTADO EN EL BRAZO
+        const cannonX = px + astro.w - 2;
+        const cannonY = py + 12;
+        // Chasis del cañón
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.roundRect(cannonX, cannonY, 11, 7, 2);
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Bobinas de aceleración de plasma
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(cannonX + 2, cannonY + 1.5, 2, 4);
+        ctx.fillRect(cannonX + 5, cannonY + 1.5, 2, 4);
+        // Boca del cañón con chispa de carga lista
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cannonX + 9, cannonY + 2, 2, 3);
+        const sparkPulse = Math.sin(Date.now() * 0.02) * 1.5 + 2;
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(cannonX + 11, cannonY + 3.5, sparkPulse, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Brazo y guantelete espacial clásico oscilante
+        const armX = px + astro.w - 4;
+        const armY = py + 13 + (isMoving ? armSwing : 0);
+        ctx.fillStyle = suitColor;
+        ctx.beginPath();
+        ctx.roundRect(armX, armY, 5, 7, 2);
+        ctx.fill();
+        // Guantelete astronauta con nudillos protegidos
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(armX, armY + 5, 5, 4);
+        ctx.fillStyle = highlightColor;
+        ctx.fillRect(armX + 1, armY + 6, 3, 1.5);
+    }
+
+    // 9. CASCO ESPACIAL REDONDEADO Y VISOR NANO-CRISTAL 3D
+    const headCX = px + astro.w / 2;
+    const headCY = py + 7;
+    const headR = 8.5;
+
+    // Escudo esférico del casco con degradado de luz superior
+    const helmetGrad = ctx.createRadialGradient(headCX - 2.5, headCY - 3, 1, headCX, headCY, headR);
+    helmetGrad.addColorStop(0, '#ffffff');
+    helmetGrad.addColorStop(0.4, suitColor);
+    helmetGrad.addColorStop(0.85, armorColor);
+    helmetGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = helmetGrad;
+    ctx.beginPath();
+    ctx.arc(headCX, headCY, headR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = armorColor;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Antena lateral de telecomunicaciones con luz LED parpadeante
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(headCX - headR + 1, headCY - 7, 2, 6);
+    const ledBlink = Math.sin(Date.now() * 0.007) > 0;
+    ctx.fillStyle = ledBlink ? highlightColor : '#0f172a';
+    ctx.fillRect(headCX - headR, headCY - 8, 3, 2);
+
+    // VISOR DE CRISTAL REFLECTANTE Y PANTALLA HUD INTERNA
+    const visorW = 6.8;
+    const visorH = 5.2;
+    const visorCX = headCX + 1.2;
+    const visorCY = headCY;
+
+    // Fondo oscuro del visor
+    ctx.fillStyle = '#020617';
+    ctx.beginPath();
+    ctx.ellipse(visorCX, visorCY, visorW, visorH, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = armorColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Brillo azul holográfico interior (Ojo HUD cibernético)
     ctx.fillStyle = visorColor;
-    ctx.fillRect(px + astro.w / 2, py + 7, 5, 2);
+    ctx.beginPath();
+    ctx.ellipse(visorCX + 1, visorCY, visorW * 0.65, visorH * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Línea de escaneo HUD dinámica
+    const scanY = visorCY - 1.5 + Math.sin(Date.now() * 0.008) * 1.5;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(px + astro.w / 2 + 3, py + 6, 2, 1);
+    ctx.fillRect(visorCX - 2, scanY, 5, 0.8);
+
+    // Reflejo especular blanco curvado de cristal en la esquina superior
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.beginPath();
+    ctx.ellipse(visorCX - 2, visorCY - 2, 2.5, 1.2, -0.4, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
 }
@@ -2976,15 +3143,25 @@ function drawCuteEnemy(x, y, type, isFlying = false) {
 }
 
 // ==========================================
-// RENDERIZADO DE LOS 9 JEFES FINALES ÚNICOS
+// RENDERIZADO DE LOS 9 JEFES FINALES ÚNICOS (AAA 2026 VISUAL OVERHAUL)
 // ==========================================
 function drawBossModern(x, y) {
     const b = bossEntity;
     if (!b) return;
     const facingLeft = (b.vx <= 0);
     const theme = (levelData && levelData.world) ? levelData.world.theme : 'lava_castle';
-    const breath = Math.sin(Date.now() * 0.005) * 1.5;
+    const breath = Math.sin(Date.now() * 0.005) * 2;
+    const isHit = (b.hitTimer && b.hitTimer > 0);
 
+    ctx.save();
+
+    // Sombra de contacto suave en el suelo
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x + b.w / 2, y + b.h - 2, b.w / 2 + 6, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Renderizado del jefe temático correspondiente
     switch (theme) {
         case 'grassland':
             drawMechaKoopaPrime(x, y, b, facingLeft, breath);
@@ -3015,435 +3192,668 @@ function drawBossModern(x, y) {
             drawLordLavaSupremo(x, y, b, facingLeft, breath);
             break;
     }
-}
 
-// 1. MUNDO 1: MECHA-KOOPA PRIME (TORTUGA CIBERNÉTICA CON TURBINAS)
-function drawMechaKoopaPrime(x, y, b, facingLeft, breath) {
-    // Turbinas y humo cian
-    for (let i = 0; i < 3; i++) {
-        const puff = (Date.now() * 0.003 + i * 0.3) % 1;
-        const px = (facingLeft ? x + 34 : x + 10) + Math.sin(puff * 4) * 4;
-        const py = y + 10 - puff * 24;
-        ctx.fillStyle = `rgba(56, 189, 248, ${1 - puff})`;
-        ctx.fillRect(px, py, 3, 3);
-    }
-
-    // Caparazón blindado esmeralda con remaches de titanio
-    const shellX = facingLeft ? x + 18 : x + 6;
-    const shellY = y + 10 + breath;
-    ctx.fillStyle = '#064e3b';
-    ctx.beginPath();
-    ctx.ellipse(shellX + 12, shellY + 16, 14, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // Remaches de oro
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(shellX + 6, shellY + 8, 3, 3);
-    ctx.fillRect(shellX + 16, shellY + 8, 3, 3);
-    ctx.fillRect(shellX + 11, shellY + 22, 3, 3);
-
-    // Patas mecánicas hidráulicas con pistones
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(x + 4, y + b.h - 12, 12, 12);
-    ctx.fillRect(x + b.w - 16, y + b.h - 12, 12, 12);
-    ctx.fillStyle = '#10b981';
-    ctx.fillRect(x + 2, y + b.h - 4, 16, 4);
-    ctx.fillRect(x + b.w - 18, y + b.h - 4, 16, 4);
-
-    // Cabeza de titanio y visor láser rojo
-    const headX = facingLeft ? x + 2 : x + 22;
-    const headY = y + 6 + breath;
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.roundRect(headX, headY, 22, 18, 4);
-    ctx.fill();
-
-    // Visor láser escaneador rojo
-    const laserScan = (Math.sin(Date.now() * 0.01) + 1) * 4;
-    ctx.fillStyle = '#ef4444';
-    ctx.fillRect(headX + (facingLeft ? 2 : 6), headY + 5, 12, 5);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(headX + (facingLeft ? 2 : 6) + laserScan, headY + 6, 2, 3);
-
-    // Mandíbula mecánica
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(facingLeft ? headX - 4 : headX + 14, headY + 12, 12, 6);
-}
-
-// 2. MUNDO 2: FARAÓN ESCORPIÓN (TITÁN ESCORPIÓN DE ORO Y LAPISLÁZULI)
-function drawFaraonEscorpion(x, y, b, facingLeft, breath) {
-    // Cola curvada dorada con aguijón solar
-    const tailBaseX = facingLeft ? x + 34 : x + 10;
-    const tailTipX = facingLeft ? x + 10 : x + 34;
-    const tailTipY = y - 10 + breath;
-
-    ctx.strokeStyle = '#ca8a04';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(tailBaseX, y + 28);
-    ctx.quadraticCurveTo(facingLeft ? x + 44 : x, y - 2, tailTipX, tailTipY);
-    ctx.stroke();
-
-    // Aguijón solar incandescente
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.moveTo(tailTipX, tailTipY - 6);
-    ctx.lineTo(tailTipX - 6, tailTipY + 4);
-    ctx.lineTo(tailTipX + 6, tailTipY + 4);
-    ctx.fill();
-    ctx.fillStyle = '#fde047';
-    ctx.fillRect(tailTipX - 2, tailTipY - 8, 4, 4);
-
-    // Chispas del aguijón
-    if (Math.random() > 0.4) {
-        ctx.fillStyle = '#fde047';
-        ctx.fillRect(tailTipX + (Math.random() - 0.5) * 12, tailTipY + (Math.random() - 0.5) * 12, 2, 2);
-    }
-
-    // Carapacho de oro del faraón
-    const bodyX = x + 8;
-    const bodyY = y + 16 + breath;
-    ctx.fillStyle = '#eab308';
-    ctx.beginPath();
-    ctx.roundRect(bodyX, bodyY, 32, 24, 6);
-    ctx.fill();
-    ctx.strokeStyle = '#1e3a8a'; // Lapislázuli real
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Ojos de rubí
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(facingLeft ? bodyX + 4 : bodyX + 22, bodyY + 4, 6, 4);
-
-    // Pinzas mecánicas articuladas que chasquean
-    const snap = Math.sin(Date.now() * 0.008) * 4;
-    const pincerX = facingLeft ? x - 4 : x + 32;
-    ctx.fillStyle = '#ca8a04';
-    ctx.fillRect(pincerX, bodyY + 6, 16, 6);
-    // Pinza superior e inferior
-    ctx.fillRect(facingLeft ? pincerX - 4 : pincerX + 12, bodyY + 2 - snap, 6, 5);
-    ctx.fillRect(facingLeft ? pincerX - 4 : pincerX + 12, bodyY + 9 + snap, 6, 5);
-
-    // Patas doradas de escorpión
-    ctx.strokeStyle = '#854d0e';
-    ctx.lineWidth = 2;
-    for (let p = 0; p < 3; p++) {
+    // Shader FX de Impacto al recibir daño (Damage Flash blanco-dorado)
+    if (isHit) {
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.moveTo(bodyX + p * 10 + 4, bodyY + 22);
-        ctx.lineTo(bodyX + p * 10, y + b.h);
+        ctx.roundRect(x - 2, y - 2, b.w + 4, b.h + 4, 10);
+        ctx.fill();
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 3;
         ctx.stroke();
+
+        // Chispas de impacto
+        for (let sp = 0; sp < 4; sp++) {
+            ctx.fillStyle = '#fde047';
+            const spX = x + Math.random() * b.w;
+            const spY = y + Math.random() * b.h;
+            ctx.fillRect(spX, spY, 3, 3);
+        }
+        ctx.restore();
     }
+
+    ctx.restore();
 }
 
-// 3. MUNDO 3: GÓLEM CUÁNTICO (MONOLITO DE CRISTAL NEÓN VIOLETA)
-function drawGolemCuantico(x, y, b, facingLeft, breath) {
-    const corePulse = Math.sin(Date.now() * 0.008) * 4 + 10;
-    const hoverY = Math.sin(Date.now() * 0.004) * 4;
+// 1. MUNDO 1: MECHA-KOOPA PRIME (TORTUGA TITÁN CIBERNÉTICA CON CHIMENEAS Y LÁSER)
+function drawMechaKoopaPrime(x, y, b, facingLeft, breath) {
+    // Chimeneas de escape dobles de bronce con vapor y llamaradas de turbo
+    const stackX = facingLeft ? x + 34 : x + 8;
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(stackX, y + 2, 7, 14);
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(stackX - 1, y, 9, 3); // Borde superior
 
-    // Fragmentos de cristal neón flotando alrededor en órbita
-    for (let i = 0; i < 4; i++) {
-        const ang = (Date.now() * 0.003 + i * (Math.PI / 2));
-        const cx = x + b.w / 2 + Math.cos(ang) * 26;
-        const cy = y + b.h / 2 + Math.sin(ang) * 20;
-        ctx.fillStyle = (i % 2 === 0) ? '#c084fc' : '#38bdf8';
+    // Vapor blanco y llamaradas cian del turbo
+    for (let i = 0; i < 3; i++) {
+        const puff = (Date.now() * 0.003 + i * 0.33) % 1;
+        const px = stackX + 4 + Math.sin(puff * 6) * 4;
+        const py = y - puff * 26;
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.9 - puff * 0.8})`;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 5);
-        ctx.lineTo(cx + 4, cy);
-        ctx.lineTo(cx, cy + 5);
-        ctx.lineTo(cx - 4, cy);
+        ctx.arc(px, py, 2.5 + puff * 3.5, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Torso de cristal monolítico violeta oscuro
+    // Caparazón acorazado esmeralda masivo con placas hexagonales y remaches
+    const shellX = facingLeft ? x + 16 : x + 4;
+    const shellY = y + 10 + breath;
+    const shellW = 28;
+    const shellH = 34;
+
+    const shellGrad = ctx.createRadialGradient(shellX + shellW / 2, shellY + shellH / 2, 4, shellX + shellW / 2, shellY + shellH / 2, 20);
+    shellGrad.addColorStop(0, '#10b981');
+    shellGrad.addColorStop(0.5, '#059669');
+    shellGrad.addColorStop(1, '#064e3b');
+    ctx.fillStyle = shellGrad;
+    ctx.beginPath();
+    ctx.ellipse(shellX + shellW / 2, shellY + shellH / 2, shellW / 2, shellH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reborde de titanio acolchado
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Placas cibernéticas y remaches dorados
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(shellX + 8, shellY + 12, 2.2, 0, Math.PI * 2);
+    ctx.arc(shellX + 20, shellY + 12, 2.2, 0, Math.PI * 2);
+    ctx.arc(shellX + 14, shellY + 24, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bandas de advertencia amarillas y negras
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(shellX + 6, shellY + 16, shellW - 12, 3);
+
+    // Patas mecánicas hidráulicas tipo oruga / pistón
+    const legLeftY = y + b.h - 14 - (facingLeft ? breath * 0.5 : 0);
+    const legRightY = y + b.h - 14 + (facingLeft ? breath * 0.5 : 0);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(x + 4, legLeftY, 14, 14);
+    ctx.fillRect(x + b.w - 18, legRightY, 14, 14);
+
+    // Garras de acero reforzadas con amortiguadores
+    ctx.fillStyle = '#059669';
+    ctx.fillRect(x + 2, legLeftY + 10, 18, 4);
+    ctx.fillRect(x + b.w - 20, legRightY + 10, 18, 4);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(x + 2, legLeftY + 12, 4, 3);
+    ctx.fillRect(x + 16, legLeftY + 12, 4, 3);
+
+    // Cabeza de tiranosaurio mecatrónico blindada
+    const headX = facingLeft ? x + 2 : x + 22;
+    const headY = y + 8 + breath;
+    const headGrad = ctx.createLinearGradient(headX, headY, headX + 24, headY + 22);
+    headGrad.addColorStop(0, '#334155');
+    headGrad.addColorStop(0.6, '#0f172a');
+    headGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.roundRect(headX, headY, 24, 20, 5);
+    ctx.fill();
+    ctx.strokeStyle = '#059669';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Mandíbula mecánica articulada con dientes de titanio
+    ctx.fillStyle = '#f59e0b';
+    const jawX = facingLeft ? headX - 4 : headX + 16;
+    ctx.fillRect(jawX, headY + 14, 12, 6);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(jawX + 2, headY + 14, 3, 2);
+    ctx.fillRect(jawX + 7, headY + 14, 3, 2);
+
+    // Ojo visor cíclope láser rojo con haz proyector
+    const laserScan = (Math.sin(Date.now() * 0.012) + 1) * 4.5;
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(headX + (facingLeft ? 2 : 8), headY + 6, 14, 6);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(headX + (facingLeft ? 2 : 8), headY + 6, 14, 6);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(headX + (facingLeft ? 2 : 8) + laserScan, headY + 7, 3, 4);
+
+    // Haz de escaneo láser rojo hacia adelante
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(headX + (facingLeft ? 0 : 24), headY + 9);
+    ctx.lineTo(headX + (facingLeft ? -35 : 59), headY + 9 + (Math.sin(Date.now() * 0.01) * 6));
+    ctx.stroke();
+}
+
+// 2. MUNDO 2: FARAÓN ESCORPIÓN (TITÁN BIOMECÁNICO DE ORO, LAPISLÁZULI Y AGUIJÓN SOLAR)
+function drawFaraonEscorpion(x, y, b, facingLeft, breath) {
+    // Cola articulada robótica dorada que se eleva sobre el jefe
+    const tailBaseX = facingLeft ? x + 36 : x + 12;
+    const tailTipX = facingLeft ? x + 12 : x + 36;
+    const tailTipY = y - 14 + breath;
+
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(tailBaseX, y + 32);
+    ctx.quadraticCurveTo(facingLeft ? x + 48 : x, y - 4, tailTipX, tailTipY);
+    ctx.stroke();
+    // Segmentos acorazados de la cola
+    ctx.strokeStyle = '#1e3a8a'; // Inserciones de lapislázuli
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // AGUIJÓN SOLAR DE PLASMA INCANDESCENTE
+    const stingerPulse = Math.sin(Date.now() * 0.015) * 3 + 7;
+    const stingerGrad = ctx.createRadialGradient(tailTipX, tailTipY, 1, tailTipX, tailTipY, stingerPulse);
+    stingerGrad.addColorStop(0, '#ffffff');
+    stingerGrad.addColorStop(0.3, '#fde047');
+    stingerGrad.addColorStop(0.7, '#f97316');
+    stingerGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+    ctx.fillStyle = stingerGrad;
+    ctx.beginPath();
+    ctx.arc(tailTipX, tailTipY, stingerPulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Punta del aguijón de oro afilado
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.moveTo(tailTipX, tailTipY - 8);
+    ctx.lineTo(tailTipX - 7, tailTipY + 4);
+    ctx.lineTo(tailTipX + 7, tailTipY + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Rayos y chispas de plasma solar
+    for (let c = 0; c < 3; c++) {
+        const sparkAng = Date.now() * 0.01 + c * 2;
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(tailTipX + Math.cos(sparkAng) * 9, tailTipY + Math.sin(sparkAng) * 9, 2.5, 2.5);
+    }
+
+    // Carapacho de oro del faraón con cartelas jeroglíficas
+    const bodyX = x + 8;
+    const bodyY = y + 16 + breath;
+    const goldGrad = ctx.createLinearGradient(bodyX, bodyY, bodyX + 32, bodyY + 26);
+    goldGrad.addColorStop(0, '#fef08a');
+    goldGrad.addColorStop(0.5, '#eab308');
+    goldGrad.addColorStop(1, '#a16207');
+    ctx.fillStyle = goldGrad;
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 32, 26, 7);
+    ctx.fill();
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Corona Nemes faraónica con franjas azules y doradas
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(bodyX + 4, bodyY + 2, 24, 4);
+    ctx.fillRect(bodyX + 8, bodyY + 6, 16, 3);
+
+    // Ojos de rubí sagrados resplandecientes
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(facingLeft ? bodyX + 4 : bodyX + 22, bodyY + 11, 7, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(facingLeft ? bodyX + 6 : bodyX + 24, bodyY + 12, 2, 2);
+
+    // PINZAS MECÁNICAS ARTICULADAS DE ORO QUE CHASQUEAN
+    const snap = Math.sin(Date.now() * 0.01) * 5;
+    const pincerX = facingLeft ? x - 6 : x + 34;
+    ctx.fillStyle = '#eab308';
+    ctx.fillRect(pincerX, bodyY + 8, 18, 7);
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(pincerX, bodyY + 8, 18, 7);
+
+    // Dientes de obsidiana en las pinzas
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(facingLeft ? pincerX - 5 : pincerX + 14, bodyY + 4 - snap, 7, 6);
+    ctx.fillRect(facingLeft ? pincerX - 5 : pincerX + 14, bodyY + 11 + snap, 7, 6);
+
+    // Patas biomecánicas doradas
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 2.5;
+    for (let p = 0; p < 4; p++) {
+        const footStep = Math.sin(Date.now() * 0.01 + p) * 3;
+        ctx.beginPath();
+        ctx.moveTo(bodyX + p * 8 + 3, bodyY + 24);
+        ctx.lineTo(bodyX + p * 8, y + b.h - footStep);
+        ctx.stroke();
+    }
+}
+
+// 3. MUNDO 3: GÓLEM CUÁNTICO (MONOLITO DE CRISTAL OBSIDIANA Y NÚCLEO SINGULARIDAD VIOLETA)
+function drawGolemCuantico(x, y, b, facingLeft, breath) {
+    const hoverY = Math.sin(Date.now() * 0.005) * 5;
+    const corePulse = Math.sin(Date.now() * 0.01) * 4 + 11;
+
+    // Fragmentos de cristal neón flotando y orbitando en 3D
+    for (let i = 0; i < 5; i++) {
+        const ang = (Date.now() * 0.0035 + i * (Math.PI * 2 / 5));
+        const cx = x + b.w / 2 + Math.cos(ang) * 28;
+        const cy = y + b.h / 2 + Math.sin(ang) * 22;
+
+        ctx.fillStyle = (i % 2 === 0) ? '#c084fc' : '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6);
+        ctx.lineTo(cx + 5, cy);
+        ctx.lineTo(cx, cy + 6);
+        ctx.lineTo(cx - 5, cy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Relámpagos de energía cuántica entre los fragmentos
+        ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + b.w / 2, y + b.h / 2 + hoverY);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+    }
+
+    // Torso monolítico de cristal obsidiana y amatista
     const cx = x + 10;
     const cy = y + 8 + hoverY;
-    ctx.fillStyle = '#3b0764';
+    const golemGrad = ctx.createLinearGradient(cx, cy, cx + 28, cy + 36);
+    golemGrad.addColorStop(0, '#581c87');
+    golemGrad.addColorStop(0.5, '#2e1065');
+    golemGrad.addColorStop(1, '#0f051d');
+    ctx.fillStyle = golemGrad;
     ctx.beginPath();
     ctx.moveTo(cx + 14, cy);
     ctx.lineTo(cx + 28, cy + 12);
-    ctx.lineTo(cx + 22, cy + 34);
-    ctx.lineTo(cx + 6, cy + 34);
+    ctx.lineTo(cx + 24, cy + 36);
+    ctx.lineTo(cx + 4, cy + 36);
     ctx.lineTo(cx, cy + 12);
-    ctx.fill();
-    ctx.strokeStyle = '#a855f7';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Núcleo cuántico radiante en el pecho
-    const grad = ctx.createRadialGradient(cx + 14, cy + 18, 1, cx + 14, cy + 18, corePulse);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.4, '#c084fc');
-    grad.addColorStop(1, 'rgba(147, 51, 234, 0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(cx + 14, cy + 18, corePulse, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ojo horizontal luminoso
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(cx + 8, cy + 8, 12, 3);
-
-    // Puños flotantes de cristal suspendidos
-    const fistY = y + 24 + hoverY + Math.sin(Date.now() * 0.006) * 3;
-    ctx.fillStyle = '#7e22ce';
-    ctx.fillRect(facingLeft ? x - 4 : x + b.w - 10, fistY, 12, 12);
-    ctx.strokeStyle = '#c084fc';
-    ctx.strokeRect(facingLeft ? x - 4 : x + b.w - 10, fistY, 12, 12);
-}
-
-// 4. MUNDO 4: CAPITÁN KRAKEN (DREADNOUGHT KRAKEN PIRATA)
-function drawCapitanKraken(x, y, b, facingLeft, breath) {
-    // Burbujas ascendentes
-    for (let i = 0; i < 3; i++) {
-        const bubbleTime = (Date.now() * 0.002 + i * 0.35) % 1;
-        const bx = x + 12 + i * 12;
-        const by = y + b.h - bubbleTime * 45;
-        ctx.strokeStyle = 'rgba(125, 211, 252, 0.7)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(bx, by, 3, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-
-    // Tentáculos ondulantes con cinemática sinusoidal
-    for (let t = 0; t < 4; t++) {
-        const wave = Math.sin(Date.now() * 0.006 + t * 0.9) * 8;
-        const tx = x + 8 + t * 8;
-        ctx.strokeStyle = '#0d9488';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(tx, y + 32);
-        ctx.quadraticCurveTo(tx + wave, y + 44, tx - wave, y + b.h + 4);
-        ctx.stroke();
-
-        // Ventosas luminiscentes
-        ctx.fillStyle = '#6ee7b7';
-        ctx.fillRect(tx + (wave * 0.5) - 2, y + 42, 3, 3);
-    }
-
-    // Manto cibernético del kraken
-    const headX = x + 8;
-    const headY = y + 6 + breath;
-    ctx.fillStyle = '#0f766e';
-    ctx.beginPath();
-    ctx.ellipse(headX + 16, headY + 14, 16, 18, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#14b8a6';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Sombrero bicornio pirata
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.moveTo(headX, headY + 4);
-    ctx.lineTo(headX + 16, headY - 12);
-    ctx.lineTo(headX + 32, headY + 4);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(headX + 14, headY - 4, 4, 4); // Calavera de oro
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
 
-    // Ojo biónico con parche pirata
-    const eyeX = facingLeft ? headX + 6 : headX + 18;
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(eyeX, headY + 10, 8, 8); // Parche
-    ctx.fillStyle = '#ef4444';
-    ctx.fillRect(eyeX + 2, headY + 12, 4, 4); // Visor ocular
+    // NÚCLEO SINGULARIDAD CUÁNTICA EN EL PECHO
+    const coreGrad = ctx.createRadialGradient(cx + 14, cy + 20, 1, cx + 14, cy + 20, corePulse);
+    coreGrad.addColorStop(0, '#ffffff');
+    coreGrad.addColorStop(0.35, '#e879f9');
+    coreGrad.addColorStop(0.7, '#9333ea');
+    coreGrad.addColorStop(1, 'rgba(147, 51, 234, 0)');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(cx + 14, cy + 20, corePulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ojo horizontal luminoso de análisis cuántico
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(cx + 7, cy + 9, 14, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx + 12 + Math.sin(Date.now() * 0.01) * 4, cy + 9, 3, 4);
+
+    // PUÑOS FLOTANTES DE CRISTAL CUÁNTICO CON NUDILLOS DE NEÓN
+    const fistY = y + 22 + hoverY + Math.sin(Date.now() * 0.008) * 4;
+    const fistX = facingLeft ? x - 8 : x + b.w - 6;
+
+    ctx.fillStyle = '#7e22ce';
+    ctx.beginPath();
+    ctx.roundRect(fistX, fistY, 15, 15, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    // Nudillos iluminados
+    ctx.fillStyle = '#c084fc';
+    ctx.fillRect(fistX + 2, fistY + 2, 3, 3);
+    ctx.fillRect(fistX + 6, fistY + 2, 3, 3);
+    ctx.fillRect(fistX + 10, fistY + 2, 3, 3);
 }
 
-// 5. MUNDO 5: YETI CRIOGÉNICO (TITÁN DE HIELO PERPÉTUO)
-function drawYetiCriogenico(x, y, b, facingLeft, breath) {
-    // Vaho glacial helado saliendo del yeti
+// 4. MUNDO 4: CAPITÁN KRAKEN (DREADNOUGHT PIRATA DE LAS PROFUNDIDADES OCEÁNICAS)
+function drawCapitanKraken(x, y, b, facingLeft, breath) {
+    // Burbujas ascendentes continuas
     for (let i = 0; i < 4; i++) {
-        const mist = (Date.now() * 0.003 + i * 0.4) % 1;
-        const mx = (facingLeft ? x + 4 : x + 34) + Math.sin(mist * 5) * 6;
-        const my = y + 16 + mist * 16;
-        ctx.fillStyle = `rgba(224, 242, 254, ${0.8 - mist * 0.7})`;
+        const bubbleTime = (Date.now() * 0.002 + i * 0.3) % 1;
+        const bx = x + 8 + i * 11;
+        const by = y + b.h - bubbleTime * 50;
+        ctx.strokeStyle = 'rgba(125, 211, 252, 0.8)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(bx, by, 3 + (i % 2), 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // 6 TENTÁCULOS ONDULANTES CON CINEMÁTICA FLUIDA Y VENTOSAS BIOLUMINISCENTES
+    for (let t = 0; t < 6; t++) {
+        const wave = Math.sin(Date.now() * 0.006 + t * 0.8) * 10;
+        const tx = x + 5 + t * 7;
+        const tentGrad = ctx.createLinearGradient(tx, y + 30, tx + wave, y + b.h + 8);
+        tentGrad.addColorStop(0, '#0f766e');
+        tentGrad.addColorStop(1, '#14b8a6');
+        ctx.strokeStyle = tentGrad;
+        ctx.lineWidth = 4.5;
+        ctx.beginPath();
+        ctx.moveTo(tx, y + 30);
+        ctx.quadraticCurveTo(tx + wave, y + 42, tx - wave * 0.6, y + b.h + 6);
+        ctx.stroke();
+
+        // Ventosas bioluminiscentes verde esmeralda
+        ctx.fillStyle = '#6ee7b7';
+        ctx.beginPath();
+        ctx.arc(tx + wave * 0.5, y + 42, 2.2, 0, Math.PI * 2);
+        ctx.arc(tx - wave * 0.3, y + b.h + 2, 2.0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Manto cibernético del kraken con chaleco de almirante
+    const headX = x + 8;
+    const headY = y + 6 + breath;
+    const bodyGrad = ctx.createRadialGradient(headX + 16, headY + 16, 4, headX + 16, headY + 16, 20);
+    bodyGrad.addColorStop(0, '#14b8a6');
+    bodyGrad.addColorStop(0.6, '#0f766e');
+    bodyGrad.addColorStop(1, '#042f2e');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.ellipse(headX + 16, headY + 16, 17, 19, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#2dd4bf';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // SOMBRERO BICORNIO PIRATA CON CALAVERA DE ORO Y PLUMA
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.moveTo(headX - 2, headY + 4);
+    ctx.lineTo(headX + 16, headY - 14);
+    ctx.lineTo(headX + 34, headY + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#ca8a04';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Calavera y tibias cruzadas doradas
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(headX + 16, headY - 5, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(headX + 14, headY - 1, 4, 2);
+
+    // Pluma pirata roja ondeando
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(headX + 22, headY - 10);
+    ctx.quadraticCurveTo(headX + 32, headY - 16, headX + 38, headY - 12);
+    ctx.stroke();
+
+    // Ojo biónico con parche pirata y retícula roja
+    const eyeX = facingLeft ? headX + 6 : headX + 18;
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(eyeX, headY + 11, 9, 9);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(eyeX + 2, headY + 13, 5, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(eyeX + 3, headY + 14, 2, 2);
+
+    // Ojo extraterrestre verde esmeralda
+    const otherEyeX = facingLeft ? headX + 18 : headX + 7;
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.arc(otherEyeX + 3, headY + 15, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#064e3b';
+    ctx.fillRect(otherEyeX + 2, headY + 14, 2, 3);
+}
+
+// 5. MUNDO 5: YETI CRIOGÉNICO (TITÁN ÁRTICO DE HIELO PERPÉTUO Y CUERNOS DE ZAFIRO)
+function drawYetiCriogenico(x, y, b, facingLeft, breath) {
+    // Vaho glacial helado y copos de nieve flotando
+    for (let i = 0; i < 5; i++) {
+        const mist = (Date.now() * 0.003 + i * 0.35) % 1;
+        const mx = (facingLeft ? x + 2 : x + 36) + Math.sin(mist * 5) * 8;
+        const my = y + 14 + mist * 22;
+        ctx.fillStyle = `rgba(224, 242, 254, ${0.9 - mist * 0.8})`;
         ctx.beginPath();
         ctx.arc(mx, my, 4 + mist * 4, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Cuerpo macizo cubierto de pelaje ártico cibernético
-    const bodyX = x + 6;
+    // CUERPO MACIZO CUBIERTO DE PELAJE ÁRTICO Y ARMADURA GLACIAL
+    const bodyX = x + 4;
     const bodyY = y + 12 + breath;
-    ctx.fillStyle = '#f1f5f9';
+    const furGrad = ctx.createLinearGradient(bodyX, bodyY, bodyX + 40, bodyY + 36);
+    furGrad.addColorStop(0, '#ffffff');
+    furGrad.addColorStop(0.5, '#e0f2fe');
+    furGrad.addColorStop(1, '#93c5fd');
+    ctx.fillStyle = furGrad;
     ctx.beginPath();
-    ctx.roundRect(bodyX, bodyY, 36, 32, 10);
+    ctx.roundRect(bodyX, bodyY, 40, 36, 12);
     ctx.fill();
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Cuernos masivos de hielo cristalino azul zafiro
+    // CUERNOS MASIVOS DE HIELO CRISTALINO ZAFIRO CON CARÁMBANOS
     ctx.fillStyle = '#0284c7';
-    // Cuerno 1
+    // Cuerno Izquierdo
     ctx.beginPath();
-    ctx.moveTo(bodyX + 6, bodyY);
-    ctx.lineTo(bodyX - 4, bodyY - 14);
-    ctx.lineTo(bodyX + 12, bodyY + 2);
-    ctx.fill();
-    // Cuerno 2
-    ctx.beginPath();
-    ctx.moveTo(bodyX + 30, bodyY);
-    ctx.lineTo(bodyX + 40, bodyY - 14);
-    ctx.lineTo(bodyX + 24, bodyY + 2);
-    ctx.fill();
-
-    // Ojos glaciales luminosos
-    ctx.fillStyle = '#00ffff';
-    ctx.fillRect(facingLeft ? bodyX + 8 : bodyX + 22, bodyY + 8, 7, 5);
-
-    // Puños titánicos de hielo escarpado
-    ctx.fillStyle = '#0ea5e9';
-    ctx.fillRect(x + 2, y + b.h - 12, 14, 12);
-    ctx.fillRect(x + b.w - 16, y + b.h - 12, 14, 12);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 4, y + b.h - 6, 4, 6);
-    ctx.fillRect(x + b.w - 14, y + b.h - 6, 4, 6);
-}
-
-// 6. MUNDO 6: ESPECTRO DE LAS SOMBRAS (WRAITH ESPECTRAL Y FANTASMA)
-function drawEspectroSombras(x, y, b, facingLeft, breath) {
-    const floatY = Math.sin(Date.now() * 0.005) * 5;
-
-    // Fuego fatuo y almas espectrales flotando
-    for (let i = 0; i < 3; i++) {
-        const soul = (Date.now() * 0.002 + i * 0.5) % 1;
-        const sx = x + 10 + i * 12 + Math.sin(soul * 6) * 6;
-        const sy = y + b.h - soul * 40;
-        ctx.fillStyle = `rgba(168, 85, 247, ${1 - soul})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // Toga fantasmal ondulante oscura
-    const bodyX = x + 8;
-    const bodyY = y + 8 + floatY;
-    ctx.fillStyle = '#1e1b4b';
-    ctx.beginPath();
-    ctx.moveTo(bodyX + 16, bodyY);
-    ctx.lineTo(bodyX + 32, bodyY + 20);
-    ctx.lineTo(bodyX + 26, bodyY + 40);
-    ctx.lineTo(bodyX + 6, bodyY + 40);
-    ctx.lineTo(bodyX, bodyY + 20);
+    ctx.moveTo(bodyX + 6, bodyY + 2);
+    ctx.lineTo(bodyX - 8, bodyY - 16);
+    ctx.lineTo(bodyX + 14, bodyY + 4);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#7e22ce';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Calavera fantasmal flotante
-    ctx.fillStyle = '#f8fafc';
-    ctx.beginPath();
-    ctx.arc(bodyX + 16, bodyY + 12, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Cuencas oculares con fuego demoníaco lila
-    ctx.fillStyle = '#9333ea';
-    ctx.fillRect(bodyX + 11, bodyY + 9, 4, 5);
-    ctx.fillRect(bodyX + 17, bodyY + 9, 4, 5);
-    ctx.fillStyle = '#4ade80'; // Fuego espectral verde
-    ctx.fillRect(bodyX + 12, bodyY + 10, 2, 2);
-    ctx.fillRect(bodyX + 18, bodyY + 10, 2, 2);
-
-    // Garras espectrales flotantes
-    ctx.fillStyle = '#c084fc';
-    const clawX = facingLeft ? x - 2 : x + b.w - 8;
-    ctx.fillRect(clawX, bodyY + 20, 8, 4);
-    ctx.fillRect(clawX + (facingLeft ? -3 : 7), bodyY + 18, 3, 8);
-}
-
-// 7. MUNDO 7: MECA-DRAGÓN SUPREMO (WYVERN ROJO CON PROPULSORES)
-function drawMecaDragon(x, y, b, facingLeft, breath) {
-    const wingFlap = Math.sin(Date.now() * 0.012) * 10;
-
-    // Fuego de los postquemadores / reactores en las alas
-    ctx.fillStyle = '#ea580c';
-    ctx.fillRect(x + (facingLeft ? 32 : 8), y + 16, 8, 6);
-    ctx.fillStyle = '#fde047';
-    ctx.fillRect(x + (facingLeft ? 36 : 4), y + 17, 6, 4);
-
-    // Alas mecánicas articuladas con placas de acero rojo
-    ctx.fillStyle = '#991b1b';
-    ctx.beginPath();
-    ctx.moveTo(x + 20, y + 16);
-    ctx.lineTo(facingLeft ? x + 44 : x - 4, y - 6 + wingFlap);
-    ctx.lineTo(facingLeft ? x + 38 : x + 2, y + 26);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#f87171';
+    ctx.strokeStyle = '#e0f2fe';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Torso blindado de dragón
-    const bodyX = x + 10;
-    const bodyY = y + 14 + breath;
-    ctx.fillStyle = '#b91c1c';
+    // Cuerno Derecho
+    ctx.fillStyle = '#0284c7';
     ctx.beginPath();
-    ctx.roundRect(bodyX, bodyY, 28, 26, 6);
+    ctx.moveTo(bodyX + 34, bodyY + 2);
+    ctx.lineTo(bodyX + 48, bodyY - 16);
+    ctx.lineTo(bodyX + 26, bodyY + 4);
+    ctx.closePath();
     ctx.fill();
+    ctx.stroke();
 
-    // Cabeza de dragón acorazada y cuernos de acero
-    const headX = facingLeft ? x + 2 : x + 24;
-    const headY = y + 4 + breath;
-    ctx.fillStyle = '#7f1d1d';
-    ctx.beginPath();
-    ctx.roundRect(headX, headY, 22, 16, 4);
-    ctx.fill();
+    // Ojos glaciales azul cian puro resplandecientes
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect(facingLeft ? bodyX + 8 : bodyX + 24, bodyY + 10, 8, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(facingLeft ? bodyX + 10 : bodyX + 26, bodyY + 11, 2, 3);
 
-    // Cuerno de dragón afilado
-    ctx.fillStyle = '#fbbf24';
-    ctx.beginPath();
-    ctx.moveTo(headX + 12, headY);
-    ctx.lineTo(headX + (facingLeft ? 22 : 2), headY - 12);
-    ctx.lineTo(headX + 16, headY + 4);
-    ctx.fill();
+    // Boca amenazante con colmillos de hielo afilados
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(bodyX + 12, bodyY + 20, 16, 6);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bodyX + 14, bodyY + 20, 3, 4);
+    ctx.fillRect(bodyX + 23, bodyY + 20, 3, 4);
 
-    // Ojo reptiliano amarillo brillante
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 5, 5, 4);
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(headX + (facingLeft ? 6 : 16), headY + 5, 2, 4);
-
-    // Patas con garras afiladas de acero
-    ctx.fillStyle = '#450a0a';
-    ctx.fillRect(x + 6, y + b.h - 10, 12, 10);
-    ctx.fillRect(x + b.w - 18, y + b.h - 10, 12, 10);
+    // PUÑOS TITÁNICOS DE ROCA DE HIELO CON RUNAS GLACIALES
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fillRect(x + 2, y + b.h - 14, 16, 14);
+    ctx.fillRect(x + b.w - 18, y + b.h - 14, 16, 14);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x + 2, y + b.h - 14, 16, 14);
+    ctx.strokeRect(x + b.w - 18, y + b.h - 14, 16, 14);
 }
 
-// 8. MUNDO 8: LORD DE LAVA SUPREMO (BOWSER TITÁN DE MAGMA OBSIDIANA)
-function drawLordLavaSupremo(x, y, b, facingLeft, breath) {
-    // Partículas de ascuas y fuego flotando alrededor del boss
+// 6. MUNDO 6: ESPECTRO DE LAS SOMBRAS (WRAITH ESPECTRAL CON LLAMAS DEMONÍACAS Y FUEGOS FATUOS)
+function drawEspectroSombras(x, y, b, facingLeft, breath) {
+    const floatY = Math.sin(Date.now() * 0.005) * 6;
+
+    // FUEGOS FATUOS Y ALMAS ESPECTRALES ORBITANDO
     for (let i = 0; i < 4; i++) {
-        const emberTime = (Date.now() * 0.002 + i * 0.6) % 1;
-        const ex = x + 10 + (i * 12) + Math.sin(emberTime * 5 + i) * 8;
-        const ey = y + b.h - 8 - emberTime * 50;
-        ctx.fillStyle = (i % 2 === 0) ? '#f97316' : '#fde047';
-        ctx.fillRect(ex, ey, 2.5, 2.5);
+        const soul = (Date.now() * 0.0025 + i * 0.4) % 1;
+        const sx = x + 10 + i * 10 + Math.sin(soul * 6) * 8;
+        const sy = y + b.h - soul * 48;
+        ctx.fillStyle = (i % 2 === 0) ? 'rgba(168, 85, 247, 0.85)' : 'rgba(74, 222, 128, 0.85)';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // Caparazón volcánico con espinas de obsidiana
-    const shellX = facingLeft ? x + 18 : x + 4;
-    const shellY = y + 8 + breath;
-    const shellW = 26;
-    const shellH = 34;
-
-    ctx.fillStyle = '#1c1917';
+    // TOGA FANTASMAL ONDULANTE OSCURA (DISOLVIÉNDOSE EN EL VACÍO)
+    const bodyX = x + 8;
+    const bodyY = y + 6 + floatY;
+    const robeGrad = ctx.createLinearGradient(bodyX + 16, bodyY, bodyX + 16, bodyY + 44);
+    robeGrad.addColorStop(0, '#3b0764');
+    robeGrad.addColorStop(0.5, '#1e1b4b');
+    robeGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    ctx.fillStyle = robeGrad;
     ctx.beginPath();
-    ctx.ellipse(shellX + shellW / 2, shellY + shellH / 2, shellW / 2, shellH / 2, 0, 0, Math.PI * 2);
+    ctx.moveTo(bodyX + 16, bodyY);
+    ctx.lineTo(bodyX + 34, bodyY + 22);
+    ctx.lineTo(bodyX + 28, bodyY + 44);
+    ctx.lineTo(bodyX + 4, bodyY + 44);
+    ctx.lineTo(bodyX - 2, bodyY + 22);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#b91c1c';
+    ctx.strokeStyle = '#a855f7';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Espinas volcánicas
-    ctx.fillStyle = '#ea580c';
-    const spikePositions = [
+    // CALAVERA FANTASMAL SUSPENDIDA EN EL CENTRO
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.arc(bodyX + 16, bodyY + 12, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cuencas oculares con fuego demoníaco lila y verde
+    ctx.fillStyle = '#1e1b4b';
+    ctx.fillRect(bodyX + 10, bodyY + 9, 5, 6);
+    ctx.fillRect(bodyX + 17, bodyY + 9, 5, 6);
+    ctx.fillStyle = '#4ade80'; // Pupilas de fuego espectral verde
+    ctx.fillRect(bodyX + 11, bodyY + 10, 3, 3);
+    ctx.fillRect(bodyX + 18, bodyY + 10, 3, 3);
+
+    // GARRAS ESPECTRALES TRAZANDO ESTELAS LILAS
+    const clawX = facingLeft ? x - 4 : x + b.w - 8;
+    ctx.fillStyle = '#c084fc';
+    ctx.beginPath();
+    ctx.roundRect(clawX, bodyY + 20, 12, 5, 2);
+    ctx.fill();
+    // Dedos alargados
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(clawX + (facingLeft ? -4 : 10), bodyY + 18, 4, 9);
+}
+
+// 7. MUNDO 7: MECA-DRAGÓN SUPREMO (WYVERN ROJO CON TURBINAS DE REACCIÓN Y LLAMARADA SUPERSONICA)
+function drawMecaDragon(x, y, b, facingLeft, breath) {
+    const wingFlap = Math.sin(Date.now() * 0.012) * 12;
+
+    // TURBINAS DE REACCIÓN CON POSTQUEMADORES INCANDESCENTES
+    const turbineX = x + (facingLeft ? 32 : 6);
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(turbineX, y + 16, 10, 8);
+    // Lenguas de fuego del reactor
+    const jetFlameLen = 14 + Math.sin(Date.now() * 0.03) * 5;
+    const jetGrad = ctx.createLinearGradient(turbineX, y + 20, turbineX + (facingLeft ? jetFlameLen : -jetFlameLen), y + 20);
+    jetGrad.addColorStop(0, '#ffffff');
+    jetGrad.addColorStop(0.3, '#fde047');
+    jetGrad.addColorStop(0.7, '#ea580c');
+    jetGrad.addColorStop(1, 'rgba(234, 88, 12, 0)');
+    ctx.fillStyle = jetGrad;
+    ctx.beginPath();
+    ctx.moveTo(turbineX + (facingLeft ? 10 : 0), y + 16);
+    ctx.lineTo(turbineX + (facingLeft ? 10 + jetFlameLen : -jetFlameLen), y + 20);
+    ctx.lineTo(turbineX + (facingLeft ? 10 : 0), y + 24);
+    ctx.closePath();
+    ctx.fill();
+
+    // ALAS MECÁNICAS ARTICULADAS TIPO CAZA SUPERSÓNICO
+    const wingGrad = ctx.createLinearGradient(x + 20, y + 16, x + 40, y + 36);
+    wingGrad.addColorStop(0, '#ef4444');
+    wingGrad.addColorStop(0.6, '#b91c1c');
+    wingGrad.addColorStop(1, '#450a0a');
+    ctx.fillStyle = wingGrad;
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + 16);
+    ctx.lineTo(facingLeft ? x + 48 : x - 8, y - 8 + wingFlap);
+    ctx.lineTo(facingLeft ? x + 40 : x, y + 28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // TORSO BLINDADO AERODINÁMICO DE DRAGÓN
+    const bodyX = x + 10;
+    const bodyY = y + 14 + breath;
+    ctx.fillStyle = '#991b1b';
+    ctx.beginPath();
+    ctx.roundRect(bodyX, bodyY, 28, 28, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#facc15'; // Ribete dorado
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // CABEZA DE DRAGÓN ACORAZADA Y CUERNOS DE ORO
+    const headX = facingLeft ? x : x + 24;
+    const headY = y + 4 + breath;
+    ctx.fillStyle = '#7f1d1d';
+    ctx.beginPath();
+    ctx.roundRect(headX, headY, 24, 18, 5);
+    ctx.fill();
+
+    // Gran cuerno dorado afilado
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.moveTo(headX + 14, headY);
+    ctx.lineTo(headX + (facingLeft ? 26 : 2), headY - 14);
+    ctx.lineTo(headX + 18, headY + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ojo reptiliano dorado con pupila vertical
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 5, 6, 5);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(headX + (facingLeft ? 7 : 17), headY + 5, 2, 5);
+
+    // Garras de acero reforzadas
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(x + 6, y + b.h - 12, 14, 12);
+    ctx.fillRect(x + b.w - 20, y + b.h - 12, 14, 12);
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillRect(x + 6, y + b.h - 3, 5, 3);
+    ctx.fillRect(x + b.w - 12, y + b.h - 3, 5, 3);
+}
+
+// 8. MUNDO 8: LORD DE LAVA SUPREMO (BOWSER TITÁN VOLCÁNICO CON ESPINAS Y CRÁTERES DE FUEGO)
+function drawLordLavaSupremo(x, y, b, facingLeft, breath) {
+    // Chispas de magma y ascuas ardientes que ascienden
+    for (let i = 0; i < 6; i++) {
+        const emberTime = (Date.now() * 0.0025 + i * 0.4) % 1;
+        const ex = x + 8 + (i * 7) + Math.sin(emberTime * 6 + i) * 8;
+        const ey = y + b.h - 6 - emberTime * 56;
+        ctx.fillStyle = (i % 2 === 0) ? '#f97316' : '#fde047';
+        ctx.fillRect(ex, ey, 3, 3);
+    }
+
+    // CAPARAZÓN OBSIDIANA GIGANTE CON ESPINAS CRÁTER VOLCÁNICAS
+    const shellX = facingLeft ? x + 18 : x + 2;
+    const shellY = y + 8 + breath;
+    const shellW = 28;
+    const shellH = 36;
+
+    const shellGrad = ctx.createRadialGradient(shellX + shellW / 2, shellY + shellH / 2, 4, shellX + shellW / 2, shellY + shellH / 2, 22);
+    shellGrad.addColorStop(0, '#450a0a');
+    shellGrad.addColorStop(0.6, '#1c1917');
+    shellGrad.addColorStop(1, '#0c0a09');
+    ctx.fillStyle = shellGrad;
+    ctx.beginPath();
+    ctx.ellipse(shellX + shellW / 2, shellY + shellH / 2, shellW / 2, shellH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Vetas de magma ardiente que agrietan el caparazón
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    // 6 Espinas de volcán con puntas ardientes
+    const spikes = [
         { sx: shellX + 4, sy: shellY + 6 },
         { sx: shellX + shellW - 6, sy: shellY + 6 },
         { sx: shellX + shellW / 2, sy: shellY + 2 },
@@ -3451,147 +3861,215 @@ function drawLordLavaSupremo(x, y, b, facingLeft, breath) {
         { sx: shellX + 3, sy: shellY + shellH / 2 },
         { sx: shellX + shellW - 5, sy: shellY + shellH / 2 }
     ];
-    spikePositions.forEach(sp => {
-        ctx.fillRect(sp.sx - 1, sp.sy - 3, 3, 3);
+    spikes.forEach(sp => {
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.moveTo(sp.sx - 2, sp.sy + 2);
+        ctx.lineTo(sp.sx, sp.sy - 5);
+        ctx.lineTo(sp.sx + 2, sp.sy + 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(sp.sx - 1, sp.sy - 5, 2, 2);
     });
 
-    // Torso y corazón de magma pulsante
-    const bodyX = facingLeft ? x + 10 : x + 14;
+    // CORAZÓN DE MAGMA ARDIENTE EN EL PECHO
+    const bodyX = facingLeft ? x + 8 : x + 16;
     const bodyY = y + 16 + breath;
-    ctx.fillStyle = '#292524';
-    ctx.beginPath();
-    ctx.ellipse(bodyX + 12, bodyY + 14, 14, 16, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Corazón ardiente de magma
-    const lavaPulse = (Math.sin(Date.now() * 0.007) + 1) * 0.5;
-    const coreGrad = ctx.createRadialGradient(bodyX + 12, bodyY + 14, 1, bodyX + 12, bodyY + 14, 10 + lavaPulse * 4);
+    const lavaPulse = (Math.sin(Date.now() * 0.008) + 1) * 0.5;
+    const coreGrad = ctx.createRadialGradient(bodyX + 12, bodyY + 14, 1, bodyX + 12, bodyY + 14, 11 + lavaPulse * 4);
     coreGrad.addColorStop(0, '#fef08a');
-    coreGrad.addColorStop(0.5, '#ea580c');
-    coreGrad.addColorStop(1, '#991b1b');
+    coreGrad.addColorStop(0.4, '#f97316');
+    coreGrad.addColorStop(0.8, '#dc2626');
+    coreGrad.addColorStop(1, 'rgba(153, 27, 27, 0)');
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(bodyX + 12, bodyY + 14, 8 + lavaPulse * 3, 0, Math.PI * 2);
+    ctx.arc(bodyX + 12, bodyY + 14, 10 + lavaPulse * 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cabeza de dragón de magma
-    const headX = facingLeft ? x + 4 : x + 20;
+    // CABEZA DE DRAGÓN DE LAVA CON MELENA DE FUEGO VIVO
+    const headX = facingLeft ? x + 2 : x + 22;
     const headY = y + 2 + breath;
+
+    // Melena de fuego vivo ondeante
+    for (let m = 0; m < 3; m++) {
+        const maneWave = Math.sin(Date.now() * 0.01 + m) * 4;
+        ctx.fillStyle = (m % 2 === 0) ? '#f97316' : '#fde047';
+        ctx.beginPath();
+        ctx.moveTo(headX + 12, headY);
+        ctx.lineTo(headX + (facingLeft ? 26 : -2) + maneWave, headY - 10 - m * 3);
+        ctx.lineTo(headX + 18, headY + 6);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Cráneo volcánico negro
     ctx.fillStyle = '#1c1917';
     ctx.beginPath();
-    ctx.roundRect(headX, headY, 24, 18, 4);
+    ctx.roundRect(headX, headY, 24, 20, 5);
     ctx.fill();
+    ctx.strokeStyle = '#ea580c';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    // Ojos con pupilas de fuego
+    // Ojos ardientes con pupilas de fuego
     ctx.fillStyle = '#fef08a';
-    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 5, 6, 5);
+    ctx.fillRect(headX + (facingLeft ? 4 : 14), headY + 6, 6, 5);
     ctx.fillStyle = '#dc2626';
-    ctx.fillRect(headX + (facingLeft ? 6 : 16), headY + 6, 2, 3);
+    ctx.fillRect(headX + (facingLeft ? 7 : 17), headY + 7, 2, 4);
 
-    // Cuernos y melena de fuego
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.moveTo(headX + 14, headY);
-    ctx.lineTo(headX + (facingLeft ? 22 : 6), headY - 12);
-    ctx.lineTo(headX + 18, headY + 2);
-    ctx.fill();
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(headX + (facingLeft ? 21 : 5), headY - 12, 3, 3);
-
-    // Pies con garras de magma
+    // Garras de magma pesadas
     ctx.fillStyle = '#1c1917';
-    ctx.fillRect(x + 6, y + b.h - 10, 14, 10);
-    ctx.fillRect(x + b.w - 20, y + b.h - 10, 14, 10);
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(x + 4, y + b.h - 4, 4, 4);
-    ctx.fillRect(x + b.w - 18, y + b.h - 4, 4, 4);
+    ctx.fillRect(x + 6, y + b.h - 12, 14, 12);
+    ctx.fillRect(x + b.w - 20, y + b.h - 12, 14, 12);
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(x + 6, y + b.h - 3, 6, 3);
+    ctx.fillRect(x + b.w - 14, y + b.h - 3, 6, 3);
 }
 
-// 9. MUNDO 9: EMPERADOR DE LA SINGULARIDAD (OVERLORD CÓSMICO SUPREMO)
+// 9. MUNDO 9: EMPERADOR DE LA SINGULARIDAD (OVERLORD CÓSMICO DE MATERIA OSCURA Y ESTRELLAS)
 function drawEmperadorSingularidad(x, y, b, facingLeft, breath) {
-    const floatY = Math.sin(Date.now() * 0.004) * 4;
+    const floatY = Math.sin(Date.now() * 0.004) * 5;
     const ringAngle = Date.now() * 0.002;
 
-    // Anillos de acreción cósmica orbitando alrededor del emperador
+    // ANILLOS DE ACRECIÓN CÓSMICA 3D ORBITANDO ALREDEDOR DEL JEFE
     ctx.save();
     ctx.translate(x + b.w / 2, y + b.h / 2 + floatY);
     ctx.rotate(ringAngle);
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 32, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 34, 14, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Satélite / orbe estelar en órbita
+    // Satélite / planeta enano orbitando
     ctx.fillStyle = '#facc15';
     ctx.beginPath();
-    ctx.arc(32, 0, 3.5, 0, Math.PI * 2);
+    ctx.arc(34, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(-34, 0, 3, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // Manto estelar de nebulosa oscura
+    // MANTO ESTELAR DE NEBULOSA OSCURA CON CONSTELACIONES
     const bodyX = x + 8;
-    const bodyY = y + 10 + floatY;
-    ctx.fillStyle = '#020617';
+    const bodyY = y + 8 + floatY;
+    const nebulaGrad = ctx.createLinearGradient(bodyX, bodyY, bodyX + 32, bodyY + 36);
+    nebulaGrad.addColorStop(0, '#0f172a');
+    nebulaGrad.addColorStop(0.5, '#1e1b4b');
+    nebulaGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = nebulaGrad;
     ctx.beginPath();
-    ctx.roundRect(bodyX, bodyY, 32, 32, 8);
+    ctx.roundRect(bodyX, bodyY, 32, 36, 10);
     ctx.fill();
     ctx.strokeStyle = '#6366f1';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Singularidad del agujero negro en el pecho
-    const singRadius = Math.sin(Date.now() * 0.009) * 3 + 8;
+    // SINGULARIDAD DEL AGUJERO NEGRO EN EL PECHO CON LENTE GRAVITACIONAL
+    const singRadius = Math.sin(Date.now() * 0.009) * 3 + 9;
+    const singGrad = ctx.createRadialGradient(bodyX + 16, bodyY + 18, 2, bodyX + 16, bodyY + 18, singRadius + 6);
+    singGrad.addColorStop(0, '#000000');
+    singGrad.addColorStop(0.6, '#06b6d4');
+    singGrad.addColorStop(1, 'rgba(99, 102, 241, 0)');
+    ctx.fillStyle = singGrad;
+    ctx.beginPath();
+    ctx.arc(bodyX + 16, bodyY + 18, singRadius + 6, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#000000';
     ctx.beginPath();
     ctx.arc(bodyX + 16, bodyY + 18, singRadius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#06b6d4';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
-    // Corona cósmica de estrellas
+    // CORONA CÓSMICA DE ESTRELLAS DE ORO PURO
     ctx.fillStyle = '#fbbf24';
     for (let c = 0; c < 3; c++) {
-        const cx = bodyX + 8 + c * 8;
+        const cx = bodyX + 6 + c * 10;
         ctx.beginPath();
         ctx.moveTo(cx, bodyY);
-        ctx.lineTo(cx + 3, bodyY - 10);
-        ctx.lineTo(cx + 6, bodyY);
+        ctx.lineTo(cx + 4, bodyY - 12);
+        ctx.lineTo(cx + 8, bodyY);
+        ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx + 3, bodyY - 13, 2, 2);
+        ctx.fillStyle = '#fbbf24';
     }
 
-    // Ojos cósmicos de energía pura
+    // Ojos cósmicos de energía estelar pura
     ctx.fillStyle = '#00ffff';
-    ctx.fillRect(bodyX + (facingLeft ? 6 : 18), bodyY + 8, 8, 3);
+    ctx.fillRect(bodyX + (facingLeft ? 6 : 18), bodyY + 8, 8, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bodyX + (facingLeft ? 8 : 20), bodyY + 9, 3, 2);
 }
 
+// ==========================================
+// BARRA DE VIDA DEL JEFE DE ALTA DEFINICIÓN (AAA HUD)
+// ==========================================
 function drawBossHealthBarModern() {
     const b = bossEntity;
-    const barW = 180;
-    const barH = 12;
+    const barW = 200;
+    const barH = 14;
     const barX = (VIEW_WIDTH - barW) / 2;
-    const barY = 24;
+    const barY = 22;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.fillRect(barX - 4, barY - 14, barW + 8, barH + 20);
+    ctx.save();
+    // Placa de fondo con relieve metálico oscuro
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(barX - 8, barY - 16, barW + 16, barH + 24, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
 
+    // Icono calavera del jefe a la izquierda
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('💀', barX - 4, barY + 9);
+
+    // Título y Nombre del Jefe
     ctx.fillStyle = '#fde047';
-    ctx.font = 'bold 10px sans-serif';
+    ctx.font = '900 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${b.name.toUpperCase()} (MUNDO ${currentWorldNum})`, VIEW_WIDTH / 2, barY - 3);
+    ctx.fillText(`${b.name.toUpperCase()} ★ MUNDO ${currentWorldNum}`, VIEW_WIDTH / 2, barY - 4);
 
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(barX, barY, barW, barH);
+    // Ranura de la barra
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.roundRect(barX + 10, barY, barW - 14, barH, 4);
+    ctx.fill();
 
+    // Relleno de la barra de salud con degradado y segmentos
     const healthPercent = Math.max(0, b.hp / b.maxHp);
-    ctx.fillStyle = healthPercent > 0.4 ? '#ef4444' : '#f59e0b';
-    ctx.fillRect(barX, barY, barW * healthPercent, barH);
+    const hpGrad = ctx.createLinearGradient(barX + 10, barY, barX + 10 + (barW - 14) * healthPercent, barY);
+    if (healthPercent > 0.4) {
+        hpGrad.addColorStop(0, '#ef4444');
+        hpGrad.addColorStop(1, '#f97316');
+    } else {
+        hpGrad.addColorStop(0, '#dc2626');
+        hpGrad.addColorStop(1, '#fbbf24');
+    }
+    ctx.fillStyle = hpGrad;
+    ctx.beginPath();
+    ctx.roundRect(barX + 10, barY, (barW - 14) * healthPercent, barH, 4);
+    ctx.fill();
 
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(barX, barY, barW, barH);
+    // Segmentos de división de golpes
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    for (let s = 1; s < b.maxHp; s++) {
+        const segX = (barX + 10) + ((barW - 14) / b.maxHp) * s;
+        ctx.fillRect(segX, barY, 1.5, barH);
+    }
+
+    // Borde brillante
+    ctx.strokeStyle = '#f8fafc';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(barX + 10, barY, barW - 14, barH);
     ctx.textAlign = 'left';
+    ctx.restore();
 }
 
 // ==========================================
