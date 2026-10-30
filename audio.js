@@ -442,20 +442,37 @@ class SoundManager {
 
         // ==========================================
         // 3. SUPER MARIO SUNSHINE - DELFINO PLAZA (PLAZA DELFINO)
+        // Melodía completa y alegre con acordeón tropical y ritmo latino
         // ==========================================
         const sunshineTheme = [
-            { f: E5, d: 0.17, b: C3 },
-            { f: G5, d: 0.17, b: G3 },
-            { f: A5, d: 0.17, b: A3 },
-            { f: C6, d: 0.32, b: C3 },
-            { f: B5, d: 0.17, b: G3 },
-            { f: G5, d: 0.17, b: E3 },
-            { f: A5, d: 0.32, b: A3 },
-            { f: F5, d: 0.17, b: F3 },
-            { f: E5, d: 0.17, b: E3 },
-            { f: D5, d: 0.17, b: G3 },
-            { f: C5, d: 0.45, b: C3 },
-            { f: 0,  d: 0.08, b: 0  }
+            // Frase 1: Entrada vibrante y festiva
+            { f: G4,  d: 0.12, b: C3 },
+            { f: C5,  d: 0.12, b: E3 },
+            { f: E5,  d: 0.16, b: G3 },
+            { f: G5,  d: 0.16, b: C3 },
+            { f: A5,  d: 0.16, b: F3 },
+            { f: C6,  d: 0.30, b: A3 },
+            { f: B5,  d: 0.16, b: G3 },
+            { f: G5,  d: 0.16, b: E3 },
+            { f: A5,  d: 0.30, b: F3 },
+            { f: F5,  d: 0.16, b: D3 },
+            { f: E5,  d: 0.16, b: C3 },
+            { f: D5,  d: 0.16, b: G3 },
+            { f: C5,  d: 0.38, b: C3 },
+            { f: 0,   d: 0.08, b: 0  },
+
+            // Frase 2: Respuesta juguetona de Delfino Plaza
+            { f: E5,  d: 0.14, b: C3 },
+            { f: G5,  d: 0.14, b: G3 },
+            { f: C6,  d: 0.28, b: E3 },
+            { f: B5,  d: 0.14, b: G3 },
+            { f: A5,  d: 0.14, b: F3 },
+            { f: G5,  d: 0.28, b: E3 },
+            { f: F5,  d: 0.14, b: D3 },
+            { f: E5,  d: 0.14, b: C3 },
+            { f: D5,  d: 0.28, b: G3 },
+            { f: C5,  d: 0.45, b: C3 },
+            { f: 0,   d: 0.10, b: 0  }
         ];
 
         // ==========================================

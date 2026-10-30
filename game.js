@@ -1715,25 +1715,182 @@ function renderThemedBackdrop() {
         }
 
     } else if (theme === "ocean") {
-        // === MUNDO 4: OCÉANO TROPICAL Y PALMERAS ===
+        // ==========================================
+        // === MUNDO 4: COSTA TROPICAL DELFINO PLAZA (SUPER MARIO SUNSHINE PARALLAX 2026) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Sol tropical radiante con rayos dorados animados
+        const sunX = VIEW_WIDTH - 65;
+        const sunY = 40;
+        const sunPulse = Math.sin(Date.now() * 0.003) * 2;
+        const sunGrad = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, 32 + sunPulse);
+        sunGrad.addColorStop(0, '#ffffff');
+        sunGrad.addColorStop(0.3, '#fde047');
+        sunGrad.addColorStop(0.7, '#f59e0b');
+        sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 32 + sunPulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Colinas lejanas de la Isla Delfino en el horizonte marino
         ctx.fillStyle = '#0284c7';
-        for (let i = 0; i < 8; i++) {
-            const ox = ((i * 90) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
+        for (let i = 0; i < 4; i++) {
+            const hx = ((i * 260) - bgOffset * 0.2) % (VIEW_WIDTH * 2.2);
             ctx.beginPath();
-            ctx.arc(ox, 185, 30, Math.PI, 0, false);
+            ctx.moveTo(hx - 60, 192);
+            ctx.quadraticCurveTo(hx + 40, 105, hx + 140, 192);
             ctx.fill();
         }
-        for (let i = 0; i < 3; i++) {
-            const ix = ((i * 250) - bgOffset * 0.8) % (VIEW_WIDTH * 2);
-            ctx.fillStyle = '#d97706';
+
+        // 3. Océano turquesa profundo con olas y oleaje multicapa
+        const oceanTime = Date.now() * 0.004;
+        const seaGrad = ctx.createLinearGradient(0, 135, 0, 192);
+        seaGrad.addColorStop(0, '#0284c7');
+        seaGrad.addColorStop(0.5, '#0ea5e9');
+        seaGrad.addColorStop(1, '#06b6d4');
+        ctx.fillStyle = seaGrad;
+        ctx.fillRect(0, 145, VIEW_WIDTH, 47);
+
+        // Olas ondulantes animadas
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(0, 192);
+        for (let x = 0; x <= VIEW_WIDTH; x += 15) {
+            const waveY = 145 + Math.sin(oceanTime * 2 + x * 0.04) * 3;
+            ctx.lineTo(x, waveY);
+        }
+        ctx.lineTo(VIEW_WIDTH, 192);
+        ctx.closePath();
+        ctx.fill();
+
+        // Espuma marina brillante en las crestas
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = 0; x <= VIEW_WIDTH; x += 20) {
+            const waveY = 144 + Math.sin(oceanTime * 2 + x * 0.04) * 3;
+            if (x === 0) ctx.moveTo(x, waveY);
+            else ctx.lineTo(x, waveY);
+        }
+        ctx.stroke();
+
+        // 4. Barcos veleros y delfín saltando en el mar
+        const boatX = ((200) - bgOffset * 0.35) % (VIEW_WIDTH * 1.8);
+        if (boatX > -40 && boatX < VIEW_WIDTH + 40) {
+            // Casco del barco
+            ctx.fillStyle = '#78350f';
             ctx.beginPath();
-            ctx.ellipse(ix, 185, 35, 10, 0, 0, Math.PI * 2);
+            ctx.moveTo(boatX, 146);
+            ctx.lineTo(boatX + 22, 146);
+            ctx.lineTo(boatX + 18, 153);
+            ctx.lineTo(boatX + 3, 153);
+            ctx.closePath();
             ctx.fill();
-            ctx.fillStyle = '#15803d';
+            // Vela blanca triangular
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(ix, 155, 16, 0, Math.PI * 2);
+            ctx.moveTo(boatX + 11, 146);
+            ctx.lineTo(boatX + 11, 132);
+            ctx.lineTo(boatX + 20, 142);
+            ctx.closePath();
             ctx.fill();
         }
+
+        // Delfín saltando sobre las olas (homenaje a Super Mario Sunshine)
+        const dolphinCycle = (oceanTime * 0.7) % (Math.PI * 2);
+        const dolphinX = ((320) - bgOffset * 0.45) % (VIEW_WIDTH * 1.9);
+        if (dolphinCycle < Math.PI && dolphinX > -30 && dolphinX < VIEW_WIDTH + 30) {
+            const dY = 148 - Math.sin(dolphinCycle) * 12;
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.ellipse(dolphinX, dY, 8, 3.5, (dolphinCycle - Math.PI / 2) * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 5. Islas de arena dorada con Palmeras tropicales detalladas
+        for (let i = 0; i < 4; i++) {
+            const ix = ((i * 220 + 50) - bgOffset * 0.75) % (VIEW_WIDTH * 2.2);
+
+            // Montículo de playa / arena dorada
+            const sandGrad = ctx.createRadialGradient(ix + 20, 192, 5, ix + 20, 192, 45);
+            sandGrad.addColorStop(0, '#fef08a');
+            sandGrad.addColorStop(0.5, '#facc15');
+            sandGrad.addColorStop(1, '#ca8a04');
+            ctx.fillStyle = sandGrad;
+            ctx.beginPath();
+            ctx.ellipse(ix + 20, 186, 44, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Palmera tropical: Tronco curvado con segmentos
+            ctx.strokeStyle = '#854d0e';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(ix + 20, 184);
+            ctx.quadraticCurveTo(ix + 14, 155, ix + 22, 130);
+            ctx.stroke();
+
+            // Segmentos/anillos del tronco
+            ctx.strokeStyle = '#a16207';
+            ctx.lineWidth = 1.2;
+            for (let seg = 0; seg < 4; seg++) {
+                ctx.beginPath();
+                ctx.arc(ix + 18 + seg, 172 - seg * 11, 3, 0, Math.PI);
+                ctx.stroke();
+            }
+
+            // Cocos bajo las hojas
+            ctx.fillStyle = '#713f12';
+            ctx.beginPath();
+            ctx.arc(ix + 20, 131, 2.8, 0, Math.PI * 2);
+            ctx.arc(ix + 24, 132, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hojas de palmera esmeralda extendidas en abanico
+            const palmLeaves = [
+                { angle: -0.85, len: 22 },
+                { angle: -0.35, len: 25 },
+                { angle: 0.25,  len: 26 },
+                { angle: 0.75,  len: 22 },
+                { angle: 1.15,  len: 18 }
+            ];
+
+            palmLeaves.forEach(leaf => {
+                const lx = ix + 22;
+                const ly = 130;
+                const tipX = lx + Math.cos(leaf.angle) * leaf.len;
+                const tipY = ly + Math.sin(leaf.angle) * leaf.len;
+
+                // Hoja con gradiente verde tropical
+                const leafGrad = ctx.createLinearGradient(lx, ly, tipX, tipY);
+                leafGrad.addColorStop(0, '#4ade80');
+                leafGrad.addColorStop(0.6, '#16a34a');
+                leafGrad.addColorStop(1, '#14532d');
+                ctx.fillStyle = leafGrad;
+
+                ctx.beginPath();
+                ctx.moveTo(lx, ly);
+                ctx.quadraticCurveTo((lx + tipX) / 2, ly - 6, tipX, tipY);
+                ctx.quadraticCurveTo((lx + tipX) / 2, ly + 4, lx, ly);
+                ctx.fill();
+            });
+        }
+
+        // 6. Gaviotas blancas volando en el cielo
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.4;
+        for (let g = 0; g < 3; g++) {
+            const gx = ((g * 140 + 80) - bgOffset * 1.5) % (VIEW_WIDTH * 1.8);
+            const gy = 45 + (g * 16) + Math.sin(Date.now() * 0.005 + g) * 4;
+            ctx.beginPath();
+            ctx.moveTo(gx - 6, gy + 2);
+            ctx.quadraticCurveTo(gx - 3, gy - 3, gx, gy);
+            ctx.quadraticCurveTo(gx + 3, gy - 3, gx + 6, gy + 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
 
     } else if (theme === "airship") {
         // === MUNDO 7: FLOTA CELESTIAL Y NAVES ===
