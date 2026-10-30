@@ -171,22 +171,25 @@ class LevelBuilder {
 
         const groundRow = 6; // Fila 6 (Y = 192px)
 
-        // Suelo continuo 100% transitable (sin fosos injustos al inicio)
+        // Fosos desafiantes y equilibrados por mundo
         for (let col = 0; col < mapWidth; col++) {
             let isPit = false;
-            // Solo en niveles avanzados (nivel 5+) hay algún foso pequeño
-            if (!isBossLevel && levelIndex >= 5) {
-                if (col === 46 || col === 47) isPit = true;
+            if (!isBossLevel) {
+                // En mundos avanzados los fosos aumentan progresivamente la emoción
+                if (levelIndex >= 3 && (col === 46 || col === 47)) isPit = true;
+                if (worldIndex >= 3 && levelIndex >= 4 && (col === 28 || col === 29)) isPit = true;
+                if (worldIndex >= 5 && (col === 62 || col === 63)) isPit = true;
             } else if (isBossLevel) {
                 if (col === 32 || col === 33) isPit = true;
+                if (worldIndex >= 4 && (col === 46 || col === 47)) isPit = true;
             }
 
             if (!isPit) {
                 grid[groundRow][col] = 1;      // Césped / Roca superior
                 grid[groundRow + 1][col] = 13; // Tierra intermedia
                 grid[groundRow + 2][col] = 13; // Tierra base
-            } else if (isBossLevel) {
-                grid[mapHeight - 1][col] = 9;  // Foso de lava
+            } else {
+                grid[mapHeight - 1][col] = (world.theme === 'lava_castle' || isBossLevel) ? 9 : 0;
             }
         }
 
@@ -232,8 +235,12 @@ class LevelBuilder {
                 worldNumber: worldIndex
             };
 
-            // Esbirro en zona abierta antes de la arena
-            enemies.push({ x: 18 * 32, y: (groundRow - 1) * 32, type: 'goomba', vx: -1, alive: true });
+            // Esbirros guardianes antes de la arena del jefe
+            enemies.push({ x: 16 * 32, y: (groundRow - 1) * 32, type: 'goomba', vx: -1.3, alive: true });
+            enemies.push({ x: 26 * 32, y: (groundRow - 1) * 32, type: 'koopa', vx: -1.4, alive: true });
+            if (worldIndex >= 3) {
+                enemies.push({ x: 36 * 32, y: (groundRow - 3.5) * 32, type: 'koopa', fly: true, baseY: (groundRow - 3.5) * 32, sinOffset: 0, vx: -1.2, vy: 0, alive: true });
+            }
 
         } else {
             // ==========================================
@@ -286,31 +293,34 @@ class LevelBuilder {
                 grid[groundRow - 1][stairCol + 3] = 1; // Bajada suave
             }
 
-            // 5. ENEMIGOS CON DIFICULTAD ESCALONADA Y DINÁMICA POR MUNDO
-            const baseEnemySpeed = -(0.9 + (worldIndex - 1) * 0.12 + (levelIndex - 1) * 0.04);
+            // 5. ENEMIGOS CON DIFICULTAD REAL, DESAFIANTE Y ESCALONADA POR MUNDO
+            const baseEnemySpeed = -(1.2 + (worldIndex - 1) * 0.16 + (levelIndex - 1) * 0.05);
             
             // Cantidad y distribución de enemigos según el progreso del jugador
             const enemyConfigs = [];
             
             // Patrullas terrestres principales
-            enemyConfigs.push({ col: 24, type: 'goomba' });
-            enemyConfigs.push({ col: 42, type: 'koopa' });
-            enemyConfigs.push({ col: 60, type: (worldIndex % 2 === 0) ? 'koopa' : 'goomba' });
+            enemyConfigs.push({ col: 22, type: 'goomba' });
+            enemyConfigs.push({ col: 36, type: (levelIndex >= 3) ? 'koopa' : 'goomba' });
+            enemyConfigs.push({ col: 48, type: 'koopa' });
+            enemyConfigs.push({ col: 62, type: (worldIndex % 2 === 0) ? 'koopa' : 'goomba' });
 
-            if (worldIndex >= 2) {
-                enemyConfigs.push({ col: 34, type: 'goomba' });
+            if (worldIndex >= 2 || levelIndex >= 4) {
+                enemyConfigs.push({ col: 29, type: 'goomba' });
+                enemyConfigs.push({ col: 54, type: 'koopa' });
             }
-            if (worldIndex >= 4) {
-                enemyConfigs.push({ col: 50, type: 'koopa' });
-                // Enemigo volador (Paratroopa) en mundos avanzados
-                enemyConfigs.push({ col: 28, type: 'koopa', fly: true });
+            if (worldIndex >= 3 || levelIndex >= 6) {
+                // Enemigos voladores tácticos
+                enemyConfigs.push({ col: 32, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 44, type: 'goomba' });
             }
-            if (worldIndex >= 6) {
+            if (worldIndex >= 5) {
                 enemyConfigs.push({ col: 18, type: 'goomba' });
-                enemyConfigs.push({ col: 46, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 58, type: 'koopa', fly: true });
             }
-            if (worldIndex >= 8) {
-                enemyConfigs.push({ col: 64, type: 'koopa' });
+            if (worldIndex >= 7) {
+                enemyConfigs.push({ col: 26, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 66, type: 'koopa' });
             }
 
             enemyConfigs.forEach(cfg => {

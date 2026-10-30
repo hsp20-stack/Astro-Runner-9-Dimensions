@@ -107,7 +107,7 @@ const astro = {
     vx: 0,
     vy: 0,
     speed: 3.0,
-    jumpForce: -9.8, // Salto súper ágil y alto para subir fácilmente a cualquier bloque o tubería
+    jumpForce: -8.0, // Salto ágil, equilibrado y justo estilo clásico Mario (sin saltarse medio nivel volando)
     isGrounded: false,
     facing: 'right',
     state: 'normal', // 'normal', 'super', 'plasma'
@@ -302,11 +302,11 @@ function updateGame(dt) {
 
     // Gestión de Salto con Jump Buffering y Coyote Time
     if (keys.up) {
-        jumpBuffer = 14;
+        jumpBuffer = 10;
     }
 
     if (astro.isGrounded) {
-        coyoteTimer = 10;
+        coyoteTimer = 8;
     } else if (coyoteTimer > 0) {
         coyoteTimer--;
     }
@@ -325,9 +325,14 @@ function updateGame(dt) {
         }
     }
 
-    // Gravedad ágil y ligera estilo Mario 64 / Galaxy
-    astro.vy += 0.40;
-    if (astro.vy > 8.5) astro.vy = 8.5;
+    // Gravedad clásica y firme de plataformas (evita flotabilidad excesiva en el aire)
+    if (astro.vy < 0 && !keys.up) {
+        // Salto variable: si se suelta el botón de salto, la gravedad frena la subida (control exacto)
+        astro.vy += 0.58;
+    } else {
+        astro.vy += 0.44;
+    }
+    if (astro.vy > 9.0) astro.vy = 9.0;
 
     // Techo de pantalla (para no perderse fuera por arriba)
     if (astro.y < 4) {
@@ -496,6 +501,7 @@ function updateFlagPoleSequence() {
         const castleDoorX = (levelData.castleX || (levelData.mapWidth - 5) * 32) + 16;
         if (astro.x >= castleDoorX) {
             flagPoleAnimation.active = false;
+            flagPoleAnimation.astroWalkingToCastle = false;
             triggerStageClear(false);
         }
     }
@@ -756,7 +762,7 @@ function updateEnemies() {
             if (!astro.isDying && checkAABB(astro, { x: e.x, y: e.y, w: 22, h: 20 })) {
                 if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= e.y + 12) {
                     e.alive = false;
-                    astro.vy = -6.8;
+                    astro.vy = -6.0;
                     score += 200;
                     triggerScreenShake(3.5);
                     addFloatingText('+200', e.x + 10, e.y, '#facc15');
@@ -801,20 +807,20 @@ function updateBoss() {
     }
 
     bossAttackTimer++;
-    if (bossAttackTimer % 95 === 0 && b.isGrounded) {
-        b.vy = -7.6;
+    if (bossAttackTimer % 75 === 0 && b.isGrounded) {
+        b.vy = -8.0;
         b.isGrounded = false;
     }
 
-    if (bossAttackTimer % 120 === 0) {
+    if (bossAttackTimer % 90 === 0) {
         const dir = (astro.x < b.x) ? -1 : 1;
-        b.vx = dir * 2.2;
+        b.vx = dir * 2.5;
         bossProjectiles.push({
             x: b.x + (dir < 0 ? 0 : b.w),
             y: b.y + b.h / 3,
             w: 12,
             h: 12,
-            vx: dir * 3.6,
+            vx: dir * 4.2,
             color: b.color
         });
         window.sounds.playFireball();
@@ -907,7 +913,11 @@ function killPlayer() {
     astro.deathTimer = 0;
     lives--;
     updateUI();
-    window.sounds.playGameOver();
+    if (lives > 0) {
+        try { window.sounds.playPlayerDie(); } catch (e) {}
+    } else {
+        try { window.sounds.playGameOver(); } catch (e) {}
+    }
 }
 
 function handleRespawn() {
@@ -1065,10 +1075,22 @@ function updateParticles() {
 // RENDERIZADO VISUAL MODERNO 2026 (AAA 2.5D ENGINE)
 // ==========================================
 function render() {
-    if (!levelData) return;
-
     ctx.save();
     ctx.scale(RENDER_SCALE, RENDER_SCALE);
+
+    // Fondo base infalible para asegurar que la pantalla NUNCA quede en negro
+    const defaultSkyTop = (levelData && levelData.world && levelData.world.skyTop) ? levelData.world.skyTop : '#38bdf8';
+    const defaultSkyBottom = (levelData && levelData.world && levelData.world.skyBottom) ? levelData.world.skyBottom : '#bae6fd';
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    skyGrad.addColorStop(0, defaultSkyTop);
+    skyGrad.addColorStop(1, defaultSkyBottom);
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+    if (!levelData) {
+        ctx.restore();
+        return;
+    }
 
     // Efecto Screen Shake moderno (Impact Feel 2026)
     if (screenShake > 0) {
@@ -1077,13 +1099,6 @@ function render() {
         const sy = (Math.random() - 0.5) * shakeMag;
         ctx.translate(sx, sy);
     }
-
-    // Cielo con degradado vertical moderno
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
-    skyGrad.addColorStop(0, levelData.world.skyTop);
-    skyGrad.addColorStop(1, levelData.world.skyBottom);
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
 
     // Fondo temático dinámico según el mundo
     renderThemedBackdrop();
@@ -3472,7 +3487,7 @@ function setupControls() {
         if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
         if (e.code === 'ArrowUp' || e.code === 'Space' || e.code === 'KeyW') {
             keys.up = true;
-            jumpBuffer = 14;
+            jumpBuffer = 10;
         }
         if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = true;
         if (e.code === 'KeyZ' || e.code === 'ShiftLeft' || e.code === 'KeyJ') {
@@ -3557,7 +3572,7 @@ function setupControls() {
     bindTouch('btnDown', () => keys.down = true, () => keys.down = false);
     bindTouch('btnA', () => {
         keys.up = true;
-        jumpBuffer = 14;
+        jumpBuffer = 10;
     }, () => {
         keys.up = false;
     });

@@ -10,7 +10,37 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2026v13">
+    <!-- Fallback ultraseguro para evitar pantalla negra en Safari -->
+    <script>
+        window.sounds = window.sounds || {
+            init: function() {},
+            startMusic: function() {},
+            stopMusic: function() {},
+            toggleMute: function() { return false; },
+            playJump: function() {},
+            playCoin: function() {},
+            playPowerUp: function() {},
+            playStomp: function() {},
+            playShoot: function() {},
+            playBlockHit: function() {},
+            playStageClear: function() {},
+            playGameOver: function() {},
+            playPlayerDie: function() {},
+            playBossHit: function() {},
+            playBossDefeated: function() {},
+            musicPlaying: false,
+            muted: false
+        };
+        // Forzar actualización inmediata en iOS Safari para limpiar caché antiguo
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+                for (var r of regs) {
+                    r.update();
+                }
+            });
+        }
+    </script>
     <!-- Script infalible e instantáneo para la pantalla de inicio Hugo SP Studios y el menú -->
     <script>
         function dismissStudioSplash() {
@@ -314,14 +344,16 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="audio.js"></script>
-    <script src="levels.js"></script>
-    <script src="game.js"></script>
+    <!-- Scripts con Cache-Buster para Safari iOS -->
+    <script src="audio.js?v=2026v13"></script>
+    <script src="levels.js?v=2026v13"></script>
+    <script src="game.js?v=2026v13"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => {
+                navigator.serviceWorker.register('sw.js?v=2026v13').then(function(reg) {
+                    reg.update();
+                }).catch(err => {
                     console.log('SW note:', err);
                 });
             });
