@@ -520,48 +520,122 @@ class SoundManager {
 
         // ==========================================
         // 6. ZELDA: OCARINA OF TIME - KOKIRI FOREST (BOSQUE KOKIRI)
-        // Melodía alegre, pastoral y mística
+        // Fragmento exacto del OST original de Ocarina of Time (0:07 a 0:41):
+        // Flauta pastoral, melodía icónica (G4-C5-G4-E4) y sección B ascendente completa
         // ==========================================
         const kokiriForest = [
-            // Frase 1: Entrada alegre de flauta pastoral
-            { f: A4,  d: 0.16, b: D3 },
-            { f: B4,  d: 0.16, b: G3 },
-            { f: D5,  d: 0.32, b: D3 },
-            { f: E5,  d: 0.16, b: G3 },
-            { f: D5,  d: 0.16, b: D3 },
-            { f: B4,  d: 0.32, b: G3 },
-            { f: A4,  d: 0.20, b: D3 },
+            // --- PARTE A1 (0:07 - 0:15): Apertura de Flauta Dulce en Do Mayor ---
+            // Compás 1: Motivo inicial "G4 - C5 - G4 - E4"
+            { f: G4,  d: 0.22, b: C3 },
+            { f: 0,   d: 0.04, b: 0  },
+            { f: C5,  d: 0.24, b: G3 },
+            { f: G4,  d: 0.30, b: C3 },
+            { f: E4,  d: 0.18, b: G3 },
+
+            // Compás 2: Carrera ondulante "D4 - E4 - F4 - G4 - A4 - G4 - F4 - G4"
+            { f: D4,  d: 0.13, b: F3 },
+            { f: E4,  d: 0.13, b: F3 },
+            { f: F4,  d: 0.13, b: A3 },
+            { f: G4,  d: 0.18, b: G3 },
+            { f: A4,  d: 0.13, b: F3 },
+            { f: G4,  d: 0.13, b: G3 },
+            { f: F4,  d: 0.13, b: F3 },
+            { f: G4,  d: 0.22, b: G3 },
+
+            // Compás 3: Descenso melódico "F4 - E4 - D4 - E4"
+            { f: F4,  d: 0.18, b: D3 },
+            { f: E4,  d: 0.18, b: G3 },
+            { f: D4,  d: 0.18, b: G2 },
+            { f: E4,  d: 0.24, b: G3 },
+
+            // Compás 4: Cierre frase 1 en Do
+            { f: C4,  d: 0.55, b: C3 },
+            { f: 0,   d: 0.10, b: 0  },
+
+            // --- PARTE A2 (0:15 - 0:24): Repetición y variación pastoral ---
+            // Compás 5: Llamada
+            { f: G4,  d: 0.22, b: C3 },
+            { f: 0,   d: 0.04, b: 0  },
+            { f: C5,  d: 0.24, b: G3 },
+            { f: G4,  d: 0.30, b: C3 },
+            { f: E4,  d: 0.18, b: G3 },
+
+            // Compás 6: Variación ágil
+            { f: D4,  d: 0.13, b: F3 },
+            { f: E4,  d: 0.13, b: F3 },
+            { f: F4,  d: 0.13, b: A3 },
+            { f: G4,  d: 0.18, b: G3 },
+            { f: A4,  d: 0.13, b: F3 },
+            { f: G4,  d: 0.13, b: G3 },
+            { f: F4,  d: 0.13, b: F3 },
+            { f: G4,  d: 0.22, b: G3 },
+
+            // Compás 7: Descenso y preparación hacia la tónica
+            { f: F4,  d: 0.15, b: D3 },
+            { f: E4,  d: 0.15, b: G3 },
+            { f: D4,  d: 0.15, b: G2 },
+            { f: E4,  d: 0.15, b: C3 },
+            { f: F4,  d: 0.15, b: D3 },
+            { f: G4,  d: 0.20, b: G3 },
+
+            // Compás 8: Salto a la tónica alta C5
+            { f: C5,  d: 0.55, b: C3 },
+            { f: 0,   d: 0.12, b: 0  },
+
+            // --- PARTE B1 (0:24 - 0:32): Sección alegre y luminosa (Sección B) ---
+            // Compás 9: "E5 - D5 - C5 - B4 - G4"
+            { f: E5,  d: 0.26, b: A3 },
+            { f: D5,  d: 0.14, b: E3 },
+            { f: C5,  d: 0.14, b: A3 },
+            { f: B4,  d: 0.26, b: E3 },
+            { f: G4,  d: 0.24, b: G3 },
+
+            // Compás 10: "A4 - B4 - C5 - D5 - B4"
+            { f: A4,  d: 0.14, b: F3 },
+            { f: B4,  d: 0.14, b: C3 },
+            { f: C5,  d: 0.24, b: F3 },
+            { f: D5,  d: 0.24, b: G3 },
+            { f: B4,  d: 0.24, b: G3 },
+
+            // Compás 11: "E5 - D5 - C5 - B4 - G4"
+            { f: E5,  d: 0.26, b: A3 },
+            { f: D5,  d: 0.14, b: E3 },
+            { f: C5,  d: 0.14, b: A3 },
+            { f: B4,  d: 0.26, b: E3 },
+            { f: G4,  d: 0.24, b: G3 },
+
+            // Compás 12: Subida suspendida a Re5
+            { f: A4,  d: 0.14, b: F3 },
+            { f: B4,  d: 0.14, b: G3 },
+            { f: C5,  d: 0.22, b: A3 },
+            { f: D5,  d: 0.58, b: G3 },
             { f: 0,   d: 0.08, b: 0  },
 
-            // Frase 2: Arpegio ascendente vivo
-            { f: D4,  d: 0.16, b: D3 },
-            { f: Fs4, d: 0.16, b: A3 },
-            { f: A4,  d: 0.16, b: D3 },
-            { f: B4,  d: 0.32, b: G3 },
-            { f: A4,  d: 0.16, b: D3 },
-            { f: Fs4, d: 0.32, b: A3 },
-            { f: E4,  d: 0.36, b: A2 },
-            { f: 0,   d: 0.08, b: 0  },
+            // --- PARTE B2 (0:32 - 0:41): Clímax y gran cadencia final ---
+            // Compás 13: Repetición del motivo alto
+            { f: E5,  d: 0.26, b: A3 },
+            { f: D5,  d: 0.14, b: E3 },
+            { f: C5,  d: 0.14, b: A3 },
+            { f: B4,  d: 0.26, b: E3 },
+            { f: G4,  d: 0.24, b: G3 },
 
-            // Frase 3: Motivo melódico alto con dulzura
-            { f: A4,  d: 0.16, b: D3 },
-            { f: B4,  d: 0.16, b: G3 },
-            { f: D5,  d: 0.32, b: D3 },
-            { f: E5,  d: 0.16, b: G3 },
-            { f: Fs5, d: 0.32, b: D3 },
-            { f: E5,  d: 0.16, b: A3 },
-            { f: D5,  d: 0.32, b: D3 },
-            { f: B4,  d: 0.36, b: G3 },
-            { f: 0,   d: 0.08, b: 0  },
+            // Compás 14: Ascenso triunfal hacia F5
+            { f: A4,  d: 0.14, b: F3 },
+            { f: B4,  d: 0.14, b: C3 },
+            { f: C5,  d: 0.20, b: F3 },
+            { f: D5,  d: 0.20, b: G3 },
+            { f: E5,  d: 0.24, b: C3 },
 
-            // Frase 4: Cadencia resolutiva del bosque
-            { f: D5,  d: 0.16, b: G3 },
-            { f: B4,  d: 0.16, b: E3 },
-            { f: A4,  d: 0.16, b: D3 },
-            { f: Fs4, d: 0.24, b: A3 },
-            { f: E4,  d: 0.24, b: A3 },
-            { f: D4,  d: 0.48, b: D3 },
-            { f: 0,   d: 0.12, b: 0  }
+            // Compás 15: "F5 - E5 - D5 - C5 - B4"
+            { f: F5,  d: 0.26, b: F3 },
+            { f: E5,  d: 0.14, b: G3 },
+            { f: D5,  d: 0.14, b: G3 },
+            { f: C5,  d: 0.22, b: A3 },
+            { f: B4,  d: 0.22, b: B3 },
+
+            // Compás 16: Gran resolución en C5 (segundo 0:41)
+            { f: C5,  d: 0.75, b: C3 },
+            { f: 0,   d: 0.20, b: 0  }
         ];
 
         // ==========================================
