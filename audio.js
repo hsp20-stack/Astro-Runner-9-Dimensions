@@ -502,7 +502,53 @@ class SoundManager {
         ];
 
         // ==========================================
-        // 6. ZELDA: OCARINA OF TIME - VALLE GERUDO (TEMA ÉPICO Y DINÁMICO)
+        // 6. ZELDA: OCARINA OF TIME - KOKIRI FOREST (BOSQUE KOKIRI)
+        // Melodía alegre, pastoral y mística
+        // ==========================================
+        const kokiriForest = [
+            // Frase 1: Entrada alegre de flauta pastoral
+            { f: A4,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.16, b: G3 },
+            { f: D5,  d: 0.32, b: D3 },
+            { f: E5,  d: 0.16, b: G3 },
+            { f: D5,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.32, b: G3 },
+            { f: A4,  d: 0.20, b: D3 },
+            { f: 0,   d: 0.08, b: 0  },
+
+            // Frase 2: Arpegio ascendente vivo
+            { f: D4,  d: 0.16, b: D3 },
+            { f: Fs4, d: 0.16, b: A3 },
+            { f: A4,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.32, b: G3 },
+            { f: A4,  d: 0.16, b: D3 },
+            { f: Fs4, d: 0.32, b: A3 },
+            { f: E4,  d: 0.36, b: A2 },
+            { f: 0,   d: 0.08, b: 0  },
+
+            // Frase 3: Motivo melódico alto con dulzura
+            { f: A4,  d: 0.16, b: D3 },
+            { f: B4,  d: 0.16, b: G3 },
+            { f: D5,  d: 0.32, b: D3 },
+            { f: E5,  d: 0.16, b: G3 },
+            { f: Fs5, d: 0.32, b: D3 },
+            { f: E5,  d: 0.16, b: A3 },
+            { f: D5,  d: 0.32, b: D3 },
+            { f: B4,  d: 0.36, b: G3 },
+            { f: 0,   d: 0.08, b: 0  },
+
+            // Frase 4: Cadencia resolutiva del bosque
+            { f: D5,  d: 0.16, b: G3 },
+            { f: B4,  d: 0.16, b: E3 },
+            { f: A4,  d: 0.16, b: D3 },
+            { f: Fs4, d: 0.24, b: A3 },
+            { f: E4,  d: 0.24, b: A3 },
+            { f: D4,  d: 0.48, b: D3 },
+            { f: 0,   d: 0.12, b: 0  }
+        ];
+
+        // ==========================================
+        // 6b. ZELDA: OCARINA OF TIME - VALLE GERUDO
         // ==========================================
         const gerudoValley = [
             // Compás 1: Motivo rítmico apasionado
@@ -598,9 +644,9 @@ class SoundManager {
         ];
 
         // Asignación de música exclusiva según el Mundo (1 al 9)
-        let worldSoundtrack = gerudoValley;
+        let worldSoundtrack = kokiriForest;
         switch (Number(worldNum)) {
-            case 1: worldSoundtrack = gerudoValley; break;      // Mundo 1: Valle Gerudo (Zelda Ocarina of Time)
+            case 1: worldSoundtrack = kokiriForest; break;      // Mundo 1: Kokiri Forest (Zelda: Ocarina of Time)
             case 2: worldSoundtrack = sm64Theme; break;         // Mundo 2: Dunas Doradas (Super Mario 64)
             case 3: worldSoundtrack = sariasSong; break;        // Mundo 3: Caverna Neón (Zelda Lost Woods)
             case 4: worldSoundtrack = sunshineTheme; break;     // Mundo 4: Costa Caribeña (Mario Sunshine Delfino)
@@ -609,7 +655,7 @@ class SoundManager {
             case 7: worldSoundtrack = galaxyTheme; break;       // Mundo 7: Flota Celestial (Mario Galaxy Gusty Garden)
             case 8: worldSoundtrack = koopasRoad; break;        // Mundo 8: Fortaleza de Magma (SM64 Koopa's Road)
             case 9: worldSoundtrack = cometObservatory; break;  // Mundo 9: Reino Cósmico (Mario Galaxy Observatory)
-            default: worldSoundtrack = gerudoValley; break;
+            default: worldSoundtrack = kokiriForest; break;
         }
 
         // ==========================================

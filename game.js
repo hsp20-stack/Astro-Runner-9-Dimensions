@@ -1773,11 +1773,11 @@ function renderThemedBackdrop() {
 
     } else {
         // ==========================================
-        // === MUNDO 1: BOSQUE ENCANTADO VERDE (FOREST PARALLAX 2026) ===
+        // === MUNDO 1: BOSQUE CON PUEBLO MEDIEVAL Y FUENTE DE AGUA (2026 AAA PARALLAX) ===
         // ==========================================
         ctx.save();
 
-        // 1. Capa 1: Cordillera lejana de montañas boscosas azules y bruma
+        // 1. Capa 1: Cordillera lejana de montañas boscosas azules y bruma mística
         ctx.fillStyle = '#1e3a8a';
         for (let i = 0; i < 4; i++) {
             const mx = ((i * 260) - bgOffset * 0.2) % (VIEW_WIDTH * 2.2);
@@ -1789,7 +1789,7 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 2. Capa 2: Bosque lejano con copas de pinos y robles gigantes
+        // 2. Capa 2: Bosque lejano con pinos altos y robles en la distancia
         ctx.fillStyle = '#14532d';
         for (let i = 0; i < 7; i++) {
             const tx = ((i * 120 + 30) - bgOffset * 0.45) % (VIEW_WIDTH * 2.2);
@@ -1812,9 +1812,152 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 3. Capa 3: Árboles frondosos en plano medio con volumen y ramas
+        // 3. Capa 3: PEQUEÑO PUEBLO EN EL BOSQUE (Casitas con chimenea + Fuente de agua viva)
+        // Se dibuja en un plano de profundidad suave (paralaje bgOffset * 0.6)
+        const villageXBase = ((280) - bgOffset * 0.6) % (VIEW_WIDTH * 2.5);
+
+        // --- Casas del Pueblo ---
+        const housePositions = [
+            { x: villageXBase - 140, w: 38, h: 28, roofH: 18, chimney: true },
+            { x: villageXBase - 60,  w: 46, h: 32, roofH: 22, chimney: true },
+            { x: villageXBase + 80,  w: 42, h: 30, roofH: 20, chimney: false },
+            { x: villageXBase + 160, w: 36, h: 26, roofH: 16, chimney: true }
+        ];
+
+        housePositions.forEach(house => {
+            const hx = house.x;
+            const hy = 192 - house.h;
+
+            // Humo de la chimenea animado
+            if (house.chimney) {
+                const smokeTime = Date.now() * 0.003;
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(hx + 8, hy - house.roofH - 6, 6, 8); // Chimenea de ladrillo
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                for (let s = 0; s < 3; s++) {
+                    const sOffset = (smokeTime + s * 0.35) % 1;
+                    const smX = hx + 11 + Math.sin(smokeTime * 3 + s) * 4;
+                    const smY = (hy - house.roofH - 8) - sOffset * 22;
+                    ctx.beginPath();
+                    ctx.arc(smX, smY, 2.5 + sOffset * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Fachada de madera y piedra de la casa
+            const wallGrad = ctx.createLinearGradient(hx, hy, hx + house.w, hy);
+            wallGrad.addColorStop(0, '#78350f');
+            wallGrad.addColorStop(0.5, '#b45309');
+            wallGrad.addColorStop(1, '#451a03');
+            ctx.fillStyle = wallGrad;
+            ctx.fillRect(hx, hy, house.w, house.h);
+
+            // Vigas de madera cruzadas rústicas
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(hx, hy, 3, house.h);
+            ctx.fillRect(hx + house.w - 3, hy, 3, house.h);
+            ctx.fillRect(hx, hy + house.h / 2, house.w, 2);
+
+            // Tejado a dos aguas rojo teja o paja alpina
+            const roofGrad = ctx.createLinearGradient(hx, hy - house.roofH, hx + house.w, hy);
+            roofGrad.addColorStop(0, '#dc2626');
+            roofGrad.addColorStop(1, '#991b1b');
+            ctx.fillStyle = roofGrad;
+            ctx.beginPath();
+            ctx.moveTo(hx - 5, hy);
+            ctx.lineTo(hx + house.w / 2, hy - house.roofH);
+            ctx.lineTo(hx + house.w + 5, hy);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#450a0a';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Ventana iluminada con luz cálida dorada
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(hx + 8, hy + 6, 8, 8);
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(hx + 11, hy + 6, 2, 8);
+            ctx.fillRect(hx + 8, hy + 9, 8, 2);
+
+            // Puerta de madera con arco
+            ctx.fillStyle = '#3f1d0b';
+            ctx.fillRect(hx + house.w - 14, hy + 10, 10, house.h - 10);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(hx + house.w - 7, hy + 17, 2, 2); // Pomo dorado
+        });
+
+        // --- LA FUENTE DE AGUA DEL PUEBLO ---
+        // Situada en la plaza central del pueblo
+        const fX = villageXBase + 10;
+        const fY = 192;
+
+        // Base redonda de piedra de la fuente
+        const basinGrad = ctx.createLinearGradient(fX - 22, fY - 14, fX + 22, fY);
+        basinGrad.addColorStop(0, '#94a3b8');
+        basinGrad.addColorStop(0.5, '#64748b');
+        basinGrad.addColorStop(1, '#334155');
+        ctx.fillStyle = basinGrad;
+        ctx.beginPath();
+        ctx.ellipse(fX, fY - 6, 22, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Agua brillante en el estanque de la fuente
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.ellipse(fX, fY - 7, 18, 6.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pilar central tallado de piedra
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(fX - 4, fY - 26, 8, 20);
+        // Plato superior de la fuente
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.ellipse(fX, fY - 26, 11, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Chorro de agua vivo y animado saliendo hacia arriba
+        const waterPulse = Math.sin(Date.now() * 0.008) * 2;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(fX, fY - 32 + waterPulse, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cascadas de agua cayendo a los lados
+        ctx.strokeStyle = 'rgba(224, 242, 254, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(fX, fY - 30);
+        ctx.quadraticCurveTo(fX - 10, fY - 24, fX - 12, fY - 8);
+        ctx.moveTo(fX, fY - 30);
+        ctx.quadraticCurveTo(fX + 10, fY - 24, fX + 12, fY - 8);
+        ctx.stroke();
+
+        // Salpicaduras animadas en el agua
+        ctx.fillStyle = '#ffffff';
+        for (let sp = 0; sp < 4; sp++) {
+            const spOffset = (Date.now() * 0.01 + sp * 1.5) % (Math.PI * 2);
+            ctx.fillRect(fX - 8 + Math.cos(spOffset) * 6, fY - 7 + Math.sin(spOffset) * 2, 1.8, 1.8);
+        }
+
+        // Farol de piedra rústico junto a la fuente con luz cálida
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(fX - 32, fY - 22, 3, 22);
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(fX - 30.5, fY - 22, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(fX - 31.5, fY - 23, 2, 2);
+
+        // 4. Capa 4: Árboles frondosos en plano medio envolviendo el pueblo
         for (let i = 0; i < 5; i++) {
-            const fx = ((i * 170 + 70) - bgOffset * 0.8) % (VIEW_WIDTH * 2.2);
+            const fx = ((i * 170 + 70) - bgOffset * 0.85) % (VIEW_WIDTH * 2.2);
             // Tronco de madera con textura
             const trunkGrad = ctx.createLinearGradient(fx + 16, 0, fx + 32, 0);
             trunkGrad.addColorStop(0, '#451a03');
@@ -1849,7 +1992,7 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 4. Nubes suaves de bosque con viento
+        // 5. Nubes suaves de bosque con viento
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         for (let i = 0; i < 4; i++) {
             const cx = ((i * 210 + 40) - bgOffset * 1.3) % (VIEW_WIDTH * 2.1);
