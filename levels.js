@@ -4,17 +4,17 @@
 const WORLDS_CONFIG = [
     {
         id: 1,
-        name: "Colinas Verdes Clásicas",
+        name: "Aldea Kokiri del Bosque",
         theme: "grassland",
-        skyTop: "#38bdf8",
-        skyBottom: "#bae6fd",
-        grassColor: "#22c55e",
-        grassHighlight: "#86efac",
-        dirtColor: "#854d0e",
-        dirtPattern: "#713f12",
+        skyTop: "#1e3a8a",
+        skyBottom: "#60a5fa",
+        grassColor: "#15803d",
+        grassHighlight: "#4ade80",
+        dirtColor: "#582f0e",
+        dirtPattern: "#3d1f05",
         blockColor: "#ea580c",
         cloudColor: "#ffffff",
-        description: "Colinas verdes y praderas floridas bajo cielos azules radiantes.",
+        description: "Frondoso bosque ancestral con árboles gigantescos y bruma mística bajo el cielo.",
         bossName: "Mecha-Koopa Prime",
         bossHp: 3,
         bossColor: "#ef4444"
@@ -55,17 +55,17 @@ const WORLDS_CONFIG = [
     },
     {
         id: 4,
-        name: "Costa Caribeña Esmeralda",
+        name: "Plaza Delfino Tropical",
         theme: "ocean",
         skyTop: "#0284c7",
-        skyBottom: "#7dd3fc",
+        skyBottom: "#bae6fd",
         grassColor: "#10b981",
         grassHighlight: "#6ee7b7",
-        dirtColor: "#92400e",
+        dirtColor: "#b45309",
         dirtPattern: "#78350f",
-        blockColor: "#d97706",
-        cloudColor: "#f0fdfa",
-        description: "Océano tropical con aguas esmeralda, palmeras e islas de coral.",
+        blockColor: "#f59e0b",
+        cloudColor: "#ffffff",
+        description: "Costa paradisíaca soleada inspirada en Delfino Plaza, con mar turquesa, palmeras, veleros y delfines.",
         bossName: "Capitán Kraken",
         bossHp: 5,
         bossColor: "#059669"
@@ -161,7 +161,8 @@ class LevelBuilder {
     static generateLevel(worldIndex, levelIndex) {
         const world = WORLDS_CONFIG[worldIndex - 1] || WORLDS_CONFIG[0];
         const isBossLevel = (levelIndex === 8);
-        const mapWidth = isBossLevel ? 75 : 85;
+        // Niveles mucho más largos y completos (190 tiles normales, 140 tiles para fortaleza boss)
+        const mapWidth = isBossLevel ? 140 : 190;
         const mapHeight = 9;
 
         const grid = Array.from({ length: mapHeight }, () => Array(mapWidth).fill(0));
@@ -171,17 +172,20 @@ class LevelBuilder {
 
         const groundRow = 6; // Fila 6 (Y = 192px)
 
-        // Fosos desafiantes y equilibrados por mundo
+        // Fosos y abismos desafiantes distribuidos a lo largo del mapa
         for (let col = 0; col < mapWidth; col++) {
             let isPit = false;
             if (!isBossLevel) {
-                // En mundos avanzados los fosos aumentan progresivamente la emoción
-                if (levelIndex >= 3 && (col === 46 || col === 47)) isPit = true;
-                if (worldIndex >= 3 && levelIndex >= 4 && (col === 28 || col === 29)) isPit = true;
-                if (worldIndex >= 5 && (col === 62 || col === 63)) isPit = true;
+                // Fosos estratégicos espaciados en los niveles largos
+                if (levelIndex >= 2 && (col === 38 || col === 39)) isPit = true;
+                if ((worldIndex >= 2 || levelIndex >= 4) && (col === 74 || col === 75)) isPit = true;
+                if (levelIndex >= 3 && (col === 112 || col === 113)) isPit = true;
+                if (worldIndex >= 3 && (col === 148 || col === 149)) isPit = true;
             } else if (isBossLevel) {
-                if (col === 32 || col === 33) isPit = true;
-                if (worldIndex >= 4 && (col === 46 || col === 47)) isPit = true;
+                // Fosos de lava en el castillo antes de la arena del jefe
+                if (col === 34 || col === 35) isPit = true;
+                if (col === 58 || col === 59) isPit = true;
+                if (col === 82 || col === 83) isPit = true;
             }
 
             if (!isPit) {
@@ -195,31 +199,43 @@ class LevelBuilder {
 
         if (isBossLevel) {
             // ==========================================
-            // NIVEL 8: CASTILLO DEL JEFE FINAL
+            // NIVEL 8: GRAN FORTALEZA Y ARENA DEL JEFE FINAL (140 TILES)
             // ==========================================
-            // Plataformas flotantes amplias y transitables
-            for (let c = 10; c <= 14; c++) grid[groundRow - 3][c] = 12;
-            for (let c = 20; c <= 25; c++) grid[groundRow - 4][c] = 12;
-            for (let c = 38; c <= 44; c++) grid[groundRow - 3][c] = 12;
+            // 1. Recorrido de plataformas flotantes sobre fosos de lava
+            for (let c = 12; c <= 18; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 28; c <= 33; c++) grid[groundRow - 4][c] = 12;
+            for (let c = 44; c <= 50; c++) grid[groundRow - 3][c] = 12;
+            for (let c = 68; c <= 74; c++) grid[groundRow - 4][c] = 12;
+            for (let c = 88; c <= 94; c++) grid[groundRow - 3][c] = 12;
 
-            // Bloques de poder de ayuda antes del combate
-            grid[groundRow - 3][11] = 4; // Champiñón
-            grid[groundRow - 4][22] = 4; // Flor de fuego / Batería de plasma
+            // Bloques de poder ganados superando los desafíos de la fortaleza
+            grid[groundRow - 4][30] = 4; // Champiñón Super a mitad de la fortaleza
+            grid[groundRow - 4][71] = 4; // Flor de Plasma antes del tramo final
 
-            // Entrada y pared límite de la arena del boss
-            grid[groundRow - 1][50] = 12;
-            grid[groundRow - 2][50] = 12;
+            // Monedas de fortaleza
+            [14, 16, 46, 48, 90, 92].forEach(c => {
+                coins.push({ x: c * 32, y: (groundRow - 4) * 32 });
+            });
 
+            // 2. Puerta y muro de entrada a la Arena del Boss (Columna 100)
+            const arenaStartCol = 102;
+            for (let r = 0; r < groundRow - 2; r++) {
+                grid[r][arenaStartCol - 2] = 12; // Muro superior
+            }
+            grid[groundRow - 1][arenaStartCol - 2] = 12;
+            grid[groundRow - 2][arenaStartCol - 2] = 12;
+
+            // Pared límite derecha de la arena
             for (let r = 0; r < groundRow; r++) {
                 grid[r][mapWidth - 1] = 12;
             }
 
             // Plataformas dentro de la arena del boss para saltarle encima
-            for (let c = 56; c <= 60; c++) grid[groundRow - 3][c] = 12;
-            for (let c = 64; c <= 68; c++) grid[groundRow - 3][c] = 12;
+            for (let c = arenaStartCol + 8; c <= arenaStartCol + 13; c++) grid[groundRow - 3][c] = 12;
+            for (let c = arenaStartCol + 20; c <= arenaStartCol + 25; c++) grid[groundRow - 3][c] = 12;
 
             boss = {
-                x: 63 * 32,
+                x: (arenaStartCol + 16) * 32,
                 y: (groundRow - 2) * 32,
                 w: 48,
                 h: 56,
@@ -227,7 +243,7 @@ class LevelBuilder {
                 hp: world.bossHp,
                 maxHp: world.bossHp,
                 color: world.bossColor,
-                vx: -1.2,
+                vx: -1.3,
                 vy: 0,
                 isGrounded: false,
                 attackTimer: 0,
@@ -235,96 +251,166 @@ class LevelBuilder {
                 worldNumber: worldIndex
             };
 
-            // Esbirros guardianes antes de la arena del jefe
-            enemies.push({ x: 16 * 32, y: (groundRow - 1) * 32, type: 'goomba', vx: -1.3, alive: true });
-            enemies.push({ x: 26 * 32, y: (groundRow - 1) * 32, type: 'koopa', vx: -1.4, alive: true });
+            // Esbirros guardianes de la fortaleza
+            const bossEnemies = [
+                { col: 20, type: 'goomba' },
+                { col: 40, type: 'koopa' },
+                { col: 64, type: 'goomba' },
+                { col: 80, type: 'koopa' }
+            ];
             if (worldIndex >= 3) {
-                enemies.push({ x: 36 * 32, y: (groundRow - 3.5) * 32, type: 'koopa', fly: true, baseY: (groundRow - 3.5) * 32, sinOffset: 0, vx: -1.2, vy: 0, alive: true });
+                bossEnemies.push({ col: 52, type: 'koopa', fly: true });
+                bossEnemies.push({ col: 86, type: 'koopa', fly: true });
             }
+
+            bossEnemies.forEach(e => {
+                enemies.push({
+                    x: e.col * 32,
+                    y: e.fly ? (groundRow - 3.5) * 32 : (groundRow - 1) * 32,
+                    type: e.type,
+                    fly: !!e.fly,
+                    baseY: e.fly ? (groundRow - 3.5) * 32 : (groundRow - 1) * 32,
+                    sinOffset: 0,
+                    vx: -1.3,
+                    vy: 0,
+                    alive: true
+                });
+            });
+
+            return {
+                world,
+                worldIndex,
+                levelIndex,
+                isBossLevel: true,
+                mapWidth,
+                mapHeight,
+                grid,
+                enemies,
+                coins,
+                boss,
+                bossArenaCol: arenaStartCol,
+                spawnX: 3 * 32,
+                spawnY: (groundRow - 1) * 32
+            };
 
         } else {
             // ==========================================
-            // NIVELES 1 AL 7: DISEÑO FLUIDO, EQUILIBRADO Y 100% PASABLE
+            // NIVELES 1 AL 7: RECORRIDO LARGO, ÉPICO Y VARIADO (190 TILES)
             // ==========================================
 
-            // 1. Tuberías verdes compactas (1 solo bloque de altura para saltar limpiamente)
-            const pipeCols = [15, 33, 51, 65];
+            // 1. Tuberías verdes clásicas repartidas a lo largo de los 190 bloques
+            const pipeCols = [18, 48, 84, 122, 156];
             pipeCols.forEach(col => {
-                if (col < mapWidth - 16) {
+                if (col < mapWidth - 18) {
                     grid[groundRow - 1][col] = 5;
                     grid[groundRow - 1][col + 1] = 6;
                 }
             });
 
-            // Bloque '?' inicial con Super Poder para transformarse desde el principio
-            grid[groundRow - 2][10] = 4; // Batería / Champiñón de transformación al inicio
+            // NOTA: Se ha ELIMINADO por completo el bloque inicial de regalo con champiñón.
+            // Astro empieza en estado normal como en el Super Mario clásico.
 
-            // 2. Formaciones de bloques elevadas para saltar sobre ellas con emoción
-            // Cada formación tiene un bloque de poder central para transformarse
-            const blockCols = [20, 38, 55];
-            blockCols.forEach(col => {
-                const bRow = groundRow - 3; // Fila 3: altura clásica para saltar sobre ellos
+            // 2. Formaciones de bloques elevadas distribuidas a lo largo del nivel largo
+            const blockCols = [26, 56, 94, 132, 164];
+            blockCols.forEach((col, idx) => {
+                const bRow = groundRow - 3;
 
-                grid[bRow][col] = 2;     // Ladrillo rompible
-                grid[bRow][col + 1] = 3; // '?' Moneda dorada
-                grid[bRow][col + 2] = 4; // '?' SUPER PODER DE TRANSFORMACIÓN (Batería / Flor de Plasma)
-                grid[bRow][col + 3] = 3; // '?' Moneda dorada
-                grid[bRow][col + 4] = 2; // Ladrillo rompible
+                grid[bRow][col] = 2;         // Ladrillo rompible
+                grid[bRow][col + 1] = 3;     // '?' Moneda dorada
+                // Los potenciadores están ganados más adelante en el nivel (en la columna 56 y 132)
+                if (idx === 1) {
+                    grid[bRow][col + 2] = 4; // '?' Champiñón Super / Batería (a 1/3 del nivel)
+                } else if (idx === 3) {
+                    grid[bRow][col + 2] = 4; // '?' Flor de Plasma / Fuego (a 2/3 del nivel)
+                } else {
+                    grid[bRow][col + 2] = 2; // Ladrillo resistente
+                }
+                grid[bRow][col + 3] = 3;     // '?' Moneda dorada
+                grid[bRow][col + 4] = 2;     // Ladrillo rompible
 
                 coins.push({ x: (col + 1) * 32, y: (bRow - 1) * 32 });
                 coins.push({ x: (col + 3) * 32, y: (bRow - 1) * 32 });
             });
 
-            // 3. Monedas flotantes en arcos sobre las llanuras
-            for (let c = 7; c < mapWidth - 18; c += 8) {
+            // 3. Plataformas altas aéreas intermedias para caminos alternativos
+            const highPlatformCols = [66, 104, 142];
+            highPlatformCols.forEach(col => {
+                for (let c = col; c <= col + 5; c++) {
+                    grid[groundRow - 4][c] = 2; // Plataforma aérea de ladrillos
+                    if (c % 2 === 0) {
+                        coins.push({ x: c * 32, y: (groundRow - 5) * 32 });
+                    }
+                }
+            });
+
+            // 4. Monedas doradas flotantes en arcos sobre las llanuras
+            for (let c = 10; c < mapWidth - 22; c += 10) {
                 if (grid[groundRow][c] === 1 && grid[groundRow - 1][c] === 0) {
                     coins.push({ x: c * 32, y: (groundRow - 2) * 32 });
                 }
             }
 
-            // 4. Escalera clásica suave antes de la meta (nunca más de 2 bloques para que sea 100% pasable)
-            const stairCol = 68;
+            // 5. Escalera piramidal clásica antes de la meta final
+            const stairCol = 172;
             if (stairCol < mapWidth - 14) {
-                grid[groundRow - 1][stairCol] = 1;     // Paso 1 (1 bloque)
-                grid[groundRow - 1][stairCol + 1] = 1; // Paso 2
+                // Escalón 1
+                grid[groundRow - 1][stairCol] = 1;
+                // Escalón 2
+                grid[groundRow - 1][stairCol + 1] = 1;
                 grid[groundRow - 2][stairCol + 1] = 1;
-                grid[groundRow - 1][stairCol + 2] = 1; // Descanso
+                // Escalón 3
+                grid[groundRow - 1][stairCol + 2] = 1;
                 grid[groundRow - 2][stairCol + 2] = 1;
-                grid[groundRow - 1][stairCol + 3] = 1; // Bajada suave
+                grid[groundRow - 3][stairCol + 2] = 1;
+                // Escalón 4 (Cima)
+                grid[groundRow - 1][stairCol + 3] = 1;
+                grid[groundRow - 2][stairCol + 3] = 1;
+                grid[groundRow - 3][stairCol + 3] = 1;
+                grid[groundRow - 4][stairCol + 3] = 1;
+                // Bajada
+                grid[groundRow - 1][stairCol + 4] = 1;
+                grid[groundRow - 2][stairCol + 4] = 1;
+                grid[groundRow - 1][stairCol + 5] = 1;
             }
 
-            // 5. ENEMIGOS CON DIFICULTAD REAL, DESAFIANTE Y ESCALONADA POR MUNDO
-            const baseEnemySpeed = -(1.2 + (worldIndex - 1) * 0.16 + (levelIndex - 1) * 0.05);
-            
-            // Cantidad y distribución de enemigos según el progreso del jugador
+            // 6. DISTRIBUCIÓN EXTENSA Y DESAFIANTE DE ENEMIGOS A LO LARGO DE LOS 190 BLOQUES
+            const baseEnemySpeed = -(1.2 + (worldIndex - 1) * 0.15 + (levelIndex - 1) * 0.04);
             const enemyConfigs = [];
-            
-            // Patrullas terrestres principales
-            enemyConfigs.push({ col: 22, type: 'goomba' });
-            enemyConfigs.push({ col: 36, type: (levelIndex >= 3) ? 'koopa' : 'goomba' });
-            enemyConfigs.push({ col: 48, type: 'koopa' });
-            enemyConfigs.push({ col: 62, type: (worldIndex % 2 === 0) ? 'koopa' : 'goomba' });
 
+            // Patrullas terrestres y aéreas repartidas equidistantemente
+            enemyConfigs.push({ col: 14, type: 'goomba' });
+            enemyConfigs.push({ col: 24, type: 'goomba' });
+            enemyConfigs.push({ col: 34, type: (levelIndex >= 2) ? 'koopa' : 'goomba' });
+            enemyConfigs.push({ col: 44, type: 'goomba' });
+            enemyConfigs.push({ col: 54, type: 'koopa' });
+            enemyConfigs.push({ col: 64, type: 'goomba' });
+            enemyConfigs.push({ col: 72, type: (worldIndex >= 2) ? 'koopa' : 'goomba' });
+            enemyConfigs.push({ col: 82, type: 'goomba' });
+            enemyConfigs.push({ col: 92, type: 'koopa' });
+            enemyConfigs.push({ col: 102, type: 'goomba' });
+            enemyConfigs.push({ col: 114, type: (levelIndex >= 3) ? 'koopa' : 'goomba' });
+            enemyConfigs.push({ col: 124, type: 'goomba' });
+            enemyConfigs.push({ col: 134, type: 'koopa' });
+            enemyConfigs.push({ col: 144, type: 'goomba' });
+            enemyConfigs.push({ col: 154, type: 'koopa' });
+            enemyConfigs.push({ col: 162, type: 'goomba' });
+
+            // Enemigos voladores (Paratroopas) en mundos/niveles más avanzados
             if (worldIndex >= 2 || levelIndex >= 4) {
-                enemyConfigs.push({ col: 29, type: 'goomba' });
-                enemyConfigs.push({ col: 54, type: 'koopa' });
+                enemyConfigs.push({ col: 40, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 98, type: 'koopa', fly: true });
             }
             if (worldIndex >= 3 || levelIndex >= 6) {
-                // Enemigos voladores tácticos
-                enemyConfigs.push({ col: 32, type: 'koopa', fly: true });
-                enemyConfigs.push({ col: 44, type: 'goomba' });
+                enemyConfigs.push({ col: 68, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 138, type: 'koopa', fly: true });
             }
             if (worldIndex >= 5) {
-                enemyConfigs.push({ col: 18, type: 'goomba' });
-                enemyConfigs.push({ col: 58, type: 'koopa', fly: true });
-            }
-            if (worldIndex >= 7) {
-                enemyConfigs.push({ col: 26, type: 'koopa', fly: true });
-                enemyConfigs.push({ col: 66, type: 'koopa' });
+                enemyConfigs.push({ col: 110, type: 'koopa', fly: true });
+                enemyConfigs.push({ col: 150, type: 'koopa', fly: true });
             }
 
             enemyConfigs.forEach(cfg => {
-                if (cfg.col < mapWidth - 16) {
+                if (cfg.col < mapWidth - 18) {
                     enemies.push({
                         x: cfg.col * 32,
                         y: cfg.fly ? (groundRow - 3.5) * 32 : (groundRow - 1) * 32,
@@ -339,44 +425,45 @@ class LevelBuilder {
                 }
             });
 
-            // 6. BANDERA DE META Y CASTILLO FINAL (100% TRANSITABLE SIN BLOQUES INVISIBLES)
-            const flagCol = mapWidth - 9; // Columna 76
-            // Mástil de meta: Tile 10 desde fila 1 hasta fila 5 (NO es bloque sólido para que Astro lo toque suavemente)
+            // 7. BANDERA DE META Y CASTILLO AL FINAL DE LOS 190 BLOQUES
+            const flagCol = mapWidth - 10;   // Columna 180
+            const castleCol = mapWidth - 5;  // Columna 185
+
+            // Mástil de meta: Tile 10 desde fila 1 hasta fila 5
             for (let r = groundRow - 5; r < groundRow; r++) {
                 grid[r][flagCol] = 10;
             }
 
-            // Castillo de llegada clásico con puerta abierta
-            const castleCol = mapWidth - 5; // Columna 80
+            // Castillo final con puerta abierta
             for (let r = groundRow - 3; r < groundRow; r++) {
                 for (let c = castleCol; c < castleCol + 3; c++) {
-                    grid[r][c] = 12; // Muro del castillo
+                    grid[r][c] = 12;
                 }
             }
-            // Almenas del castillo
+            // Almenas
             grid[groundRow - 4][castleCol] = 12;
             grid[groundRow - 4][castleCol + 2] = 12;
-            // Puerta del castillo (Tile 11: arco abierto transitable)
+            // Puerta
             grid[groundRow - 1][castleCol + 1] = 11;
-        }
 
-        return {
-            world,
-            worldIndex,
-            levelIndex,
-            isBossLevel,
-            mapWidth,
-            mapHeight,
-            grid,
-            enemies,
-            coins,
-            boss,
-            spawnX: 3 * 32,
-            spawnY: (groundRow - 1) * 32,
-            flagCol: mapWidth - 9,
-            flagX: (mapWidth - 9) * 32,
-            castleX: (mapWidth - 5) * 32
-        };
+            return {
+                world,
+                worldIndex,
+                levelIndex,
+                isBossLevel: false,
+                mapWidth,
+                mapHeight,
+                grid,
+                enemies,
+                coins,
+                boss: null,
+                spawnX: 3 * 32,
+                spawnY: (groundRow - 1) * 32,
+                flagCol,
+                flagX: flagCol * 32,
+                castleX: castleCol * 32
+            };
+        }
     }
 }
 

@@ -785,11 +785,12 @@ let bossProjectiles = [];
 
 function updateBoss() {
     const b = bossEntity;
+    const arenaLeft = (levelData.bossArenaCol || 53) * TILE_SIZE;
     b.vy += 0.35;
     b.x += b.vx;
 
-    if (b.x < 53 * TILE_SIZE) {
-        b.x = 53 * TILE_SIZE;
+    if (b.x < arenaLeft) {
+        b.x = arenaLeft;
         b.vx = Math.abs(b.vx);
     }
     if (b.x > (levelData.mapWidth - 3) * TILE_SIZE) {
@@ -835,7 +836,7 @@ function updateBoss() {
             bossProjectiles.splice(i, 1);
             continue;
         }
-        if (bp.x < 50 * TILE_SIZE || bp.x > levelData.mapWidth * TILE_SIZE) {
+        if (bp.x < (arenaLeft - 3 * TILE_SIZE) || bp.x > levelData.mapWidth * TILE_SIZE) {
             bossProjectiles.splice(i, 1);
         }
     }
