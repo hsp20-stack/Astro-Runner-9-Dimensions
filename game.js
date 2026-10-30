@@ -1772,44 +1772,96 @@ function renderThemedBackdrop() {
         }
 
     } else {
-        // === MUNDO 1: COLINAS VERDES SUPER MARIO ===
-        ctx.fillStyle = '#86efac';
+        // ==========================================
+        // === MUNDO 1: BOSQUE ENCANTADO VERDE (FOREST PARALLAX 2026) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Capa 1: Cordillera lejana de montañas boscosas azules y bruma
+        ctx.fillStyle = '#1e3a8a';
         for (let i = 0; i < 4; i++) {
-            const hx = ((i * 240) - bgOffset * 0.4) % (VIEW_WIDTH * 2.2);
+            const mx = ((i * 260) - bgOffset * 0.2) % (VIEW_WIDTH * 2.2);
             ctx.beginPath();
-            ctx.arc(hx, 192, 85, Math.PI, 0, false);
+            ctx.moveTo(mx - 80, 192);
+            ctx.lineTo(mx + 50, 75);
+            ctx.lineTo(mx + 180, 192);
+            ctx.closePath();
             ctx.fill();
         }
 
-        ctx.fillStyle = '#22c55e';
-        for (let i = 0; i < 5; i++) {
-            const hx = ((i * 180 + 60) - bgOffset * 0.8) % (VIEW_WIDTH * 2.2);
+        // 2. Capa 2: Bosque lejano con copas de pinos y robles gigantes
+        ctx.fillStyle = '#14532d';
+        for (let i = 0; i < 7; i++) {
+            const tx = ((i * 120 + 30) - bgOffset * 0.45) % (VIEW_WIDTH * 2.2);
+            // Tronco lejano
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(tx + 18, 120, 12, 72);
+            // Follaje piramidal denso
+            ctx.fillStyle = '#14532d';
             ctx.beginPath();
-            ctx.arc(hx, 192, 55, Math.PI, 0, false);
+            ctx.moveTo(tx - 10, 140);
+            ctx.lineTo(tx + 24, 70);
+            ctx.lineTo(tx + 58, 140);
+            ctx.closePath();
             ctx.fill();
-
-            // Ojos negros de las colinas (sello inconfundible de Mario)
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(hx - 12, 155, 3, 9);
-            ctx.fillRect(hx + 9, 155, 3, 9);
-            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.moveTo(tx - 5, 120);
+            ctx.lineTo(tx + 24, 55);
+            ctx.lineTo(tx + 53, 120);
+            ctx.closePath();
+            ctx.fill();
         }
 
-        ctx.fillStyle = '#ffffff';
+        // 3. Capa 3: Árboles frondosos en plano medio con volumen y ramas
         for (let i = 0; i < 5; i++) {
-            const cx = ((i * 180) - bgOffset * 1.6) % (VIEW_WIDTH * 2);
-            const cy = 35 + (i % 2) * 25;
+            const fx = ((i * 170 + 70) - bgOffset * 0.8) % (VIEW_WIDTH * 2.2);
+            // Tronco de madera con textura
+            const trunkGrad = ctx.createLinearGradient(fx + 16, 0, fx + 32, 0);
+            trunkGrad.addColorStop(0, '#451a03');
+            trunkGrad.addColorStop(0.5, '#78350f');
+            trunkGrad.addColorStop(1, '#291003');
+            ctx.fillStyle = trunkGrad;
+            ctx.fillRect(fx + 16, 110, 16, 82);
+
+            // Ramas
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(fx + 28, 130, 14, 5);
+            ctx.fillRect(fx + 6, 140, 12, 5);
+
+            // Copas de follaje verde esmeralda exuberante
+            const foliageGrad = ctx.createRadialGradient(fx + 24, 85, 8, fx + 24, 85, 38);
+            foliageGrad.addColorStop(0, '#4ade80');
+            foliageGrad.addColorStop(0.5, '#16a34a');
+            foliageGrad.addColorStop(1, '#064e3b');
+            ctx.fillStyle = foliageGrad;
+
+            ctx.beginPath();
+            ctx.arc(fx + 24, 90, 32, 0, Math.PI * 2);
+            ctx.arc(fx + 6, 80, 24, 0, Math.PI * 2);
+            ctx.arc(fx + 42, 80, 24, 0, Math.PI * 2);
+            ctx.arc(fx + 24, 60, 26, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Destello de sol filtrado en las hojas superiores
+            ctx.fillStyle = 'rgba(254, 240, 138, 0.25)';
+            ctx.beginPath();
+            ctx.ellipse(fx + 24, 55, 14, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 4. Nubes suaves de bosque con viento
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        for (let i = 0; i < 4; i++) {
+            const cx = ((i * 210 + 40) - bgOffset * 1.3) % (VIEW_WIDTH * 2.1);
+            const cy = 28 + (i % 2) * 22;
             ctx.beginPath();
             ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-            ctx.arc(cx + 14, cy - 6, 12, 0, Math.PI * 2);
+            ctx.arc(cx + 14, cy - 6, 13, 0, Math.PI * 2);
             ctx.arc(cx + 28, cy, 14, 0, Math.PI * 2);
             ctx.fill();
-
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(cx + 10, cy - 2, 2, 5);
-            ctx.fillRect(cx + 16, cy - 2, 2, 5);
-            ctx.fillStyle = '#ffffff';
         }
+
+        ctx.restore();
     }
 }
 

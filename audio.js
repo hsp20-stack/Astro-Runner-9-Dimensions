@@ -314,6 +314,35 @@ class SoundManager {
         }
     }
 
+    playPlayerDie() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const melody = [
+                { f: 493.88, d: 0.12 },
+                { f: 466.16, d: 0.12 },
+                { f: 440.00, d: 0.12 },
+                { f: 349.23, d: 0.28 }
+            ];
+            let offset = 0;
+            melody.forEach(n => {
+                const now = this.ctx.currentTime + offset;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, now);
+                gain.gain.setValueAtTime(0.24, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + n.d);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + n.d);
+                offset += n.d;
+            });
+        } catch (e) {}
+    }
+
     playGameOver() {
         if (this.muted) return;
         this.stopMusic();
@@ -369,13 +398,6 @@ class SoundManager {
         this.isBossMusic = isBoss;
         this.stopMusic();
         this.musicPlaying = true;
-
-        // Frecuencias exactas en Hz para todas las octavas (2 a 6)
-        const C2 = 65.41, Cs2 = 69.30, Db2 = 69.30, D2 = 73.42, Ds2 = 77.78, Eb2 = 77.78, E2 = 82.41, F2 = 87.31, Fs2 = 92.50, Gb2 = 92.50, G2 = 98.00, Gs2 = 103.83, Ab2 = 103.83, A2 = 110.00, As2 = 116.54, Bb2 = 116.54, B2 = 123.47;
-        const C3 = 130.81, Cs3 = 138.59, Db3 = 138.59, D3 = 146.83, Ds3 = 155.56, Eb3 = 155.56, E3 = 164.81, F3 = 174.61, Fs3 = 185.00, Gb3 = 185.00, G3 = 196.00, Gs3 = 207.65, Ab3 = 207.65, A3 = 220.00, As3 = 233.08, Bb3 = 233.08, B3 = 246.94;
-        const C4 = 261.63, Cs4 = 277.18, Db4 = 277.18, D4 = 293.66, Ds4 = 311.13, Eb4 = 311.13, E4 = 329.63, F4 = 349.23, Fs4 = 369.99, Gb4 = 369.99, G4 = 392.00, Gs4 = 415.30, Ab4 = 415.30, A4 = 440.00, As4 = 466.16, Bb4 = 466.16, B4 = 493.88;
-        const C5 = 523.25, Cs5 = 554.37, Db5 = 554.37, D5 = 587.33, Ds5 = 622.25, Eb5 = 622.25, E5 = 659.25, F5 = 698.46, Fs5 = 739.99, Gb5 = 739.99, G5 = 783.99, Gs5 = 830.61, Ab5 = 830.61, A5 = 880.00, As5 = 932.33, Bb5 = 932.33, B5 = 987.77;
-        const C6 = 1046.50, Cs6 = 1108.73, Db6 = 1108.73, D6 = 1174.66, Ds6 = 1244.51, Eb6 = 1244.51, E6 = 1318.51, F6 = 1396.91, Fs6 = 1479.98, Gb6 = 1479.98, G6 = 1567.98, Gs6 = 1661.22, Ab6 = 1661.22, A6 = 1760.00, As6 = 1864.66, Bb6 = 1864.66, B6 = 1975.53;
 
         // ==========================================
         // 1. SUPER MARIO 64 - BOB-OMB BATTLEFIELD (TEMA PRINCIPAL)
@@ -480,21 +502,37 @@ class SoundManager {
         ];
 
         // ==========================================
-        // 6. ZELDA: OCARINA OF TIME - VALLE GERUDO (DESIERTO)
+        // 6. ZELDA: OCARINA OF TIME - VALLE GERUDO (TEMA ÉPICO Y DINÁMICO)
         // ==========================================
         const gerudoValley = [
-            { f: Fs4, d: 0.14, b: D3 },
-            { f: B4,  d: 0.14, b: B3 },
-            { f: Cs5, d: 0.14, b: Fs3 },
-            { f: D5,  d: 0.28, b: B3 },
-            { f: E5,  d: 0.14, b: G3 },
-            { f: D5,  d: 0.14, b: D3 },
-            { f: Cs5, d: 0.28, b: A3 },
-            { f: B4,  d: 0.14, b: B3 },
-            { f: A4,  d: 0.14, b: Fs3 },
-            { f: B4,  d: 0.28, b: B3 },
-            { f: Cs5, d: 0.28, b: A3 },
-            { f: Fs4, d: 0.45, b: D3 },
+            // Compás 1: Motivo rítmico apasionado
+            { f: Fs4, d: 0.13, b: D3 },
+            { f: B4,  d: 0.13, b: B3 },
+            { f: Cs5, d: 0.13, b: Fs3 },
+            { f: D5,  d: 0.26, b: B3 },
+            { f: E5,  d: 0.13, b: G3 },
+            { f: D5,  d: 0.13, b: D3 },
+            { f: Cs5, d: 0.26, b: A3 },
+            { f: B4,  d: 0.13, b: B3 },
+            { f: A4,  d: 0.13, b: Fs3 },
+            { f: B4,  d: 0.26, b: B3 },
+            { f: Cs5, d: 0.26, b: A3 },
+            { f: Fs4, d: 0.40, b: D3 },
+            { f: 0,   d: 0.06, b: 0  },
+
+            // Compás 2: Desarrollo triunfal melódico
+            { f: Fs4, d: 0.13, b: D3 },
+            { f: B4,  d: 0.13, b: B3 },
+            { f: Cs5, d: 0.13, b: Fs3 },
+            { f: D5,  d: 0.26, b: B3 },
+            { f: E5,  d: 0.13, b: G3 },
+            { f: Fs5, d: 0.26, b: D3 },
+            { f: E5,  d: 0.13, b: G3 },
+            { f: D5,  d: 0.13, b: D3 },
+            { f: Cs5, d: 0.26, b: A3 },
+            { f: B4,  d: 0.13, b: B3 },
+            { f: Cs5, d: 0.26, b: A3 },
+            { f: B4,  d: 0.45, b: B3 },
             { f: 0,   d: 0.08, b: 0  }
         ];
 
@@ -560,10 +598,10 @@ class SoundManager {
         ];
 
         // Asignación de música exclusiva según el Mundo (1 al 9)
-        let worldSoundtrack = sm64Theme;
+        let worldSoundtrack = gerudoValley;
         switch (Number(worldNum)) {
-            case 1: worldSoundtrack = sm64Theme; break;         // Mundo 1: Pradera Cósmica (Bob-omb Battlefield)
-            case 2: worldSoundtrack = gerudoValley; break;      // Mundo 2: Dunas Doradas (Zelda Gerudo Valley)
+            case 1: worldSoundtrack = gerudoValley; break;      // Mundo 1: Valle Gerudo (Zelda Ocarina of Time)
+            case 2: worldSoundtrack = sm64Theme; break;         // Mundo 2: Dunas Doradas (Super Mario 64)
             case 3: worldSoundtrack = sariasSong; break;        // Mundo 3: Caverna Neón (Zelda Lost Woods)
             case 4: worldSoundtrack = sunshineTheme; break;     // Mundo 4: Costa Caribeña (Mario Sunshine Delfino)
             case 5: worldSoundtrack = coolCoolMountain; break;  // Mundo 5: Cumbres Glaciales (SM64 Snow Mountain)
@@ -571,7 +609,7 @@ class SoundManager {
             case 7: worldSoundtrack = galaxyTheme; break;       // Mundo 7: Flota Celestial (Mario Galaxy Gusty Garden)
             case 8: worldSoundtrack = koopasRoad; break;        // Mundo 8: Fortaleza de Magma (SM64 Koopa's Road)
             case 9: worldSoundtrack = cometObservatory; break;  // Mundo 9: Reino Cósmico (Mario Galaxy Observatory)
-            default: worldSoundtrack = sm64Theme; break;
+            default: worldSoundtrack = gerudoValley; break;
         }
 
         // ==========================================
@@ -634,31 +672,33 @@ class SoundManager {
 
         const playNextNote = () => {
             if (!this.musicPlaying || this.muted) return;
+            let noteDuration = 0.2;
             try {
                 if (!this.ctx) return;
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
                 const note = sequence[index % sequence.length];
+                if (note && note.d) noteDuration = note.d;
                 const now = this.ctx.currentTime;
 
                 if (note && note.f > 0) {
-                    // Voz principal: Melodía rica y brillante con armónicos estilo Nintendo 64/GameCube
+                    // Voz principal: Melodía rica y brillante con armónicos estilo Nintendo
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
 
                     osc.type = isBoss ? 'sawtooth' : 'triangle';
                     osc.frequency.setValueAtTime(note.f, now);
 
-                    gain.gain.setValueAtTime(0.26, now); // Volumen principal bien claro y nítido
-                    gain.gain.exponentialRampToValueAtTime(0.012, now + note.d * 0.92);
+                    gain.gain.setValueAtTime(0.26, now);
+                    gain.gain.linearRampToValueAtTime(0.012, now + note.d * 0.92);
 
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
                     osc.start(now);
                     osc.stop(now + note.d * 0.95);
 
-                    // Línea de bajo rítmico (Bassline que marca el compás de Super Mario y Zelda)
+                    // Línea de bajo rítmico (Bassline de Super Mario y Zelda)
                     if (note.b && note.b > 0) {
                         const bassOsc = this.ctx.createOscillator();
                         const bassGain = this.ctx.createGain();
@@ -666,7 +706,7 @@ class SoundManager {
                         bassOsc.frequency.setValueAtTime(note.b, now);
 
                         bassGain.gain.setValueAtTime(0.19, now);
-                        bassGain.gain.exponentialRampToValueAtTime(0.01, now + note.d * 0.85);
+                        bassGain.gain.linearRampToValueAtTime(0.01, now + note.d * 0.85);
 
                         bassOsc.connect(bassGain);
                         bassGain.connect(this.ctx.destination);
@@ -674,11 +714,13 @@ class SoundManager {
                         bassOsc.stop(now + note.d * 0.88);
                     }
                 }
-
-                index++;
-                this.musicTimeout = setTimeout(playNextNote, (note ? note.d : 0.2) * 1000);
             } catch (err) {
                 console.error("Audio playback note note:", err);
+            } finally {
+                if (this.musicPlaying && !this.muted) {
+                    index++;
+                    this.musicTimeout = setTimeout(playNextNote, noteDuration * 1000);
+                }
             }
         };
 
