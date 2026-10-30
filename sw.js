@@ -1,12 +1,12 @@
 // sw.js - Service Worker Ultra-Rápido y Actualizable (Astro Runner 2026)
-const CACHE_NAME = 'astro-runner-v2026-v3';
+const CACHE_NAME = 'astro-runner-v2026-v14';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './style.css',
-    './game.js',
-    './levels.js',
-    './audio.js',
+    './style.css?v=2026v14',
+    './game.js?v=2026v14',
+    './levels.js?v=2026v14',
+    './audio.js?v=2026v14',
     './manifest.json',
     './icon.png'
 ];

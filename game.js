@@ -2375,144 +2375,251 @@ function drawGoldCoin(x, y) {
 }
 
 function drawCuteEnemy(x, y, type, isFlying = false) {
-    const walkCycle = Math.sin(Date.now() * 0.01 + x);
+    const walkCycle = Math.sin(Date.now() * 0.012 + x);
+    const theme = (levelData && levelData.world) ? levelData.world.theme : 'grassland';
 
-    // Alas cibernéticas animadas si es enemigo volador (Paratroopa)
+    // 1. Sombra suave bajo el enemigo en el suelo
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(x + 11, y + 21, isFlying ? 8 : 10, isFlying ? 2.5 : 3.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 2. Alas animadas ultranítidas para enemigos voladores (Paratroopa)
     if (isFlying) {
-        const wingFlap = Math.sin(Date.now() * 0.02) * 5;
-        ctx.fillStyle = '#ffffff';
+        const wingFlap = Math.sin(Date.now() * 0.025) * 6;
+        ctx.save();
         // Ala izquierda
+        const wingGradL = ctx.createLinearGradient(x - 5, y + wingFlap, x + 2, y + 10 + wingFlap);
+        wingGradL.addColorStop(0, '#ffffff');
+        wingGradL.addColorStop(1, '#93c5fd');
+        ctx.fillStyle = wingGradL;
         ctx.beginPath();
-        ctx.ellipse(x - 1, y + 6 + wingFlap, 5, 8, -0.4, 0, Math.PI * 2);
+        ctx.ellipse(x - 2, y + 5 + wingFlap, 6, 9, -0.45, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
+
         // Ala derecha
+        const wingGradR = ctx.createLinearGradient(x + 18, y - wingFlap, x + 26, y + 10 - wingFlap);
+        wingGradR.addColorStop(0, '#ffffff');
+        wingGradR.addColorStop(1, '#93c5fd');
+        ctx.fillStyle = wingGradR;
         ctx.beginPath();
-        ctx.ellipse(x + 19, y + 6 - wingFlap, 5, 8, 0.4, 0, Math.PI * 2);
+        ctx.ellipse(x + 23, y + 5 - wingFlap, 6, 9, 0.45, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
+        ctx.restore();
     }
 
     if (type === 'goomba') {
-        // === MECHA-GOOMBA AVANZADO (CHAMPIÑÓN ROBÓTICO DE ÉLITE) ===
-        // Pies mecánicos oscilantes
-        const leftFootY = y + 15 - (walkCycle > 0 ? walkCycle * 2.5 : 0);
-        const rightFootY = y + 15 - (walkCycle < 0 ? -walkCycle * 2.5 : 0);
-        ctx.fillStyle = '#0f172a'; // Acero negro carbón
-        ctx.fillRect(x + 2, leftFootY, 6, 5);
-        ctx.fillRect(x + 12, rightFootY, 6, 5);
-        ctx.fillStyle = '#38bdf8'; // Remache / diodo cian
-        ctx.fillRect(x + 4, leftFootY + 1, 2, 2);
-        ctx.fillRect(x + 14, rightFootY + 1, 2, 2);
+        // ==========================================
+        // GOOMBA SUPREMO (CHAMPIÑÓN RETRO CON VOLUMEN 3D Y EXPRESIÓN VIVA)
+        // ==========================================
+        ctx.save();
 
-        // Tallo / Mandíbula de aleación de bronce
-        ctx.fillStyle = '#fed7aa';
-        ctx.fillRect(x + 4, y + 9, 12, 7);
-        ctx.fillStyle = '#450a0a';
-        ctx.fillRect(x + 6, y + 14, 8, 2); // Boca abierta
+        // Color adaptativo por bioma para mayor variedad visual
+        let capTop = '#c2410c';
+        let capMid = '#9a3412';
+        let capBottom = '#431407';
+        let stemColor = '#ffedd5';
+        let stemShadow = '#fed7aa';
 
-        // Colmillos afilados amenazantes
-        ctx.fillStyle = '#ffffff';
+        if (theme === 'ice') {
+            capTop = '#0284c7'; capMid = '#0369a1'; capBottom = '#082f49';
+            stemColor = '#e0f2fe'; stemShadow = '#bae6fd';
+        } else if (theme === 'lava_castle') {
+            capTop = '#dc2626'; capMid = '#991b1b'; capBottom = '#450a0a';
+            stemColor = '#fecaca'; stemShadow = '#fca5a5';
+        } else if (theme === 'space') {
+            capTop = '#9333ea'; capMid = '#6b21a8'; capBottom = '#3b0764';
+            stemColor = '#f3e8ff'; stemShadow = '#e9d5ff';
+        }
+
+        // Pies animados con paso elástico natural
+        const leftFootY = y + 15 - (walkCycle > 0 ? walkCycle * 3.2 : 0);
+        const rightFootY = y + 15 - (walkCycle < 0 ? -walkCycle * 3.2 : 0);
+
+        // Pies marrones con bisel superior
+        ctx.fillStyle = '#1e1b4b';
         ctx.beginPath();
-        ctx.moveTo(x + 6, y + 16);
-        ctx.lineTo(x + 8, y + 13);
-        ctx.lineTo(x + 10, y + 16);
-        ctx.moveTo(x + 10, y + 16);
-        ctx.lineTo(x + 12, y + 13);
-        ctx.lineTo(x + 14, y + 16);
+        ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
         ctx.fill();
 
-        // Caparazón / Sombrero con volumen degradado
-        const capGrad = ctx.createLinearGradient(x, y, x, y + 11);
-        capGrad.addColorStop(0, '#ea580c');
-        capGrad.addColorStop(0.5, '#c2410c');
-        capGrad.addColorStop(1, '#7c2d12');
+        // Tallo / Cuerpo carnoso redondeado con sombreado esférico
+        const stemGrad = ctx.createRadialGradient(x + 11, y + 12, 2, x + 11, y + 14, 9);
+        stemGrad.addColorStop(0, stemColor);
+        stemGrad.addColorStop(0.75, stemShadow);
+        stemGrad.addColorStop(1, '#9a3412');
+        ctx.fillStyle = stemGrad;
+        ctx.beginPath();
+        ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cabeza / Sombrero en forma de campana piramidal con degradado rico
+        const capGrad = ctx.createRadialGradient(x + 9, y + 4, 2, x + 11, y + 8, 12);
+        capGrad.addColorStop(0, '#f97316');
+        capGrad.addColorStop(0.35, capTop);
+        capGrad.addColorStop(0.75, capMid);
+        capGrad.addColorStop(1, capBottom);
         ctx.fillStyle = capGrad;
+
         ctx.beginPath();
-        ctx.arc(x + 10, y + 8, 10, Math.PI, 0, false);
+        ctx.moveTo(x + 2, y + 10);
+        ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+        ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+        ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+        ctx.closePath();
         ctx.fill();
 
-        // Borde inferior reforzado del sombrero
-        ctx.fillStyle = '#9a3412';
-        ctx.fillRect(x + 1, y + 7, 18, 3);
-
-        // Cejas angulares negras agresivas
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 1.5;
+        // Brillo superior curvo en el sombrero (Specular highlight)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
         ctx.beginPath();
-        ctx.moveTo(x + 4, y + 8);
-        ctx.lineTo(x + 8, y + 10);
-        ctx.moveTo(x + 16, y + 8);
-        ctx.lineTo(x + 12, y + 10);
+        ctx.ellipse(x + 9, y + 2, 4, 1.8, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cejas amenazantes anguladas y marcadas
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + 4, y + 5);
+        ctx.lineTo(x + 10, y + 8);
+        ctx.moveTo(x + 18, y + 5);
+        ctx.lineTo(x + 12, y + 8);
         ctx.stroke();
 
-        // Ojos amenazantes con pupilas carmesí brillante
+        // Ojos expresivos con esclera blanca y pupilas con reflejo
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 5, y + 10, 3, 4);
-        ctx.fillRect(x + 12, y + 10, 3, 4);
-        ctx.fillStyle = '#dc2626';
-        ctx.fillRect(x + 6, y + 11, 2, 3);
-        ctx.fillRect(x + 13, y + 11, 2, 3);
+        ctx.beginPath();
+        ctx.ellipse(x + 7.5, y + 9.5, 2.5, 3.8, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(x + 14.5, y + 9.5, 2.5, 3.8, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pupilas negras con destello de vida
+        ctx.fillStyle = '#020617';
+        ctx.beginPath();
+        ctx.arc(x + 8.5, y + 9.5, 1.7, 0, Math.PI * 2);
+        ctx.arc(x + 13.5, y + 9.5, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 8, y + 8.5, 1, 1);
+        ctx.fillRect(x + 13, y + 8.5, 1, 1);
+
+        // Colmillos afilados inferiores que sobresalen
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(x + 6, y + 15);
+        ctx.lineTo(x + 7.5, y + 12);
+        ctx.lineTo(x + 9, y + 15);
+        ctx.moveTo(x + 13, y + 15);
+        ctx.lineTo(x + 14.5, y + 12);
+        ctx.lineTo(x + 16, y + 15);
+        ctx.fill();
+
+        ctx.restore();
 
     } else {
-        // === CYBER-KOOPA (TORTUGA ACORAZADA TÁCTICA) ===
-        // Patas reptilianas animadas con zancada
-        const legFrontY = y + 14 - (walkCycle > 0 ? walkCycle * 2 : 0);
-        const legBackY = y + 14 - (walkCycle < 0 ? -walkCycle * 2 : 0);
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(x + 2, legFrontY, 5, 5);
-        ctx.fillRect(x + 13, legBackY, 5, 5);
-        ctx.fillStyle = '#ffffff'; // Garras
-        ctx.fillRect(x + 1, legFrontY + 3, 2, 2);
-        ctx.fillRect(x + 12, legBackY + 3, 2, 2);
+        // ==========================================
+        // KOOPA TROOPA SUPREMO (TORTUGA CON CAPARAZÓN 3D POLICROMADO Y ANIMACIÓN VIVA)
+        // ==========================================
+        ctx.save();
 
-        // Caparazón 3D con sombreado esmeralda
-        const shellGrad = ctx.createLinearGradient(x + 3, y + 2, x + 3, y + 16);
-        shellGrad.addColorStop(0, '#22c55e');
-        shellGrad.addColorStop(0.7, '#16a34a');
-        shellGrad.addColorStop(1, '#14532d');
-        ctx.fillStyle = shellGrad;
+        // Patas reptilianas animadas con zancada dinámica
+        const legFrontY = y + 14 - (walkCycle > 0 ? walkCycle * 2.8 : 0);
+        const legBackY = y + 14 - (walkCycle < 0 ? -walkCycle * 2.8 : 0);
+
+        // Pies anaranjados/amarillos con volumen
+        ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.ellipse(x + 10, y + 9, 8, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 4, legFrontY + 3, 4.5, 3.2, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + 16, legBackY + 3, 4.5, 3.2, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Borde exterior blanco reforzado
-        ctx.strokeStyle = '#f8fafc';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Placas hexagonales del caparazón
-        ctx.strokeStyle = '#15803d';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x + 10, y + 3);
-        ctx.lineTo(x + 10, y + 15);
-        ctx.moveTo(x + 4, y + 9);
-        ctx.lineTo(x + 16, y + 9);
-        ctx.stroke();
-
-        // Cabeza táctica con visor cibernético
-        ctx.fillStyle = '#fde047';
-        ctx.fillRect(x + 13, y + 3, 7, 7);
-        // Pico anaranjado
-        ctx.fillStyle = '#ea580c';
-        ctx.fillRect(x + 18, y + 6, 3, 3);
-
-        // Visor de combate cian brillante
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x + 14, y + 4, 4, 3);
+        // Uñas blancas
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 15, y + 4, 1, 1);
+        ctx.fillRect(x + 1, legFrontY + 2, 2, 2);
+        ctx.fillRect(x + 13, legBackY + 2, 2, 2);
 
-        // Cola puntiaguda
-        ctx.fillStyle = '#facc15';
+        // Caparazón esférico 3D con degradado esmeralda de alta definición
+        let shellColor1 = '#4ade80';
+        let shellColor2 = '#16a34a';
+        let shellColor3 = '#064e3b';
+        if (theme === 'lava_castle') {
+            shellColor1 = '#f87171'; shellColor2 = '#dc2626'; shellColor3 = '#7f1d1d';
+        } else if (theme === 'desert') {
+            shellColor1 = '#fbbf24'; shellColor2 = '#d97706'; shellColor3 = '#78350f';
+        }
+
+        const shellGrad = ctx.createRadialGradient(x + 9, y + 6, 2, x + 11, y + 9, 11);
+        shellGrad.addColorStop(0, shellColor1);
+        shellGrad.addColorStop(0.5, shellColor2);
+        shellGrad.addColorStop(1, shellColor3);
+        ctx.fillStyle = shellGrad;
+
         ctx.beginPath();
-        ctx.moveTo(x + 3, y + 11);
-        ctx.lineTo(x - 1, y + 13);
-        ctx.lineTo(x + 3, y + 14);
+        ctx.ellipse(x + 10, y + 8.5, 9, 8, -0.1, 0, Math.PI * 2);
         ctx.fill();
+
+        // Reborde blanco acolchado del caparazón con relieve
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+
+        // Patrón de placas poligonales del caparazón con brillo
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.ellipse(x + 10, y + 8.5, 5, 4.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Cabeza con pico amarillo y cuello retráctil
+        const headGrad = ctx.createRadialGradient(x + 16, y + 2, 2, x + 17, y + 5, 6);
+        headGrad.addColorStop(0, '#fef08a');
+        headGrad.addColorStop(1, '#eab308');
+        ctx.fillStyle = headGrad;
+        ctx.beginPath();
+        ctx.arc(x + 16, y + 4.5, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pico característico anaranjado
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(x + 19, y + 4);
+        ctx.lineTo(x + 23, y + 6);
+        ctx.lineTo(x + 18, y + 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ojo grande expresivo
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(x + 16, y + 3.5, 2.5, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(x + 16.5, y + 3.5, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 16, y + 2.5, 1, 1);
+
+        // Cola puntiaguda animada
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.moveTo(x + 2, y + 9);
+        ctx.lineTo(x - 2, y + 11);
+        ctx.lineTo(x + 2, y + 12);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
     }
 }
 
