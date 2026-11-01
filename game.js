@@ -166,6 +166,11 @@ function loadLevel(worldNum, levelNum) {
     saveState.currentLevel = levelNum;
     saveProgress(saveState);
 
+    // Sincronizar cambio de nivel en modo online (si soy anfitrión)
+    if (window.OnlineManager && window.OnlineManager.isOnline && window.OnlineManager.isHost) {
+        window.OnlineManager.sendLevelSync(worldNum, levelNum);
+    }
+
     levelData = LevelBuilder.generateLevel(worldNum, levelNum);
 
     // Colocar a Astro justo sobre el césped
@@ -445,6 +450,11 @@ function updateGame(dt) {
     // Llave / Hiper-Núcleo del Boss
     if (victoryCoreDropped) {
         updateVictoryCore();
+    }
+
+    // Sincronización Online Multijugador (60 FPS)
+    if (window.OnlineManager && window.OnlineManager.isOnline) {
+        window.OnlineManager.update(dt);
     }
 
     updateParticles();
@@ -745,15 +755,21 @@ function spawnPlasmaShot() {
     if (activePlasmaShots.length >= 3) return;
     window.sounds.playFireball();
     const dir = astro.facing === 'right' ? 1 : -1;
+    const shotX = astro.x + (dir > 0 ? astro.w : -8);
+    const shotY = astro.y + astro.h / 2;
+    const shotVx = dir * 5.8;
     activePlasmaShots.push({
-        x: astro.x + (dir > 0 ? astro.w : -8),
-        y: astro.y + astro.h / 2,
+        x: shotX,
+        y: shotY,
         w: 10,
         h: 10,
-        vx: dir * 5.8,
+        vx: shotVx,
         vy: 0.5,
         bounces: 0
     });
+    if (window.OnlineManager && window.OnlineManager.isOnline) {
+        window.OnlineManager.sendPlasmaShot(shotX, shotY, shotVx);
+    }
 }
 
 function updatePlasmaShots() {
@@ -882,6 +898,9 @@ function updateEnemies() {
             if (!astro.isDying && checkAABB(astro, { x: e.x, y: e.y, w: 22, h: 20 })) {
                 if (astro.vy > 0 && (astro.y + astro.h - astro.vy) <= e.y + 12) {
                     e.alive = false;
+                    if (window.OnlineManager && window.OnlineManager.isOnline) {
+                        window.OnlineManager.sendEnemyDefeat(i);
+                    }
                     astro.vy = -6.0;
                     score += 200;
                     triggerScreenShake(3.5);
@@ -1331,6 +1350,11 @@ function render() {
         if (!astro.isDying || astro.deathTimer < 110) {
             drawAstroModern();
         }
+    }
+
+    // Jugador Remoto Online (Amigo / Familiar jugando a distancia)
+    if (window.OnlineManager && window.OnlineManager.isOnline) {
+        window.OnlineManager.drawRemotePlayer(ctx, cameraX);
     }
 
     // Partículas con Bloom, suavizado y desvanecimiento dinámico

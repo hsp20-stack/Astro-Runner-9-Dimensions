@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=2026v27">
+    <link rel="stylesheet" href="style.css?v=2026v28">
     <!-- Fallback ultraseguro para evitar pantalla negra en Safari -->
     <script>
         window.sounds = window.sounds || {
@@ -99,6 +99,34 @@
             var m = document.getElementById('modalSettings');
             if (m) m.classList.add('hidden');
         }
+
+        function openOnlineModal() {
+            var m = document.getElementById('modalOnline');
+            if (m) m.classList.remove('hidden');
+        }
+
+        function closeOnlineModal() {
+            var m = document.getElementById('modalOnline');
+            if (m) m.classList.add('hidden');
+        }
+
+        function switchOnlineTab(tab) {
+            var btnCreate = document.getElementById('tabCreateBtn');
+            var btnJoin = document.getElementById('tabJoinBtn');
+            var panelCreate = document.getElementById('panelCreateRoom');
+            var panelJoin = document.getElementById('panelJoinRoom');
+            if (tab === 'create') {
+                if (btnCreate) btnCreate.classList.add('active');
+                if (btnJoin) btnJoin.classList.remove('active');
+                if (panelCreate) panelCreate.classList.remove('hidden');
+                if (panelJoin) panelJoin.classList.add('hidden');
+            } else {
+                if (btnCreate) btnCreate.classList.remove('active');
+                if (btnJoin) btnJoin.classList.add('active');
+                if (panelCreate) panelCreate.classList.add('hidden');
+                if (panelJoin) panelJoin.classList.remove('hidden');
+            }
+        }
     </script>
 </head>
 <body>
@@ -147,7 +175,10 @@
             <!-- Botones Principales -->
             <div class="menu-buttons-list">
                 <button id="btnPlayGame" class="menu-btn primary-btn" onclick="startGameFromMenu()">
-                    <span class="btn-icon">▶</span> JUGAR (MUNDO 1)
+                    <span class="btn-icon">▶</span> JUGAR SOLO
+                </button>
+                <button id="btnOpenOnlineMenu" class="menu-btn online-pulse-btn" onclick="openOnlineModal()">
+                    <span class="btn-icon">🌐</span> MODO ONLINE CON AMIGOS
                 </button>
                 <button id="btnOpenWorldSelectMenu" class="menu-btn highlight-btn" onclick="openWorldSelector()">
                     <span class="btn-icon">🌍</span> ELEGIR MUNDO (1 AL 9)
@@ -236,6 +267,60 @@
         </div>
     </div>
 
+    <!-- MODAL MODO ONLINE CON AMIGOS -->
+    <div id="modalOnline" class="modal-overlay hidden">
+        <div class="modal-card online-card">
+            <div class="modal-header">
+                <h2>🌐 MODO ONLINE CON AMIGOS</h2>
+                <button class="close-x-btn" onclick="closeOnlineModal()">✖</button>
+            </div>
+            
+            <div class="online-tabs-nav">
+                <button id="tabCreateBtn" class="online-tab-btn active" onclick="switchOnlineTab('create')">
+                    👑 CREAR SALA
+                </button>
+                <button id="tabJoinBtn" class="online-tab-btn" onclick="switchOnlineTab('join')">
+                    🚀 UNIRSE CON CÓDIGO
+                </button>
+            </div>
+
+            <!-- Pestaña 1: Crear Sala -->
+            <div id="panelCreateRoom" class="online-tab-panel">
+                <p class="online-desc">Crea una sala privada y juega en cooperativo en tiempo real con un amigo o familiar desde cualquier parte del mundo.</p>
+                <button class="retro-btn online-primary-btn" onclick="OnlineManager.createRoom()">
+                    ⚡ GENERAR SALA PRIVADA
+                </button>
+
+                <div id="roomCodeDisplayCard" class="room-code-card hidden">
+                    <span class="code-title">CÓDIGO DE TU SALA:</span>
+                    <div class="room-code-badge" id="roomCodeText">----</div>
+                    <p class="code-subtext">Dile este código a tu amigo o envíale el enlace directo:</p>
+                    <button class="whatsapp-btn" onclick="OnlineManager.copyInviteLink()">
+                        📋 COPIAR ENLACE PARA WHATSAPP
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pestaña 2: Unirse a Sala -->
+            <div id="panelJoinRoom" class="online-tab-panel hidden">
+                <p class="online-desc">Escribe el código de 4 letras que te ha compartido tu amigo:</p>
+                <div class="join-input-group">
+                    <input type="text" id="inputRoomCode" placeholder="EJ: 8K2M" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+                    <button class="retro-btn online-primary-btn" onclick="OnlineManager.joinRoom(document.getElementById('inputRoomCode').value)">
+                        CONECTAR ▶
+                    </button>
+                </div>
+            </div>
+
+            <!-- Caja de Estado / Mensaje de conexión -->
+            <div id="onlineStatusMsg" class="online-status-box idle">
+                Elige crear una sala o unirte a la de un amigo.
+            </div>
+
+            <button class="retro-btn secondary" onclick="closeOnlineModal()">VOLVER</button>
+        </div>
+    </div>
+
     <!-- 3. CONTENEDOR DEL JUEGO -->
     <div id="gameContainer">
         <!-- HUD LIMPIO Y ESPACIADO EN LAS ESQUINAS -->
@@ -263,6 +348,20 @@
                 <span class="badge-icon">⏰</span>
                 <span id="uiTime" class="badge-val">300</span>
             </div>
+        </div>
+
+        <!-- Pastilla de Estado Online en HUD -->
+        <div id="onlineHudPill" class="online-hud-pill hidden">
+            <span class="pulse-dot"></span>
+            <span id="onlineHudText">ONLINE · CO-OP</span>
+        </div>
+
+        <!-- Barra de Emotes rápidos para multijugador -->
+        <div id="quickEmoteBar" class="quick-emote-bar hidden">
+            <button class="emote-btn" onclick="OnlineManager.sendEmote('👋')" title="Saludar">👋</button>
+            <button class="emote-btn" onclick="OnlineManager.sendEmote('🚀')" title="¡Vamos!">🚀</button>
+            <button class="emote-btn" onclick="OnlineManager.sendEmote('⭐')" title="¡Bien hecho!">⭐</button>
+            <button class="emote-btn" onclick="OnlineManager.sendEmote('🎉')" title="¡Celebrar!">🎉</button>
         </div>
 
         <!-- Botones de Utilidades pequeños y discretos -->
@@ -345,14 +444,17 @@
         </div>
     </div>
 
+    <!-- PeerJS WebRTC P2P para multijugador online sin servidor -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <!-- Scripts con Cache-Buster para Safari iOS -->
-    <script src="audio.js?v=2026v27"></script>
-    <script src="levels.js?v=2026v27"></script>
-    <script src="game.js?v=2026v27"></script>
+    <script src="audio.js?v=2026v28"></script>
+    <script src="levels.js?v=2026v28"></script>
+    <script src="multiplayer.js?v=2026v28"></script>
+    <script src="game.js?v=2026v28"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=2026v27').then(function(reg) {
+                navigator.serviceWorker.register('sw.js?v=2026v28').then(function(reg) {
                     reg.update();
                 }).catch(err => {
                     console.log('SW note:', err);
