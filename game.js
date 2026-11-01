@@ -3217,154 +3217,376 @@ function renderWavingFlag() {
 }
 
 // ==========================================
-// DIBUJO DE TILES ESTILO 2026 (AAA 2.5D PLATFORMS)
+// DIBUJO DE TILES ESTILO 2026 ADAPTATIVO A LOS 9 MUNDOS (AAA 2.5D PLATFORMS)
 // ==========================================
 function drawMarioTile(tile, x, y, c, r) {
+    const theme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
+
     if (tile === 1) {
-        // === 1. TIERRA ORGÁNICA ESTRATIFICADA CON CÉSPED 2.5D (2026 AAA GRAPHICS) ===
-        // Sombra de oclusión ambiental proyectada bajo el bloque si flota
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        // === 1. SUPERFICIE SUPERIOR (ADAPTATIVA A CADA MUNDO) ===
+        // Sombra de oclusión ambiental bajo el bloque
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
         ctx.fillRect(x + 2, y + TILE_SIZE, TILE_SIZE - 4, 5);
 
-        // Bloque de tierra con degradado vertical de profundidad
-        const dirtGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
-        dirtGrad.addColorStop(0, levelData.world.dirtColor);
-        dirtGrad.addColorStop(1, '#2b0c03');
-        ctx.fillStyle = dirtGrad;
-        ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+        if (theme === 'desert') {
+            // --- MUNDO 2: DUNAS DE ARENA DORADA Y ARENISCA EGIPCIA ---
+            // Base de arenisca chiseled
+            const sandGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            sandGrad.addColorStop(0, '#d97706');
+            sandGrad.addColorStop(0.5, '#b45309');
+            sandGrad.addColorStop(1, '#78350f');
+            ctx.fillStyle = sandGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
 
-        // Minerales y guijarros incrustados con relieve y luz especular
-        ctx.fillStyle = levelData.world.dirtPattern;
-        ctx.beginPath();
-        ctx.ellipse(x + 7, y + 20, 4, 3, 0.2, 0, Math.PI * 2);
-        ctx.ellipse(x + 22, y + 24, 5, 3.5, -0.3, 0, Math.PI * 2);
-        ctx.fill();
+            // Capa superior de arena ondulante por el viento
+            const topSand = ctx.createLinearGradient(x, y, x, y + 12);
+            topSand.addColorStop(0, '#fef08a');
+            topSand.addColorStop(0.4, '#f59e0b');
+            topSand.addColorStop(1, '#d97706');
+            ctx.fillStyle = topSand;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
 
-        // Destello especular en los minerales
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.fillRect(x + 6, y + 19, 2, 1);
-        ctx.fillRect(x + 21, y + 23, 2, 1);
+            // Ondulaciones de duna en el borde
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+            ctx.fill();
 
-        // Sombra suave proyectada bajo el faldón de hierba
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
-        ctx.beginPath();
-        ctx.arc(x + 6, y + 13, 5, 0, Math.PI);
-        ctx.arc(x + 16, y + 13, 5, 0, Math.PI);
-        ctx.arc(x + 26, y + 13, 5, 0, Math.PI);
-        ctx.fill();
+            // Destello de arena brillante
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(x, y, TILE_SIZE, 2);
+            ctx.fillRect(x + 6, y + 5, 2, 2);
+            ctx.fillRect(x + 20, y + 4, 2, 2);
 
-        // Capa de césped superior con degradado tridimensional
-        const grassGrad = ctx.createLinearGradient(x, y, x, y + 12);
-        grassGrad.addColorStop(0, levelData.world.grassHighlight);
-        grassGrad.addColorStop(0.35, levelData.world.grassColor);
-        grassGrad.addColorStop(1, '#14532d');
-        ctx.fillStyle = grassGrad;
-        ctx.fillRect(x, y, TILE_SIZE, 11);
+        } else if (theme === 'neon_cave') {
+            // --- MUNDO 3: ROCA OBSIDIANA CON COSTRA DE CRISTAL NEÓN VIOLETA Y CIAN ---
+            const caveGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            caveGrad.addColorStop(0, '#1e1b4b');
+            caveGrad.addColorStop(1, '#090518');
+            ctx.fillStyle = caveGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
 
-        // Lóbulos redondeados colgantes de hierba
-        ctx.beginPath();
-        ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
-        ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
-        ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
-        ctx.fill();
+            // Costra de cristales fluorescentes
+            const crystalGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            crystalGrad.addColorStop(0, '#00f2fe');
+            crystalGrad.addColorStop(0.5, '#a855f7');
+            crystalGrad.addColorStop(1, '#581c87');
+            ctx.fillStyle = crystalGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 10);
 
-        // Borde superior biselado brillante (Rim Light 2026)
-        ctx.fillStyle = levelData.world.grassHighlight;
-        ctx.fillRect(x, y, TILE_SIZE, 2.5);
+            // Espuelas afiladas de cristal neón
+            ctx.fillStyle = '#00f2fe';
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y); ctx.lineTo(x + 7, y - 4); ctx.lineTo(x + 10, y);
+            ctx.moveTo(x + 14, y); ctx.lineTo(x + 17, y - 5); ctx.lineTo(x + 20, y);
+            ctx.moveTo(x + 22, y); ctx.lineTo(x + 26, y - 4); ctx.lineTo(x + 29, y);
+            ctx.fill();
 
-        // Briznas de hierba animadas que ondean suavemente con el viento
-        const wind = Math.sin(Date.now() * 0.003 + c * 0.7) * 2;
-        ctx.strokeStyle = levelData.world.grassHighlight;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(x + 4, y);
-        ctx.lineTo(x + 6 + wind, y - 4);
-        ctx.moveTo(x + 14, y);
-        ctx.lineTo(x + 16 + wind, y - 5);
-        ctx.moveTo(x + 24, y);
-        ctx.lineTo(x + 26 + wind, y - 4);
-        ctx.stroke();
+            // Borde neón pulsante
+            ctx.fillStyle = '#e0f2fe';
+            ctx.fillRect(x, y, TILE_SIZE, 2);
+
+        } else if (theme === 'ocean') {
+            // --- MUNDO 4: ARENA DE PLAYA TROPICAL CON CONCHAS Y BALDOSAS MARINAS ---
+            const beachGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            beachGrad.addColorStop(0, '#ca8a04');
+            beachGrad.addColorStop(1, '#854d0e');
+            ctx.fillStyle = beachGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+            // Borde superior de arena blanca y césped tropical esmeralda
+            const coastGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            coastGrad.addColorStop(0, '#6ee7b7');
+            coastGrad.addColorStop(0.4, '#10b981');
+            coastGrad.addColorStop(1, '#047857');
+            ctx.fillStyle = coastGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
+
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#a7f3d0';
+            ctx.fillRect(x, y, TILE_SIZE, 2.5);
+
+            // Pequeña concha marina en el borde
+            ctx.fillStyle = '#fbcfe8';
+            ctx.beginPath();
+            ctx.arc(x + 14, y + 5, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (theme === 'ice') {
+            // --- MUNDO 5: NIEVE PRÍSTINA Y HIELO GLACIAR CRISTALINO ---
+            const glacierGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            glacierGrad.addColorStop(0, '#38bdf8');
+            glacierGrad.addColorStop(0.5, '#0284c7');
+            glacierGrad.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = glacierGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+            // Manto de nieve pura superior
+            const snowGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            snowGrad.addColorStop(0, '#ffffff');
+            snowGrad.addColorStop(0.6, '#e0f2fe');
+            snowGrad.addColorStop(1, '#bae6fd');
+            ctx.fillStyle = snowGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
+
+            // Carámbanos de hielo colgando
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 11); ctx.lineTo(x + 6, y + 16); ctx.lineTo(x + 9, y + 11);
+            ctx.moveTo(x + 13, y + 11); ctx.lineTo(x + 16, y + 17); ctx.lineTo(x + 19, y + 11);
+            ctx.moveTo(x + 23, y + 11); ctx.lineTo(x + 26, y + 16); ctx.lineTo(x + 29, y + 11);
+            ctx.fill();
+
+            // Resplandor de nieve brillante
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x, y, TILE_SIZE, 3);
+            ctx.fillRect(x + 4, y + 5, 2, 2);
+            ctx.fillRect(x + 18, y + 4, 2, 2);
+
+        } else if (theme === 'spooky_forest') {
+            // --- MUNDO 6: TIERRA DE CEMENTERIO MALDITO CON MUSGO VIOLETA ---
+            const cryptGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            cryptGrad.addColorStop(0, '#1e293b');
+            cryptGrad.addColorStop(1, '#020617');
+            ctx.fillStyle = cryptGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+            // Musgo púrpura fantasmal
+            const mossGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            mossGrad.addColorStop(0, '#c084fc');
+            mossGrad.addColorStop(0.4, '#7e22ce');
+            mossGrad.addColorStop(1, '#3b0764');
+            ctx.fillStyle = mossGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
+
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+            ctx.fill();
+
+            // Esporas luminosas verdosas
+            ctx.fillStyle = '#2dd4bf';
+            ctx.fillRect(x + 8, y + 4, 2, 2);
+            ctx.fillRect(x + 22, y + 5, 2, 2);
+
+        } else if (theme === 'airship') {
+            // --- MUNDO 7: TABLONES DE MADERA DE GALEÓN VOLADOR Y REMACHES DE BRONCE ---
+            const woodGrad = ctx.createLinearGradient(x, y, x, y + TILE_SIZE);
+            woodGrad.addColorStop(0, '#b45309');
+            woodGrad.addColorStop(0.5, '#78350f');
+            woodGrad.addColorStop(1, '#451a03');
+            ctx.fillStyle = woodGrad;
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            // Líneas de tablón náutico
+            ctx.strokeStyle = '#291002';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 10); ctx.lineTo(x + TILE_SIZE, y + 10);
+            ctx.moveTo(x, y + 21); ctx.lineTo(x + TILE_SIZE, y + 21);
+            ctx.stroke();
+
+            // Borde superior de latón pulido
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(x, y, TILE_SIZE, 3);
+
+            // Clavos / remaches dorados de barco
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(x + 4, y + 5, 2, 2);
+            ctx.fillRect(x + TILE_SIZE - 6, y + 5, 2, 2);
+            ctx.fillRect(x + 12, y + 15, 2, 2);
+
+        } else if (theme === 'lava_castle') {
+            // --- MUNDO 8: ROCA BASÁLTICA VOLCÁNICA CON GRIETAS DE MAGMA ARDIENTE ---
+            const basaltGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            basaltGrad.addColorStop(0, '#260404');
+            basaltGrad.addColorStop(1, '#0f0202');
+            ctx.fillStyle = basaltGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+            // Costra de roca ardiente superior
+            const lavaRockGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            lavaRockGrad.addColorStop(0, '#f97316');
+            lavaRockGrad.addColorStop(0.35, '#dc2626');
+            lavaRockGrad.addColorStop(1, '#450a0a');
+            ctx.fillStyle = lavaRockGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
+
+            // Borde quebrado de roca volcánica
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+            ctx.fill();
+
+            // Grietas de lava viva incandescente
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 3); ctx.lineTo(x + 8, y + 8); ctx.lineTo(x + 14, y + 4); ctx.lineTo(x + 22, y + 9); ctx.lineTo(x + 29, y + 2);
+            ctx.stroke();
+
+        } else if (theme === 'space') {
+            // --- MUNDO 9: ALEACIÓN METÁLICA CÓSMICA CON CIRCUITOS DE ENERGÍA ---
+            const alloyGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
+            alloyGrad.addColorStop(0, '#312e81');
+            alloyGrad.addColorStop(0.5, '#1e1b4b');
+            alloyGrad.addColorStop(1, '#020617');
+            ctx.fillStyle = alloyGrad;
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+            // Placa superior metálica con bisel dorado
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x, y, TILE_SIZE, 3);
+
+            // Líneas de circuito de energía cian pulsantes
+            const circuitPulse = Math.sin(Date.now() * 0.006 + x) * 0.3 + 0.7;
+            ctx.strokeStyle = `rgba(56, 189, 248, ${circuitPulse})`;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 8); ctx.lineTo(x + 14, y + 8); ctx.lineTo(x + 18, y + 16); ctx.lineTo(x + 28, y + 16);
+            ctx.stroke();
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(x + 13, y + 7, 3, 3);
+            ctx.fillRect(x + 27, y + 15, 3, 3);
+
+        } else {
+            // --- MUNDO 1: TIERRA ORGÁNICA ESTRATIFICADA CON CÉSPED 2.5D (KOKIRI) ---
+            const dirtGrad = ctx.createLinearGradient(x, y + 10, x, y + TILE_SIZE);
+            dirtGrad.addColorStop(0, '#582f0e');
+            dirtGrad.addColorStop(1, '#2b0c03');
+            ctx.fillStyle = dirtGrad;
+            ctx.fillRect(x, y + 10, TILE_SIZE, TILE_SIZE - 10);
+
+            // Minerales incrustados
+            ctx.fillStyle = '#3d1f05';
+            ctx.beginPath();
+            ctx.ellipse(x + 7, y + 20, 4, 3, 0.2, 0, Math.PI * 2);
+            ctx.ellipse(x + 22, y + 24, 5, 3.5, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Césped verde esmeralda con volumen
+            const grassGrad = ctx.createLinearGradient(x, y, x, y + 12);
+            grassGrad.addColorStop(0, '#4ade80');
+            grassGrad.addColorStop(0.35, '#15803d');
+            grassGrad.addColorStop(1, '#064e3b');
+            ctx.fillStyle = grassGrad;
+            ctx.fillRect(x, y, TILE_SIZE, 11);
+
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 16, y + 11, 4.5, 0, Math.PI);
+            ctx.arc(x + 26, y + 11, 4.5, 0, Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#86efac';
+            ctx.fillRect(x, y, TILE_SIZE, 2.5);
+
+            // Briznas de hierba ondeando con el viento
+            const wind = Math.sin(Date.now() * 0.003 + c * 0.7) * 2;
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y); ctx.lineTo(x + 6 + wind, y - 4);
+            ctx.moveTo(x + 14, y); ctx.lineTo(x + 16 + wind, y - 5);
+            ctx.moveTo(x + 24, y); ctx.lineTo(x + 26 + wind, y - 4);
+            ctx.stroke();
+        }
 
     } else if (tile === 13) {
-        // === 2. TIERRA SUBTERRÁNEA PROFUNDA CON VETAS CRISTALINAS ===
+        // === 2. TIERRA SUBTERRÁNEA PROFUNDA ADAPTATIVA ===
         const deepGrad = ctx.createLinearGradient(x, y, x, y + TILE_SIZE);
         deepGrad.addColorStop(0, levelData.world.dirtColor);
-        deepGrad.addColorStop(1, '#1a0502');
+        deepGrad.addColorStop(1, '#0f0502');
         ctx.fillStyle = deepGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Estratos geológicos y vetas minerales
         ctx.fillStyle = levelData.world.dirtPattern;
-        ctx.fillRect(x + 2, y + 8, 10, 5);
-        ctx.fillRect(x + 16, y + 18, 12, 6);
+        ctx.fillRect(x + 2, y + 8, 12, 5);
+        ctx.fillRect(x + 16, y + 18, 14, 6);
 
-        // Cristal mineral brillante incrustado
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.moveTo(x + 18, y + 7);
-        ctx.lineTo(x + 21, y + 4);
-        ctx.lineTo(x + 24, y + 7);
-        ctx.lineTo(x + 21, y + 10);
-        ctx.fill();
-
-        // Oclusión ambiental sutil en las esquinas
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+        // Oclusión ambiental
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
         ctx.lineWidth = 1;
         ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
 
     } else if (tile === 2) {
-        // === 3. BLOQUE DE LADRILLO 3D BISELADO (MODERN BEVELED BLOCK) ===
-        // Sombra de oclusión ambiental bajo el ladrillo
+        // === 3. BLOQUE DE LADRILLO 3D ADAPTATIVO A CADA MUNDO ===
         ctx.fillStyle = 'rgba(0, 0, 0, 0.26)';
         ctx.fillRect(x + 1, y + TILE_SIZE, TILE_SIZE - 2, 5);
 
-        // Superficie con degradado del ladrillo
+        let bTop = '#ea580c', bMid = '#c2410c', bBot = '#7c2d12', mortColor = '#450a0a';
+        if (theme === 'desert') {
+            bTop = '#fde047'; bMid = '#d97706'; bBot = '#78350f'; mortColor = '#451a03';
+        } else if (theme === 'neon_cave') {
+            bTop = '#c084fc'; bMid = '#7c3aed'; bBot = '#3b0764'; mortColor = '#1e1b4b';
+        } else if (theme === 'ocean') {
+            bTop = '#fde68a'; bMid = '#f59e0b'; bBot = '#92400e'; mortColor = '#451a03';
+        } else if (theme === 'ice') {
+            bTop = '#ffffff'; bMid = '#38bdf8'; bBot = '#0284c7'; mortColor = '#0c4a6e';
+        } else if (theme === 'spooky_forest') {
+            bTop = '#64748b'; bMid = '#334155'; bBot = '#0f172a'; mortColor = '#020617';
+        } else if (theme === 'airship') {
+            bTop = '#fb923c'; bMid = '#c2410c'; bBot = '#431407'; mortColor = '#291002';
+        } else if (theme === 'lava_castle') {
+            bTop = '#f87171'; bMid = '#b91c1c'; bBot = '#450a0a'; mortColor = '#190202';
+        } else if (theme === 'space') {
+            bTop = '#a78bfa'; bMid = '#6366f1'; bBot = '#312e81'; mortColor = '#0f172a';
+        }
+
         const blockGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
-        blockGrad.addColorStop(0, '#ea580c');
-        blockGrad.addColorStop(0.5, levelData.world.blockColor);
-        blockGrad.addColorStop(1, '#7c2d12');
+        blockGrad.addColorStop(0, bTop);
+        blockGrad.addColorStop(0.5, bMid);
+        blockGrad.addColorStop(1, bBot);
         ctx.fillStyle = blockGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Bisel de luz superior e izquierdo (Specular Highlight)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+        // Bisel de luz superior e izquierdo
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.fillRect(x, y, TILE_SIZE, 2.5);
         ctx.fillRect(x, y, 2.5, TILE_SIZE);
 
-        // Bisel de sombra inferior y derecho (Ambient Shadow)
+        // Bisel de sombra inferior y derecho
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fillRect(x, y + TILE_SIZE - 2.5, TILE_SIZE, 2.5);
         ctx.fillRect(x + TILE_SIZE - 2.5, y, 2.5, TILE_SIZE);
 
-        // Mortero interior con profundidad
-        ctx.strokeStyle = '#450a0a';
-        ctx.lineWidth = 2;
+        // Líneas de mortero o junta
+        ctx.strokeStyle = mortColor;
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(x + 2, y + 16);
-        ctx.lineTo(x + TILE_SIZE - 2, y + 16);
-        ctx.moveTo(x + 16, y + 2);
-        ctx.lineTo(x + 16, y + 15);
-        ctx.moveTo(x + 8, y + 17);
-        ctx.lineTo(x + 8, y + TILE_SIZE - 2);
-        ctx.moveTo(x + 24, y + 17);
-        ctx.lineTo(x + 24, y + TILE_SIZE - 2);
+        ctx.moveTo(x + 2, y + 16); ctx.lineTo(x + TILE_SIZE - 2, y + 16);
+        ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 16, y + 15);
+        ctx.moveTo(x + 8, y + 17); ctx.lineTo(x + 8, y + TILE_SIZE - 2);
+        ctx.moveTo(x + 24, y + 17); ctx.lineTo(x + 24, y + TILE_SIZE - 2);
         ctx.stroke();
 
     } else if (tile === 3 || tile === 4) {
-        // === 4. BLOQUE '?' HOLOGRÁFICO METÁLICO CON SHIMMER ANIMADO ===
-        // Sombra de oclusión ambiental
+        // === 4. BLOQUE '?' HOLOGRÁFICO CON SHIMMER ANIMADO ===
         ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
         ctx.fillRect(x + 2, y + TILE_SIZE, TILE_SIZE - 4, 5);
 
-        // Cuerpo dorado metálico con degradado
-        const goldGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
-        goldGrad.addColorStop(0, '#fef08a');
-        goldGrad.addColorStop(0.35, '#f59e0b');
-        goldGrad.addColorStop(1, '#b45309');
-        ctx.fillStyle = goldGrad;
+        let q1 = '#fef08a', q2 = '#f59e0b', q3 = '#b45309';
+        if (theme === 'neon_cave') { q1 = '#e0f2fe'; q2 = '#00f2fe'; q3 = '#0369a1'; }
+        else if (theme === 'ice') { q1 = '#ffffff'; q2 = '#38bdf8'; q3 = '#0284c7'; }
+        else if (theme === 'lava_castle') { q1 = '#fef08a'; q2 = '#f97316'; q3 = '#dc2626'; }
+        else if (theme === 'space') { q1 = '#f3e8ff'; q2 = '#a855f7'; q3 = '#6b21a8'; }
+
+        const qGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
+        qGrad.addColorStop(0, q1);
+        qGrad.addColorStop(0.35, q2);
+        qGrad.addColorStop(1, q3);
+        ctx.fillStyle = qGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Brillo diagonal animado (Shimmer de alta tecnología)
+        // Shimmer diagonal de alta tecnología
         const shimmerPos = ((Date.now() * 0.05 + x * 2) % (TILE_SIZE * 3)) - TILE_SIZE;
         ctx.save();
         ctx.beginPath();
@@ -3379,69 +3601,76 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.fill();
         ctx.restore();
 
-        // Borde biselado metálico
-        ctx.strokeStyle = '#78350f';
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
         ctx.lineWidth = 1.5;
         ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
 
-        // Remaches 3D esféricos en las 4 esquinas
-        const rivets = [
-            { rx: x + 4, ry: y + 4 },
-            { rx: x + TILE_SIZE - 6, ry: y + 4 },
-            { rx: x + 4, ry: y + TILE_SIZE - 6 },
-            { rx: x + TILE_SIZE - 6, ry: y + TILE_SIZE - 6 }
-        ];
-        rivets.forEach(rv => {
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(rv.rx, rv.ry, 3, 3);
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(rv.rx, rv.ry, 1.5, 1.5);
-        });
+        // Remaches en las esquinas
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 3, y + 3, 2, 2);
+        ctx.fillRect(x + TILE_SIZE - 5, y + 3, 2, 2);
+        ctx.fillRect(x + 3, y + TILE_SIZE - 5, 2, 2);
+        ctx.fillRect(x + TILE_SIZE - 5, y + TILE_SIZE - 5, 2, 2);
 
-        // Símbolo '?' blanco con resplandor neón
+        // Símbolo '?'
         ctx.save();
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 20px monospace';
-        ctx.shadowColor = '#fef08a';
+        ctx.shadowColor = q1;
         ctx.shadowBlur = 8;
         ctx.fillText('?', x + 9, y + 23);
         ctx.restore();
 
     } else if (tile >= 5 && tile <= 8) {
-        // === 5. TUBERÍA METÁLICA MODERNA CON REFLEJO CILÍNDRICO ===
+        // === 5. TUBERÍA METÁLICA TEMÁTICA SEGÚN EL MUNDO ===
         const pipeY = y + 6;
         const pipeH = TILE_SIZE - 6;
 
-        // Cuerpo cilíndrico de la tubería con degradado realista
+        let p1 = '#14532d', p2 = '#16a34a', p3 = '#86efac', p4 = '#052e16', ringColor = '#38bdf8';
+        if (theme === 'desert') {
+            p1 = '#78350f'; p2 = '#d97706'; p3 = '#fde047'; p4 = '#451a03'; ringColor = '#06b6d4';
+        } else if (theme === 'neon_cave') {
+            p1 = '#3b0764'; p2 = '#7c3aed'; p3 = '#c084fc'; p4 = '#1e1b4b'; ringColor = '#00f2fe';
+        } else if (theme === 'ocean') {
+            p1 = '#065f46'; p2 = '#0d9488'; p3 = '#5eead4'; p4 = '#042f2e'; ringColor = '#fbbf24';
+        } else if (theme === 'ice') {
+            p1 = '#0369a1'; p2 = '#0284c7'; p3 = '#bae6fd'; p4 = '#082f49'; ringColor = '#ffffff';
+        } else if (theme === 'spooky_forest') {
+            p1 = '#1e293b'; p2 = '#475569'; p3 = '#94a3b8'; p4 = '#020617'; ringColor = '#22c55e';
+        } else if (theme === 'airship') {
+            p1 = '#7c2d12'; p2 = '#c2410c'; p3 = '#fed7aa'; p4 = '#431407'; ringColor = '#f59e0b';
+        } else if (theme === 'lava_castle') {
+            p1 = '#450a0a'; p2 = '#991b1b'; p3 = '#f87171'; p4 = '#1c0202'; ringColor = '#f59e0b';
+        } else if (theme === 'space') {
+            p1 = '#1e1b4b'; p2 = '#4338ca'; p3 = '#a5b4fc'; p4 = '#020617'; ringColor = '#38bdf8';
+        }
+
         const pipeGrad = ctx.createLinearGradient(x, 0, x + TILE_SIZE, 0);
-        pipeGrad.addColorStop(0, '#14532d');
-        pipeGrad.addColorStop(0.18, '#16a34a');
-        pipeGrad.addColorStop(0.35, '#86efac'); // Franja de brillo especular
-        pipeGrad.addColorStop(0.65, '#22c55e');
-        pipeGrad.addColorStop(1, '#052e16');
+        pipeGrad.addColorStop(0, p1);
+        pipeGrad.addColorStop(0.18, p2);
+        pipeGrad.addColorStop(0.35, p3);
+        pipeGrad.addColorStop(0.65, p2);
+        pipeGrad.addColorStop(1, p4);
         ctx.fillStyle = pipeGrad;
         ctx.fillRect(x, pipeY, TILE_SIZE, pipeH);
 
-        // Collarín o borde superior ensanchado
+        // Collarín ensanchado
         ctx.fillRect(x - 1, pipeY, TILE_SIZE + 2, 7);
 
-        // Tira de luz de neón cian en el collarín (Estilo Sci-Fi 2026)
-        ctx.fillStyle = '#38bdf8';
+        // Anillo de luz en el collarín
+        ctx.fillStyle = ringColor;
         ctx.fillRect(x + 2, pipeY + 7, TILE_SIZE - 4, 1.5);
 
-        // Contorno de alta definición
-        ctx.strokeStyle = '#052e16';
+        ctx.strokeStyle = p4;
         ctx.lineWidth = 1.2;
         ctx.strokeRect(x - 1, pipeY, TILE_SIZE + 2, 7);
         ctx.strokeRect(x, pipeY + 7, TILE_SIZE, pipeH - 7);
 
     } else if (tile === 9) {
-        // === 6. LAVA FLUIDA ONDULANTE CON NÚCLEO INCANDESCENTE (NO MÁS CUADRADOS ROJOS) ===
-        // Fondo volcánico profundo
+        // === 6. LAVA FLUIDA ONDULANTE CON NÚCLEO INCANDESCENTE ===
         ctx.fillStyle = '#450a0a';
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Capa de lava media con ondas sinusoidales
         const lavaTime = Date.now() * 0.005 + x * 0.1;
         const wave1 = Math.sin(lavaTime) * 3;
         const wave2 = Math.cos(lavaTime * 1.3) * 2;
@@ -3461,7 +3690,6 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.closePath();
         ctx.fill();
 
-        // Cresta viva incandescente de la lava
         ctx.strokeStyle = '#fff7ed';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -3469,7 +3697,6 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.quadraticCurveTo(x + 16, y + 2 + wave2, x + TILE_SIZE, y + 4 + wave1);
         ctx.stroke();
 
-        // Burbuja de magma animada
         const bubbleRise = (Date.now() * 0.003 + c) % 2;
         if (bubbleRise < 1) {
             ctx.fillStyle = '#fef08a';
@@ -3479,7 +3706,7 @@ function drawMarioTile(tile, x, y, c, r) {
         }
 
     } else if (tile === 12) {
-        // === 7. PIEDRA OBSIDIANA DE FORTALEZA CON BISEL Y VETAS ===
+        // === 7. BASE DE PISTA O PLATAFORMA DE LANZAMIENTO ===
         const stoneGrad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
         stoneGrad.addColorStop(0, '#334155');
         stoneGrad.addColorStop(0.5, '#1e293b');
@@ -3487,7 +3714,6 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.fillStyle = stoneGrad;
         ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
-        // Bisel de luz y sombra
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fillRect(x, y, TILE_SIZE, 2);
         ctx.fillRect(x, y, 2, TILE_SIZE);
@@ -3495,13 +3721,9 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.fillRect(x, y + TILE_SIZE - 2, TILE_SIZE, 2);
         ctx.fillRect(x + TILE_SIZE - 2, y, 2, TILE_SIZE);
 
-        // Línea rúnica o junta de mortero con leve brillo carmesí
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x + 4, y + 16);
-        ctx.lineTo(x + TILE_SIZE - 4, y + 16);
-        ctx.stroke();
+        // Luz de guía en la pista
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(x + 12, y + 14, 8, 4);
 
     } else if (tile === 10) {
         // === 8. MÁSTIL DE META CROMADO ELEGANTE ===
@@ -3513,7 +3735,7 @@ function drawMarioTile(tile, x, y, c, r) {
         ctx.fillStyle = mastGrad;
         ctx.fillRect(x + 13, y, 6, TILE_SIZE);
 
-        // Bola dorada superior con brillo (solo en fila r === 1)
+        // Bola dorada superior con brillo
         if (r === 1) {
             ctx.save();
             ctx.fillStyle = '#fbbf24';
@@ -3529,7 +3751,7 @@ function drawMarioTile(tile, x, y, c, r) {
             ctx.restore();
         }
 
-        // Pedestal de piedra esculpida en la base (r === 5)
+        // Pedestal en la base
         if (r === 5) {
             ctx.fillStyle = '#1e293b';
             ctx.fillRect(x + 4, y + 12, 24, 20);
@@ -4126,179 +4348,602 @@ function drawCuteEnemy(x, y, type, isFlying = false) {
 
     if (type === 'goomba') {
         // ==========================================
-        // GOOMBA SUPREMO (CHAMPIÑÓN RETRO CON VOLUMEN 3D Y EXPRESIÓN VIVA)
+        // GOOMBA SUPREMO (PERSONALIZADO AL 100% PARA CADA UNO DE LOS 9 MUNDOS)
         // ==========================================
         ctx.save();
 
-        // Color adaptativo por bioma para mayor variedad visual
-        let capTop = '#c2410c';
-        let capMid = '#9a3412';
-        let capBottom = '#431407';
-        let stemColor = '#ffedd5';
-        let stemShadow = '#fed7aa';
-
-        if (theme === 'ice') {
-            capTop = '#0284c7'; capMid = '#0369a1'; capBottom = '#082f49';
-            stemColor = '#e0f2fe'; stemShadow = '#bae6fd';
-        } else if (theme === 'lava_castle') {
-            capTop = '#dc2626'; capMid = '#991b1b'; capBottom = '#450a0a';
-            stemColor = '#fecaca'; stemShadow = '#fca5a5';
-        } else if (theme === 'space') {
-            capTop = '#9333ea'; capMid = '#6b21a8'; capBottom = '#3b0764';
-            stemColor = '#f3e8ff'; stemShadow = '#e9d5ff';
-        }
-
-        // Pies animados con paso elástico natural
         const leftFootY = y + 15 - (walkCycle > 0 ? walkCycle * 3.2 : 0);
         const rightFootY = y + 15 - (walkCycle < 0 ? -walkCycle * 3.2 : 0);
 
-        // Pies marrones con bisel superior
-        ctx.fillStyle = '#1e1b4b';
-        ctx.beginPath();
-        ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
-        ctx.fill();
+        if (theme === 'desert') {
+            // --- MUNDO 2: GOOMBA MOMIA DEL DESIERTO (Vendajes antiguos, cinta de faraón y ojos de zafiro) ---
+            ctx.fillStyle = '#78350f';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Tallo / Cuerpo carnoso redondeado con sombreado esférico
-        const stemGrad = ctx.createRadialGradient(x + 11, y + 12, 2, x + 11, y + 14, 9);
-        stemGrad.addColorStop(0, stemColor);
-        stemGrad.addColorStop(0.75, stemShadow);
-        stemGrad.addColorStop(1, '#9a3412');
-        ctx.fillStyle = stemGrad;
-        ctx.beginPath();
-        ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
-        ctx.fill();
+            // Tallo vendado
+            ctx.fillStyle = '#fde68a';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + 12); ctx.lineTo(x + 17, y + 14);
+            ctx.stroke();
 
-        // Cabeza / Sombrero en forma de campana piramidal con degradado rico
-        const capGrad = ctx.createRadialGradient(x + 9, y + 4, 2, x + 11, y + 8, 12);
-        capGrad.addColorStop(0, '#f97316');
-        capGrad.addColorStop(0.35, capTop);
-        capGrad.addColorStop(0.75, capMid);
-        capGrad.addColorStop(1, capBottom);
-        ctx.fillStyle = capGrad;
+            // Cabeza momia
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(x + 2, y + 10);
-        ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
-        ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
-        ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
-        ctx.closePath();
-        ctx.fill();
+            // Tiras de vendaje faraónico
+            ctx.strokeStyle = '#fef3c7';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 3); ctx.lineTo(x + 19, y + 5);
+            ctx.moveTo(x + 2, y + 7); ctx.lineTo(x + 20, y + 8);
+            ctx.stroke();
 
-        // Brillo superior curvo en el sombrero (Specular highlight)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.beginPath();
-        ctx.ellipse(x + 9, y + 2, 4, 1.8, -0.2, 0, Math.PI * 2);
-        ctx.fill();
+            // Diadema real egipcia oro y turquesa
+            ctx.fillStyle = '#06b6d4';
+            ctx.fillRect(x + 5, y - 1, 12, 2.5);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x + 9, y - 2, 4, 3.5);
 
-        // Cejas amenazantes anguladas y marcadas
-        ctx.strokeStyle = '#020617';
-        ctx.lineWidth = 2.4;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(x + 4, y + 5);
-        ctx.lineTo(x + 10, y + 8);
-        ctx.moveTo(x + 18, y + 5);
-        ctx.lineTo(x + 12, y + 8);
-        ctx.stroke();
+            // Ojos de zafiro brillantes
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.ellipse(x + 7.5, y + 8.5, 2.5, 2.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + 14.5, y + 8.5, 2.5, 2.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 8, y + 7.5, 1.2, 1.2);
+            ctx.fillRect(x + 15, y + 7.5, 1.2, 1.2);
 
-        // Ojos expresivos con esclera blanca y pupilas con reflejo
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.ellipse(x + 7.5, y + 9.5, 2.5, 3.8, 0.1, 0, Math.PI * 2);
-        ctx.ellipse(x + 14.5, y + 9.5, 2.5, 3.8, -0.1, 0, Math.PI * 2);
-        ctx.fill();
+        } else if (theme === 'neon_cave') {
+            // --- MUNDO 3: CYBER GOOMBA CRISTALINO (Obsidiana con cuernos de cristal neón y visor cibernético) ---
+            ctx.fillStyle = '#3b0764';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Pupilas negras con destello de vida
-        ctx.fillStyle = '#020617';
-        ctx.beginPath();
-        ctx.arc(x + 8.5, y + 9.5, 1.7, 0, Math.PI * 2);
-        ctx.arc(x + 13.5, y + 9.5, 1.7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 8, y + 8.5, 1, 1);
-        ctx.fillRect(x + 13, y + 8.5, 1, 1);
+            // Tallo cibernético
+            ctx.fillStyle = '#581c87';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Colmillos afilados inferiores que sobresalen
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(x + 6, y + 15);
-        ctx.lineTo(x + 7.5, y + 12);
-        ctx.lineTo(x + 9, y + 15);
-        ctx.moveTo(x + 13, y + 15);
-        ctx.lineTo(x + 14.5, y + 12);
-        ctx.lineTo(x + 16, y + 15);
-        ctx.fill();
+            // Cabeza obsidiana
+            const capGrad = ctx.createLinearGradient(x + 2, y, x + 20, y + 10);
+            capGrad.addColorStop(0, '#701a75');
+            capGrad.addColorStop(0.5, '#4a044e');
+            capGrad.addColorStop(1, '#1e1b4b');
+            ctx.fillStyle = capGrad;
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Cuernos de cristal neón cyan y magenta
+            ctx.fillStyle = '#06b6d4';
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + 1); ctx.lineTo(x + 3, y - 5); ctx.lineTo(x + 8, y);
+            ctx.fill();
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath();
+            ctx.moveTo(x + 14, y); ctx.lineTo(x + 19, y - 5); ctx.lineTo(x + 17, y + 1);
+            ctx.fill();
+
+            // Visor cibernético horizontal resplandeciente
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(x + 4, y + 7, 14, 3.5);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 9, y + 8, 4, 1.5);
+
+        } else if (theme === 'ocean') {
+            // --- MUNDO 4: GOOMBA COCO TROPICAL PIRATA (Coco con bandana pirata y flor hawaiana) ---
+            // Un pie normal y una pata de palo de madera
+            ctx.fillStyle = '#713f12';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.fill();
+            // Pata de palo
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(x + 15, rightFootY + 1, 3, 6);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x + 14.5, rightFootY + 6, 4, 1.5);
+
+            // Tallo coco
+            ctx.fillStyle = '#fef3c7';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sombrero con cáscara de coco
+            const cocoGrad = ctx.createRadialGradient(x + 11, y + 4, 2, x + 11, y + 6, 11);
+            cocoGrad.addColorStop(0, '#92400e');
+            cocoGrad.addColorStop(1, '#451a03');
+            ctx.fillStyle = cocoGrad;
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Bandana pirata roja y blanca
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 4); ctx.lineTo(x + 20, y + 4);
+            ctx.lineTo(x + 19, y + 7); ctx.lineTo(x + 3, y + 7);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 6, y + 5, 2, 2);
+            ctx.fillRect(x + 14, y + 5, 2, 2);
+
+            // Parche en el ojo izquierdo y ojo derecho alegre
+            ctx.fillStyle = '#18181b';
+            ctx.beginPath();
+            ctx.arc(x + 7.5, y + 9.5, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#18181b';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x + 4, y + 7); ctx.lineTo(x + 10, y + 12); ctx.stroke();
+
+            // Ojo derecho con brillo azul marino
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x + 14.5, y + 9.5, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.arc(x + 14.5, y + 9.5, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (theme === 'ice') {
+            // --- MUNDO 5: YETI GOOMBA GLACIAL (Pelaje blanco ártico, orejeras de nieve y escarcha) ---
+            ctx.fillStyle = '#0369a1';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tallo nevado
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sombrero azul hielo
+            const iceGrad = ctx.createLinearGradient(x + 11, y - 2, x + 11, y + 10);
+            iceGrad.addColorStop(0, '#7dd3fc');
+            iceGrad.addColorStop(1, '#0284c7');
+            ctx.fillStyle = iceGrad;
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Borde de pelaje blanco esponjoso de yeti
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            for (let fx = x + 2; fx <= x + 20; fx += 3) {
+                ctx.arc(fx, y + 10, 2, 0, Math.PI * 2);
+            }
+            ctx.fill();
+
+            // Orejeras de invierno en los laterales
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(x + 2, y + 4, 3, 0, Math.PI * 2);
+            ctx.arc(x + 20, y + 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#bae6fd';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x + 11, y + 2, 8, Math.PI, 0);
+            ctx.stroke();
+
+            // Ojos con brillo de hielo
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 6, y + 7, 3, 4);
+            ctx.fillRect(x + 13, y + 7, 3, 4);
+            ctx.fillStyle = '#0c4a6e';
+            ctx.fillRect(x + 7, y + 8, 2, 3);
+            ctx.fillRect(x + 14, y + 8, 2, 3);
+
+        } else if (theme === 'spooky_forest') {
+            // --- MUNDO 6: JACK-O'-GOOMBA FANTASMAL (Calabaza espectral púrpura con rostro tallado ardiente) ---
+            ctx.fillStyle = '#1e1b4b';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tallo oscuro espectral
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cabeza calabaza sombría púrpura
+            ctx.fillStyle = '#3b0764';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Tallo retorcido de calabaza
+            ctx.fillStyle = '#84cc16';
+            ctx.fillRect(x + 10, y - 4, 2.5, 4);
+
+            // Ojos tallados triangulares resplandecientes en fuego ámbar
+            ctx.fillStyle = '#fbbf24';
+            ctx.shadowColor = '#f97316';
+            ctx.shadowBlur = 5;
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y + 6); ctx.lineTo(x + 9, y + 8); ctx.lineTo(x + 5, y + 9); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + 16, y + 6); ctx.lineTo(x + 13, y + 8); ctx.lineTo(x + 17, y + 9); ctx.fill();
+
+            // Boca siniestra tallada en zigzag con luz interior
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y + 12);
+            ctx.lineTo(x + 8, y + 14); ctx.lineTo(x + 11, y + 12);
+            ctx.lineTo(x + 14, y + 14); ctx.lineTo(x + 16, y + 12);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+        } else if (theme === 'airship') {
+            // --- MUNDO 7: AVIADOR STEAMPUNK GOOMBA (Casco de cuero, gafas de aviador y tubo de vapor) ---
+            ctx.fillStyle = '#292524';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fed7aa';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Casco de cuero de piloto
+            ctx.fillStyle = '#44403c';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Tubo de escape de latón con humo
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(x + 14, y - 4, 3, 5);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(x + 15.5, y - 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Gafas de aviador de latón y lentes brillantes
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(x + 3, y + 4, 16, 5);
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.ellipse(x + 7, y + 6.5, 3, 2.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + 15, y + 6.5, 3, 2.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 6, y + 5.5, 2, 1);
+            ctx.fillRect(x + 14, y + 5.5, 2, 1);
+
+        } else if (theme === 'lava_castle') {
+            // --- MUNDO 8: GOOMBA DE MAGMA VOLCÁNICO (Roca ígnea negra con grietas de lava incandescente) ---
+            ctx.fillStyle = '#09090b';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#450a0a';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sombrero roca de basalto negro
+            ctx.fillStyle = '#18181b';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Grietas de lava fundida al rojo vivo
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1.6;
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 2); ctx.lineTo(x + 8, y + 5); ctx.lineTo(x + 11, y + 3);
+            ctx.moveTo(x + 14, y + 2); ctx.lineTo(x + 12, y + 6); ctx.lineTo(x + 18, y + 5);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Ojos de fuego amarillo ardiente
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(x + 7.5, y + 9.5, 2.5, 0, Math.PI * 2);
+            ctx.arc(x + 14.5, y + 9.5, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(x + 7, y + 8.5, 1.5, 2);
+            ctx.fillRect(x + 14, y + 8.5, 1.5, 2);
+
+        } else if (theme === 'space') {
+            // --- MUNDO 9: ALIEN ASTRONAUTA GOOMBA (Casco espacial de cristal y antena cósmica) ---
+            ctx.fillStyle = '#312e81';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#581c87';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cabeza alienígena violeta
+            ctx.fillStyle = '#7c3aed';
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.fill();
+
+            // Antena plateada con sensor rojo
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x + 11, y - 1); ctx.lineTo(x + 11, y - 6);
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(x + 11, y - 7, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cúpula esférica de escafandra de cristal espacial
+            ctx.strokeStyle = 'rgba(147, 197, 253, 0.8)';
+            ctx.lineWidth = 1.4;
+            ctx.fillStyle = 'rgba(147, 197, 253, 0.22)';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 5, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Tres ojos alienígenas verdes fluorescentes
+            ctx.fillStyle = '#84cc16';
+            ctx.beginPath();
+            ctx.arc(x + 6.5, y + 8, 1.8, 0, Math.PI * 2);
+            ctx.arc(x + 11, y + 6.5, 2.2, 0, Math.PI * 2);
+            ctx.arc(x + 15.5, y + 8, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else {
+            // --- MUNDO 1: KOKIRI FOREST GOOMBA (Madera de roble, hoja verde natural y expresión vivaz) ---
+            ctx.fillStyle = '#1e1b4b';
+            ctx.beginPath();
+            ctx.ellipse(x + 5, leftFootY + 3, 5, 3.5, -0.15, 0, Math.PI * 2);
+            ctx.ellipse(x + 16, rightFootY + 3, 5, 3.5, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tallo cremoso
+            const stemGrad = ctx.createRadialGradient(x + 11, y + 12, 2, x + 11, y + 14, 9);
+            stemGrad.addColorStop(0, '#ffedd5');
+            stemGrad.addColorStop(1, '#fed7aa');
+            ctx.fillStyle = stemGrad;
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y + 13, 7.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sombrero clásico marrón bellota con degradado
+            const capGrad = ctx.createRadialGradient(x + 9, y + 4, 2, x + 11, y + 8, 12);
+            capGrad.addColorStop(0, '#f97316');
+            capGrad.addColorStop(0.35, '#c2410c');
+            capGrad.addColorStop(0.75, '#9a3412');
+            capGrad.addColorStop(1, '#431407');
+            ctx.fillStyle = capGrad;
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + 10);
+            ctx.quadraticCurveTo(x + 2, y - 2, x + 11, y - 1);
+            ctx.quadraticCurveTo(x + 20, y - 2, x + 20, y + 10);
+            ctx.quadraticCurveTo(x + 11, y + 12, x + 2, y + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Hoja de Kokiri verde esmeralda prendida en la parte superior
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.ellipse(x + 11, y - 2, 4.5, 2.2, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#15803d';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+
+            // Cejas amenazantes
+            ctx.strokeStyle = '#020617';
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 5); ctx.lineTo(x + 10, y + 8);
+            ctx.moveTo(x + 18, y + 5); ctx.lineTo(x + 12, y + 8);
+            ctx.stroke();
+
+            // Ojos expresivos con brillo
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(x + 7.5, y + 9.5, 2.5, 3.8, 0.1, 0, Math.PI * 2);
+            ctx.ellipse(x + 14.5, y + 9.5, 2.5, 3.8, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#020617';
+            ctx.beginPath();
+            ctx.arc(x + 8.5, y + 9.5, 1.7, 0, Math.PI * 2);
+            ctx.arc(x + 13.5, y + 9.5, 1.7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 8, y + 8.5, 1, 1);
+            ctx.fillRect(x + 13, y + 8.5, 1, 1);
+
+            // Colmillos afilados
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y + 15); ctx.lineTo(x + 7.5, y + 12); ctx.lineTo(x + 9, y + 15);
+            ctx.moveTo(x + 13, y + 15); ctx.lineTo(x + 14.5, y + 12); ctx.lineTo(x + 16, y + 15);
+            ctx.fill();
+        }
 
         ctx.restore();
 
     } else {
         // ==========================================
-        // KOOPA TROOPA SUPREMO (TORTUGA CON CAPARAZÓN 3D POLICROMADO Y ANIMACIÓN VIVA)
+        // KOOPA TROOPA SUPREMO (PERSONALIZADO AL 100% PARA CADA UNO DE LOS 9 MUNDOS)
         // ==========================================
         ctx.save();
 
-        // Patas reptilianas animadas con zancada dinámica
         const legFrontY = y + 14 - (walkCycle > 0 ? walkCycle * 2.8 : 0);
         const legBackY = y + 14 - (walkCycle < 0 ? -walkCycle * 2.8 : 0);
 
-        // Pies anaranjados/amarillos con volumen
-        ctx.fillStyle = '#f59e0b';
+        // Pies y cabeza con colores específicos por mundo
+        let skinColor = '#eab308';
+        let skinTop = '#fef08a';
+        let beakColor = '#f97316';
+        let shellColor1 = '#4ade80';
+        let shellColor2 = '#16a34a';
+        let shellRim = '#ffffff';
+        let eyeIris = '#0284c7';
+
+        if (theme === 'desert') {
+            skinColor = '#d97706'; skinTop = '#fde68a'; beakColor = '#b45309';
+            shellColor1 = '#fbbf24'; shellColor2 = '#92400e'; shellRim = '#06b6d4'; eyeIris = '#0891b2';
+        } else if (theme === 'neon_cave') {
+            skinColor = '#475569'; skinTop = '#94a3b8'; beakColor = '#ec4899';
+            shellColor1 = '#06b6d4'; shellColor2 = '#3b0764'; shellRim = '#d946ef'; eyeIris = '#00f0ff';
+        } else if (theme === 'ocean') {
+            skinColor = '#38bdf8'; skinTop = '#bae6fd'; beakColor = '#0284c7';
+            shellColor1 = '#2dd4bf'; shellColor2 = '#0f766e'; shellRim = '#ccfbf1'; eyeIris = '#0e7490';
+        } else if (theme === 'ice') {
+            skinColor = '#7dd3fc'; skinTop = '#e0f2fe'; beakColor = '#0284c7';
+            shellColor1 = '#bae6fd'; shellColor2 = '#0284c7'; shellRim = '#ffffff'; eyeIris = '#0369a1';
+        } else if (theme === 'spooky_forest') {
+            skinColor = '#cbd5e1'; skinTop = '#f1f5f9'; beakColor = '#64748b';
+            shellColor1 = '#94a3b8'; shellColor2 = '#334155'; shellRim = '#f8fafc'; eyeIris = '#ef4444';
+        } else if (theme === 'airship') {
+            skinColor = '#b45309'; skinTop = '#fde047'; beakColor = '#78350f';
+            shellColor1 = '#ea580c'; shellColor2 = '#78350f'; shellRim = '#fbbf24'; eyeIris = '#f59e0b';
+        } else if (theme === 'lava_castle') {
+            skinColor = '#7f1d1d'; skinTop = '#fca5a5'; beakColor = '#450a0a';
+            shellColor1 = '#ef4444'; shellColor2 = '#18181b'; shellRim = '#f59e0b'; eyeIris = '#fbbf24';
+        } else if (theme === 'space') {
+            skinColor = '#6366f1'; skinTop = '#c7d2fe'; beakColor = '#4338ca';
+            shellColor1 = '#a855f7'; shellColor2 = '#1e1b4b'; shellRim = '#38bdf8'; eyeIris = '#22c55e';
+        }
+
+        // Patas reptilianas
+        ctx.fillStyle = skinColor;
         ctx.beginPath();
         ctx.ellipse(x + 4, legFrontY + 3, 4.5, 3.2, 0, 0, Math.PI * 2);
         ctx.ellipse(x + 16, legBackY + 3, 4.5, 3.2, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Uñas blancas
+        // Uñas
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x + 1, legFrontY + 2, 2, 2);
         ctx.fillRect(x + 13, legBackY + 2, 2, 2);
 
-        // Caparazón esférico 3D con degradado esmeralda de alta definición
-        let shellColor1 = '#4ade80';
-        let shellColor2 = '#16a34a';
-        let shellColor3 = '#064e3b';
-        if (theme === 'lava_castle') {
-            shellColor1 = '#f87171'; shellColor2 = '#dc2626'; shellColor3 = '#7f1d1d';
-        } else if (theme === 'desert') {
-            shellColor1 = '#fbbf24'; shellColor2 = '#d97706'; shellColor3 = '#78350f';
-        }
-
+        // Caparazón esférico 3D
         const shellGrad = ctx.createRadialGradient(x + 9, y + 6, 2, x + 11, y + 9, 11);
         shellGrad.addColorStop(0, shellColor1);
-        shellGrad.addColorStop(0.5, shellColor2);
-        shellGrad.addColorStop(1, shellColor3);
+        shellGrad.addColorStop(1, shellColor2);
         ctx.fillStyle = shellGrad;
-
         ctx.beginPath();
         ctx.ellipse(x + 10, y + 8.5, 9, 8, -0.1, 0, Math.PI * 2);
         ctx.fill();
 
-        // Reborde blanco acolchado del caparazón con relieve
-        ctx.strokeStyle = '#f8fafc';
+        // Reborde acolchado / gema
+        ctx.strokeStyle = shellRim;
         ctx.lineWidth = 2.2;
         ctx.stroke();
 
-        // Patrón de placas poligonales del caparazón con brillo
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.ellipse(x + 10, y + 8.5, 5, 4.5, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        // Detalles decorativos del caparazón por mundo
+        if (theme === 'desert') {
+            // Escarabajo alado / jeroglífico solar
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(x + 10, y + 8.5, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (theme === 'neon_cave') {
+            // Circuito neón
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(x + 7, y + 6); ctx.lineTo(x + 10, y + 9); ctx.lineTo(x + 13, y + 6);
+            ctx.stroke();
+        } else if (theme === 'airship') {
+            // Llave de cuerda giratoria steampunk en la espalda
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x + 3, y + 2, 2, 4);
+            ctx.beginPath();
+            ctx.arc(x + 4, y + 1, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (theme === 'ice') {
+            // Picos de hielo sobre el caparazón
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y + 2); ctx.lineTo(x + 10, y - 2); ctx.lineTo(x + 12, y + 2);
+            ctx.fill();
+        } else if (theme === 'lava_castle') {
+            // Púas de obsidiana ardiente
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.moveTo(x + 9, y + 2); ctx.lineTo(x + 11, y - 2); ctx.lineTo(x + 13, y + 2);
+            ctx.fill();
+        } else {
+            // Placa central de caparazón clásica
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 8.5, 5, 4.5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
-        // Cabeza con pico amarillo y cuello retráctil
+        // Cabeza con volumen
         const headGrad = ctx.createRadialGradient(x + 16, y + 2, 2, x + 17, y + 5, 6);
-        headGrad.addColorStop(0, '#fef08a');
-        headGrad.addColorStop(1, '#eab308');
+        headGrad.addColorStop(0, skinTop);
+        headGrad.addColorStop(1, skinColor);
         ctx.fillStyle = headGrad;
         ctx.beginPath();
         ctx.arc(x + 16, y + 4.5, 5.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Pico característico anaranjado
-        ctx.fillStyle = '#f97316';
+        // Pico característico
+        ctx.fillStyle = beakColor;
         ctx.beginPath();
         ctx.moveTo(x + 19, y + 4);
         ctx.lineTo(x + 23, y + 6);
@@ -4311,15 +4956,15 @@ function drawCuteEnemy(x, y, type, isFlying = false) {
         ctx.beginPath();
         ctx.ellipse(x + 16, y + 3.5, 2.5, 3.5, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#0284c7';
+        ctx.fillStyle = eyeIris;
         ctx.beginPath();
         ctx.arc(x + 16.5, y + 3.5, 1.6, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x + 16, y + 2.5, 1, 1);
 
-        // Cola puntiaguda animada
-        ctx.fillStyle = '#eab308';
+        // Cola puntiaguda
+        ctx.fillStyle = skinColor;
         ctx.beginPath();
         ctx.moveTo(x + 2, y + 9);
         ctx.lineTo(x - 2, y + 11);
