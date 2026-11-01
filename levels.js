@@ -425,26 +425,19 @@ class LevelBuilder {
                 }
             });
 
-            // 7. BANDERA DE META Y CASTILLO AL FINAL DE LOS 190 BLOQUES
-            const flagCol = mapWidth - 10;   // Columna 180
-            const castleCol = mapWidth - 5;  // Columna 185
+            // 7. BANDERA DE META Y PLATAFORMA DE LANZAMIENTO DE LA NAVE ESPACIAL
+            const flagCol = mapWidth - 10;      // Columna 180
+            const launchPadCol = mapWidth - 5;  // Columna 185
 
             // Mástil de meta: Tile 10 desde fila 1 hasta fila 5
             for (let r = groundRow - 5; r < groundRow; r++) {
                 grid[r][flagCol] = 10;
             }
 
-            // Castillo final con puerta abierta
-            for (let r = groundRow - 3; r < groundRow; r++) {
-                for (let c = castleCol; c < castleCol + 3; c++) {
-                    grid[r][c] = 12;
-                }
+            // Plataforma de aleación aeroespacial para la Nave SP-1
+            for (let c = launchPadCol - 1; c < launchPadCol + 4; c++) {
+                grid[groundRow][c] = 12; // Base de pista aeroespacial
             }
-            // Almenas
-            grid[groundRow - 4][castleCol] = 12;
-            grid[groundRow - 4][castleCol + 2] = 12;
-            // Puerta
-            grid[groundRow - 1][castleCol + 1] = 11;
 
             return {
                 world,
@@ -461,7 +454,7 @@ class LevelBuilder {
                 spawnY: (groundRow - 1) * 32,
                 flagCol,
                 flagX: flagCol * 32,
-                castleX: castleCol * 32
+                castleX: launchPadCol * 32
             };
         }
     }

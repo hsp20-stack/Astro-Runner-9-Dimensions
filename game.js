@@ -79,6 +79,21 @@ let isGameOver = false;
 let isStageClear = false;
 let victoryCoreDropped = null;
 
+// Nave Espacial de Astro (Viaje entre niveles y mundos 2026)
+let spaceshipSequence = {
+    active: false,
+    x: 0,
+    y: 0,
+    w: 56,
+    h: 38,
+    vx: 0,
+    vy: 0,
+    angle: 0,
+    state: 'waiting', // 'waiting', 'boarding', 'takeoff', 'boss_descend'
+    timer: 0,
+    astroBoarded: false
+};
+
 // Animación cinematográfica de la bandera de meta
 let flagPoleAnimation = {
     active: false,
@@ -86,7 +101,7 @@ let flagPoleAnimation = {
     flagY: 0,
     targetFlagY: 0,
     astroSliding: false,
-    astroWalkingToCastle: false
+    astroWalkingToShip: false
 };
 
 // Secuencia y animación triunfal de Nivel Completado (Victory Celebration 2026)
@@ -168,8 +183,19 @@ function loadLevel(worldNum, levelNum) {
     victoryCoreDropped = null;
     flagPoleAnimation.active = false;
     flagPoleAnimation.astroSliding = false;
-    flagPoleAnimation.astroWalkingToCastle = false;
+    flagPoleAnimation.astroWalkingToShip = false;
     victorySequence.active = false;
+
+    // Configuración de la Nave Espacial de Astro
+    spaceshipSequence.active = true;
+    spaceshipSequence.x = (levelData.castleX || (levelData.mapWidth - 5) * 32) - 10;
+    spaceshipSequence.y = (6 - 1) * 32 - 41;
+    spaceshipSequence.vx = 0;
+    spaceshipSequence.vy = 0;
+    spaceshipSequence.angle = 0;
+    spaceshipSequence.state = 'waiting';
+    spaceshipSequence.timer = 0;
+    spaceshipSequence.astroBoarded = false;
 
     activeEnemies = JSON.parse(JSON.stringify(levelData.enemies));
     activeCrystals = JSON.parse(JSON.stringify(levelData.coins));
@@ -234,10 +260,12 @@ function updateGame(dt) {
         }
     }
 
-    // Si la secuencia triunfal de Nivel Completado está activa (animación festiva 2026)
+    // Si la secuencia triunfal de Nivel Completado está activa (animación festiva y despegue de la nave 2026)
     if (victorySequence.active) {
         victorySequence.timer++;
         victorySequence.fireworkTimer++;
+
+        updateSpaceshipSequence();
 
         // Explosiones festivas periódicas de fuegos artificiales
         if (victorySequence.fireworkTimer % 18 === 0) {
@@ -248,7 +276,7 @@ function updateGame(dt) {
 
         updateParticles();
 
-        if (victorySequence.timer === 70) {
+        if (victorySequence.timer >= 95 || spaceshipSequence.y < -80) {
             showVictoryModal(victorySequence.isBossVictory);
         }
         return;
@@ -380,9 +408,9 @@ function updateGame(dt) {
         astro.transformationTimer--;
     }
 
-    // Foso
-    if (astro.y > levelData.mapHeight * TILE_SIZE + 40) {
-        killPlayer();
+    // Foso / Abismo con animación de caída clásica
+    if (astro.y > levelData.mapHeight * TILE_SIZE + 10) {
+        killPlayer(true);
     }
 
     // Disparar
@@ -423,13 +451,13 @@ function updateGame(dt) {
 }
 
 // ==========================================
-// SECUENCIA CINEMATOGRÁFICA DE META (ESTILO SUPER MARIO BROS)
+// SECUENCIA CINEMATOGRÁFICA DE META (ESTILO SUPER MARIO BROS & NAVE ESPACIAL)
 // ==========================================
 function startFlagPoleSequence() {
     flagPoleAnimation.active = true;
     flagPoleAnimation.timer = 0;
     flagPoleAnimation.astroSliding = true;
-    flagPoleAnimation.astroWalkingToCastle = false;
+    flagPoleAnimation.astroWalkingToShip = false;
     flagPoleAnimation.flagY = (6 - 5) * 32 + 4; // Inicio en la cima del mástil
     flagPoleAnimation.targetFlagY = (6 - 1) * 32 - 12; // Base del mástil
 
@@ -469,7 +497,7 @@ function updateFlagPoleSequence() {
         if (astro.y >= groundLevelY) {
             astro.y = groundLevelY;
             flagPoleAnimation.astroSliding = false;
-            flagPoleAnimation.astroWalkingToCastle = true;
+            flagPoleAnimation.astroWalkingToShip = true;
             // Salto triunfal hacia la derecha
             astro.x = levelData.flagX + 16;
             astro.vy = -3.2;
@@ -488,8 +516,8 @@ function updateFlagPoleSequence() {
                 });
             }
         }
-    } else if (flagPoleAnimation.astroWalkingToCastle) {
-        // Astro camina triunfalmente hacia la puerta del castillo
+    } else if (flagPoleAnimation.astroWalkingToShip) {
+        // Astro camina triunfalmente hacia su nave espacial
         astro.x += 1.8;
         astro.facing = 'right';
         astro.animTimer++;
@@ -497,12 +525,102 @@ function updateFlagPoleSequence() {
             astro.animFrame = (astro.animFrame + 1) % 4;
         }
 
-        // Al entrar en la puerta del castillo
-        const castleDoorX = (levelData.castleX || (levelData.mapWidth - 5) * 32) + 16;
-        if (astro.x >= castleDoorX) {
+        // Al llegar a la cabina de su nave espacial
+        const shipBoardX = spaceshipSequence.x + 10;
+        if (astro.x >= shipBoardX) {
             flagPoleAnimation.active = false;
-            flagPoleAnimation.astroWalkingToCastle = false;
+            flagPoleAnimation.astroWalkingToShip = false;
+            spaceshipSequence.astroBoarded = true;
+            spaceshipSequence.state = 'takeoff';
+            spaceshipSequence.timer = 0;
+            spaceshipSequence.vx = 0.6;
+            spaceshipSequence.vy = -0.6;
+
+            try {
+                if (window.sounds && window.sounds.playSpaceshipLaunch) {
+                    window.sounds.playSpaceshipLaunch();
+                } else if (window.sounds && window.sounds.playPowerUp) {
+                    window.sounds.playPowerUp();
+                }
+            } catch (e) {}
+
+            // Estallido de propulsión de plasma al abordar
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: spaceshipSequence.x + 6,
+                    y: spaceshipSequence.y + 24,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 3 + 1,
+                    color: ['#38bdf8', '#0ea5e9', '#f59e0b', '#ffffff'][i % 4],
+                    life: 30,
+                    size: 3.5
+                });
+            }
+
             triggerStageClear(false);
+        }
+    }
+}
+
+function updateSpaceshipSequence() {
+    if (!spaceshipSequence.active) return;
+
+    if (spaceshipSequence.state === 'boss_descend') {
+        // En los niveles de jefe, la nave espacial desciende suavemente a recoger a Astro
+        spaceshipSequence.timer++;
+        const targetY = spaceshipSequence.targetY || (astro ? astro.y - 12 : 120);
+        spaceshipSequence.y += (targetY - spaceshipSequence.y) * 0.08;
+        if (astro) {
+            spaceshipSequence.x += (astro.x + 10 - spaceshipSequence.x) * 0.08;
+        }
+
+        // Estela azulada de posicionamiento
+        if (spaceshipSequence.timer % 3 === 0) {
+            particles.push({
+                x: spaceshipSequence.x + 10,
+                y: spaceshipSequence.y + 20,
+                vx: (Math.random() - 0.5) * 2,
+                vy: Math.random() * 2 + 1,
+                color: '#38bdf8',
+                life: 16,
+                size: 2.5
+            });
+        }
+
+        if (Math.abs(spaceshipSequence.y - targetY) < 5 || spaceshipSequence.timer > 40) {
+            spaceshipSequence.astroBoarded = true;
+            spaceshipSequence.state = 'takeoff';
+            spaceshipSequence.timer = 0;
+            spaceshipSequence.vx = 0.8;
+            spaceshipSequence.vy = -1.2;
+            try {
+                if (window.sounds && window.sounds.playSpaceshipLaunch) {
+                    window.sounds.playSpaceshipLaunch();
+                }
+            } catch (e) {}
+        }
+    } else if (spaceshipSequence.state === 'takeoff') {
+        spaceshipSequence.timer++;
+        // Aceleración aerodinámica hacia las estrellas
+        spaceshipSequence.vy -= 0.16;
+        spaceshipSequence.vx += 0.13;
+        spaceshipSequence.x += spaceshipSequence.vx;
+        spaceshipSequence.y += spaceshipSequence.vy;
+        spaceshipSequence.angle = Math.min(0.40, spaceshipSequence.angle + 0.012);
+
+        // Chorro continuo de plasma y fuego de los propulsores gemelos
+        const rearX = spaceshipSequence.x - 4;
+        const rearY = spaceshipSequence.y + 22;
+        for (let i = 0; i < 3; i++) {
+            particles.push({
+                x: rearX + (Math.random() - 0.5) * 4,
+                y: rearY + (Math.random() - 0.5) * 4,
+                vx: -spaceshipSequence.vx * 0.6 - Math.random() * 2,
+                vy: -spaceshipSequence.vy * 0.3 + Math.random() * 2 - 1,
+                color: ['#ffffff', '#38bdf8', '#0284c7', '#f97316', '#fbbf24'][Math.floor(Math.random() * 5)],
+                life: 20 + Math.random() * 10,
+                size: 2.5 + Math.random() * 2.5
+            });
         }
     }
 }
@@ -567,7 +685,7 @@ function checkVerticalCollision(ent) {
                 coyoteTimer = 8;
                 break;
             } else if (tile === 9) {
-                if (ent === astro) killPlayer();
+                if (ent === astro) killPlayer(true);
             }
         }
     } else if (ent.vy < 0) {
@@ -659,9 +777,11 @@ function updatePlasmaShots() {
 
         let hit = false;
         for (let e of activeEnemies) {
-            if (e.alive && checkAABB(ps, e)) {
+            const enemyBox = { x: e.x, y: e.y, w: e.w || 22, h: e.h || 24 };
+            if (e.alive && checkAABB(ps, enemyBox)) {
                 e.alive = false;
-                score += 150;
+                score += 200;
+                addFloatingText('+200', e.x + 10, e.y, '#38bdf8');
                 window.sounds.playStomp();
                 createExplosion(e.x + 10, e.y + 10, '#38bdf8');
                 hit = true;
@@ -908,14 +1028,24 @@ function damagePlayer() {
     }
 }
 
-function killPlayer() {
+function killPlayer(fromPit = false) {
     if (astro.isDying) return;
     astro.isDying = true;
-    astro.vy = -8.2;
-    astro.vx = 0;
     astro.deathTimer = 0;
+    astro.vx = 0;
+    astro.fromPit = fromPit;
+
+    if (fromPit) {
+        // Salto visible y cómico desde el foso estilo Super Mario
+        astro.y = VIEW_HEIGHT - 6;
+        astro.vy = -10.5;
+    } else {
+        astro.vy = -8.5;
+    }
+
     lives--;
     updateUI();
+    triggerScreenShake(6);
     if (lives > 0) {
         try { window.sounds.playPlayerDie(); } catch (e) {}
     } else {
@@ -956,6 +1086,16 @@ function triggerStageClear(isWorldVictory) {
     } catch (e) {}
 
     if (isWorldVictory) {
+        // En niveles de Boss, la nave espacial de Astro desciende desde el espacio para recogerlo
+        spaceshipSequence.active = true;
+        spaceshipSequence.x = Math.max(cameraX + 50, (astro ? astro.x + 36 : cameraX + 140));
+        spaceshipSequence.y = -60;
+        spaceshipSequence.targetY = (astro ? astro.y - 12 : 120);
+        spaceshipSequence.state = 'boss_descend';
+        spaceshipSequence.timer = 0;
+        spaceshipSequence.astroBoarded = false;
+        spaceshipSequence.angle = 0.12;
+
         if (currentWorldNum < 9) {
             saveState.unlockedWorld = Math.max(saveState.unlockedWorld, currentWorldNum + 1);
             saveState.unlockedLevel = 1;
@@ -1179,9 +1319,14 @@ function render() {
         drawGoldenStar(victoryCoreDropped.x - cameraX, victoryCoreDropped.y);
     }
 
+    // Nave Espacial de Astro (Viaje interplanetario entre niveles 2026)
+    if (spaceshipSequence.active) {
+        drawAstroSpaceship(spaceshipSequence.x - cameraX, spaceshipSequence.y, spaceshipSequence.angle);
+    }
+
     // El Jugador: Astro (con alta visibilidad y animaciones)
-    if (!astro.isDying || astro.deathTimer < 90) {
-        if (!isStageClear || (levelData && levelData.isBossLevel)) {
+    if (!spaceshipSequence.astroBoarded) {
+        if (!astro.isDying || astro.deathTimer < 110) {
             drawAstroModern();
         }
     }
@@ -2547,6 +2692,168 @@ function drawMarioTile(tile, x, y, c, r) {
 }
 
 // ==========================================
+// DIBUJO DE LA NAVE ESPACIAL DE ASTRO (SP-1 HUGO SP STUDIOS)
+// ==========================================
+function drawAstroSpaceship(sx, sy, angle = 0) {
+    ctx.save();
+    ctx.translate(Math.floor(sx + 28), Math.floor(sy + 18));
+    ctx.rotate(angle);
+
+    const isTakeoff = (spaceshipSequence.state === 'takeoff');
+    const isWaiting = (spaceshipSequence.state === 'waiting');
+
+    // 1. Chorro de Plasma de los Propulsores Gemelos
+    if (isTakeoff) {
+        const flamePulse = 18 + Math.random() * 14;
+
+        // Propulsor superior
+        const flameGradTop = ctx.createLinearGradient(-22, -5, -22 - flamePulse, -5);
+        flameGradTop.addColorStop(0, '#ffffff');
+        flameGradTop.addColorStop(0.25, '#38bdf8');
+        flameGradTop.addColorStop(0.65, '#f97316');
+        flameGradTop.addColorStop(1, 'rgba(239, 68, 68, 0)');
+        ctx.fillStyle = flameGradTop;
+        ctx.beginPath();
+        ctx.moveTo(-20, -9);
+        ctx.lineTo(-22 - flamePulse, -5);
+        ctx.lineTo(-20, -1);
+        ctx.closePath();
+        ctx.fill();
+
+        // Propulsor inferior
+        const flameGradBot = ctx.createLinearGradient(-22, 7, -22 - flamePulse, 7);
+        flameGradBot.addColorStop(0, '#ffffff');
+        flameGradBot.addColorStop(0.25, '#38bdf8');
+        flameGradBot.addColorStop(0.65, '#f97316');
+        flameGradBot.addColorStop(1, 'rgba(239, 68, 68, 0)');
+        ctx.fillStyle = flameGradBot;
+        ctx.beginPath();
+        ctx.moveTo(-20, 3);
+        ctx.lineTo(-22 - flamePulse, 7);
+        ctx.lineTo(-20, 11);
+        ctx.closePath();
+        ctx.fill();
+    } else if (isWaiting) {
+        // Tren de aterrizaje de titanio
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(-14, 12, 4, 10);
+        ctx.fillRect(8, 12, 4, 10);
+        // Patines de apoyo magnéticos
+        ctx.fillStyle = '#0ea5e9';
+        ctx.fillRect(-18, 20, 12, 3);
+        ctx.fillRect(4, 20, 12, 3);
+    }
+
+    // 2. Alas delta estabilizadoras
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.moveTo(-16, -14);
+    ctx.lineTo(8, -14);
+    ctx.lineTo(14, 0);
+    ctx.lineTo(8, 14);
+    ctx.lineTo(-16, 14);
+    ctx.lineTo(-8, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Luces LED de navegación
+    const blink = Math.sin(Date.now() * 0.01) > 0;
+    ctx.fillStyle = blink ? '#38bdf8' : '#0284c7';
+    ctx.beginPath();
+    ctx.arc(8, -14, 2, 0, Math.PI * 2);
+    ctx.arc(8, 14, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. Toberas de propulsión cromadas
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(-22, -9, 6, 7);
+    ctx.fillRect(-22, 3, 6, 7);
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fillRect(-18, -8, 2, 5);
+    ctx.fillRect(-18, 4, 2, 5);
+
+    // 4. Fuselaje aerodinámico de Titanio
+    const bodyGrad = ctx.createLinearGradient(0, -12, 0, 12);
+    bodyGrad.addColorStop(0, '#ffffff');
+    bodyGrad.addColorStop(0.3, '#f1f5f9');
+    bodyGrad.addColorStop(0.7, '#0284c7');
+    bodyGrad.addColorStop(1, '#0c4a6e');
+
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-18, -8);
+    ctx.lineTo(10, -8);
+    ctx.lineTo(26, 0);   // Morro aerodinámico
+    ctx.lineTo(10, 8);
+    ctx.lineTo(-18, 8);
+    ctx.lineTo(-14, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Franja dorada de carreras estelar Hugo SP Studios
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(-8, -1, 18, 2);
+
+    // 5. Cúpula de Cristal de la Cabina (Cockpit)
+    const canopyGrad = ctx.createLinearGradient(-4, -8, 12, 2);
+    canopyGrad.addColorStop(0, 'rgba(56, 189, 248, 0.85)');
+    canopyGrad.addColorStop(0.6, 'rgba(14, 165, 233, 0.6)');
+    canopyGrad.addColorStop(1, 'rgba(2, 132, 199, 0.35)');
+
+    ctx.fillStyle = canopyGrad;
+    ctx.beginPath();
+    ctx.moveTo(-4, -6);
+    ctx.lineTo(12, -6);
+    ctx.lineTo(16, 0);
+    ctx.lineTo(12, 3);
+    ctx.lineTo(-4, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Reflejo blanco en la carlinga
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-2, -5);
+    ctx.lineTo(8, -5);
+    ctx.stroke();
+
+    // 6. Astro dentro de la cabina (cuando está a bordo)
+    if (spaceshipSequence.astroBoarded) {
+        // Casco de Astro pilotando visible tras el cristal
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(3, -2, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Visor holográfico azul/cian de Astro
+        ctx.fillStyle = '#0ea5e9';
+        ctx.beginPath();
+        ctx.ellipse(4.5, -2, 2.5, 1.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Brillo del visor
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(4, -3, 2, 0.8);
+    }
+
+    // 7. Insignia "SP-1" estilizada
+    ctx.save();
+    ctx.font = 'bold 5px system-ui, sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.textAlign = 'center';
+    ctx.fillText('SP-1', -4, 6);
+    ctx.restore();
+
+    ctx.restore();
+}
+
+// ==========================================
 // DIBUJO DE ASTRO 2026 (AAA 2.5D CON ANATOMÍA ARTICULADA Y EFECTOS)
 // ==========================================
 function drawAstroModern() {
@@ -2563,15 +2870,23 @@ function drawAstroModern() {
     }
 
     // 2. Squash, Stretch y Orientación
-    ctx.translate(px + astro.w / 2, py + astro.h);
-    ctx.scale(astro.squash, astro.stretch);
+    const cx = px + astro.w / 2;
+    const cy = py + astro.h / 2;
 
-    // Inclinación aerodinámica al correr
-    if (Math.abs(astro.vx) > 0.5) {
-        const lean = (astro.vx > 0 ? 0.08 : -0.08);
-        ctx.rotate(lean);
+    if (astro.isDying) {
+        ctx.translate(cx, cy);
+        const spin = astro.deathTimer * 0.22;
+        ctx.rotate(spin);
+        ctx.translate(-cx, -cy);
+    } else {
+        ctx.translate(cx, py + astro.h);
+        ctx.scale(astro.squash, astro.stretch);
+        if (Math.abs(astro.vx) > 0.5) {
+            const lean = (astro.vx > 0 ? 0.08 : -0.08);
+            ctx.rotate(lean);
+        }
+        ctx.translate(-cx, -(py + astro.h));
     }
-    ctx.translate(-(px + astro.w / 2), -(py + astro.h));
 
     if (astro.facing === 'left') {
         ctx.scale(-1, 1);
@@ -2837,16 +3152,25 @@ function drawAstroModern() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Brillo azul holográfico interior (Ojo HUD cibernético)
-    ctx.fillStyle = visorColor;
-    ctx.beginPath();
-    ctx.ellipse(visorCX + 1, visorCY, visorW * 0.65, visorH * 0.45, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (astro.isDying) {
+        // Ojos de derrota cómica "X X" en el visor
+        ctx.fillStyle = '#f87171';
+        ctx.font = 'bold 6px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('X', visorCX - 2, visorCY + 2);
+        ctx.fillText('X', visorCX + 2.5, visorCY + 2);
+    } else {
+        // Brillo azul holográfico interior (Ojo HUD cibernético)
+        ctx.fillStyle = visorColor;
+        ctx.beginPath();
+        ctx.ellipse(visorCX + 1, visorCY, visorW * 0.65, visorH * 0.45, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-    // Línea de escaneo HUD dinámica
-    const scanY = visorCY - 1.5 + Math.sin(Date.now() * 0.008) * 1.5;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(visorCX - 2, scanY, 5, 0.8);
+        // Línea de escaneo HUD dinámica
+        const scanY = visorCY - 1.5 + Math.sin(Date.now() * 0.008) * 1.5;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(visorCX - 2, scanY, 5, 0.8);
+    }
 
     // Reflejo especular blanco curvado de cristal en la esquina superior
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
@@ -4285,9 +4609,9 @@ function showVictoryModal(isBossDefeated) {
             }
         } else {
             if (title) title.innerText = `¡JEFE DEL MUNDO ${currentWorldNum} DERROTADO!`;
-            if (desc) desc.innerText = `¡Has obtenido la Estrella Mágica! El portal hacia el MUNDO ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name} se ha abierto.`;
+            if (desc) desc.innerText = `¡Has obtenido el Hiper-Núcleo de Poder! Astro aborda su nave espacial SP-1 y despega a velocidad luz rumbo al MUNDO ${currentWorldNum + 1}: ${WORLDS_CONFIG[currentWorldNum].name}.`;
             if (nextBtn) {
-                nextBtn.innerText = `Viajar al Mundo ${currentWorldNum + 1}`;
+                nextBtn.innerText = `Despegar al Mundo ${currentWorldNum + 1} 🚀`;
                 nextBtn.onclick = () => {
                     modal.classList.add('hidden');
                     victorySequence.active = false;
@@ -4298,9 +4622,9 @@ function showVictoryModal(isBossDefeated) {
         }
     } else {
         if (title) title.innerText = `¡NIVEL ${currentWorldNum}-${currentLevelNum} COMPLETADO!`;
-        if (desc) desc.innerText = `¡Excelente salto! Te acercas al castillo del Boss final.`;
+        if (desc) desc.innerText = `¡Misión cumplida! Astro ha abordado su nave espacial SP-1 rumbo a las estrellas hacia el siguiente nivel.`;
         if (nextBtn) {
-            nextBtn.innerText = `Siguiente Nivel (${currentWorldNum}-${currentLevelNum + 1})`;
+            nextBtn.innerText = `Despegar al Siguiente Nivel (${currentWorldNum}-${currentLevelNum + 1}) 🚀`;
             nextBtn.onclick = () => {
                 modal.classList.add('hidden');
                 victorySequence.active = false;
