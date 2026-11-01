@@ -1434,46 +1434,109 @@ function renderModernLightingAndPostProcess() {
     }
     ctx.restore();
 
-    // 3. PARTÍCULAS AMBIENTALES SEGÚN EL MUNDO
+    // 3. PARTÍCULAS AMBIENTALES DINÁMICAS SEGÚN EL MUNDO (2026 ATMOSPHERIC JUICE)
     ctx.save();
     const weatherTheme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
     const now = Date.now();
 
     if (weatherTheme === "grassland") {
-        for (let i = 0; i < 10; i++) {
-            const time = (now * 0.0006 + i * 0.3) % 1;
-            const wx = ((i * 48) - cameraX * 0.35 + Math.sin(time * 6 + i) * 15) % VIEW_WIDTH;
+        // Hadas Kokiri y briznas de hierba mágicas flotantes
+        for (let i = 0; i < 12; i++) {
+            const time = (now * 0.0006 + i * 0.28) % 1;
+            const wx = ((i * 42) - cameraX * 0.35 + Math.sin(time * 6 + i) * 16) % VIEW_WIDTH;
             const wy = (time * VIEW_HEIGHT);
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(74, 222, 128, 0.45)' : 'rgba(254, 240, 138, 0.4)';
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(74, 222, 128, 0.55)' : ((i % 2 === 0) ? 'rgba(254, 240, 138, 0.5)' : 'rgba(56, 189, 248, 0.45)');
             ctx.beginPath();
-            ctx.ellipse(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 2.5, 1.5, Math.sin(time * 4), 0, Math.PI * 2);
+            ctx.ellipse(drawX, wy, 2.5, 1.5, Math.sin(time * 4), 0, Math.PI * 2);
             ctx.fill();
         }
     } else if (weatherTheme === "desert") {
-        for (let i = 0; i < 14; i++) {
-            const time = (now * 0.001 + i * 0.25) % 1;
-            const wx = ((i * 36) - cameraX * 0.5 + time * 60) % VIEW_WIDTH;
-            const wy = 40 + (i * 14) + Math.sin(time * 8) * 8;
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
-            ctx.fillRect(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 2, 2);
+        // Arena dorada y polvo del desierto volando con el viento cálido
+        for (let i = 0; i < 18; i++) {
+            const time = (now * 0.0012 + i * 0.2) % 1;
+            const wx = ((i * 32) - cameraX * 0.55 + time * 70) % VIEW_WIDTH;
+            const wy = 30 + (i * 12) + Math.sin(time * 8 + i) * 10;
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(251, 191, 36, 0.45)' : 'rgba(245, 158, 11, 0.35)';
+            ctx.fillRect(drawX, wy, (i % 3 === 0) ? 2.5 : 1.8, (i % 3 === 0) ? 2.5 : 1.8);
         }
-    } else if (weatherTheme === "ice") {
+    } else if (weatherTheme === "neon_cave") {
+        // Esporas bioluminiscentes y polvillo de cristal flotando hacia arriba
         for (let i = 0; i < 16; i++) {
-            const time = (now * 0.0008 + i * 0.2) % 1;
-            const wx = ((i * 32) - cameraX * 0.3 + Math.sin(time * 5 + i) * 12) % VIEW_WIDTH;
-            const wy = (time * VIEW_HEIGHT);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            const time = (now * 0.0007 + i * 0.22) % 1;
+            const wx = ((i * 34) - cameraX * 0.3 + Math.sin(time * 5 + i) * 12) % VIEW_WIDTH;
+            const wy = (1 - time) * VIEW_HEIGHT; // Asciende suavemente
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(0, 242, 254, 0.5)' : 'rgba(192, 132, 252, 0.5)';
             ctx.beginPath();
-            ctx.arc(wx < 0 ? wx + VIEW_WIDTH : wx, wy, 1.8, 0, Math.PI * 2);
+            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.2 : 1.5, 0, Math.PI * 2);
             ctx.fill();
         }
+    } else if (weatherTheme === "ocean") {
+        // Brisa marina, rocío y destellos de sol en la atmósfera tropical
+        for (let i = 0; i < 14; i++) {
+            const time = (now * 0.0009 + i * 0.25) % 1;
+            const wx = ((i * 40) - cameraX * 0.4 + time * 45) % VIEW_WIDTH;
+            const wy = 80 + Math.sin(time * 6 + i) * 25 + (i * 8);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(255, 255, 255, 0.6)' : 'rgba(56, 189, 248, 0.4)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "ice") {
+        // Copos de nieve cristalinos flotando y arremolinándose
+        for (let i = 0; i < 22; i++) {
+            const time = (now * 0.0009 + i * 0.18) % 1;
+            const wx = ((i * 28) - cameraX * 0.35 + Math.sin(time * 5 + i) * 15 + time * 25) % VIEW_WIDTH;
+            const wy = (time * VIEW_HEIGHT);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(255, 255, 255, 0.85)' : 'rgba(224, 242, 254, 0.6)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 4 === 0) ? 2.2 : 1.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "spooky_forest") {
+        // Fuego fatuo espectral y esporas moradas flotantes
+        for (let i = 0; i < 14; i++) {
+            const time = (now * 0.0005 + i * 0.3) % 1;
+            const wx = ((i * 38) - cameraX * 0.35 + Math.sin(time * 7 + i) * 20) % VIEW_WIDTH;
+            const wy = 40 + Math.cos(time * 5 + i) * 35 + (i * 12);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(168, 85, 247, 0.45)' : 'rgba(45, 212, 191, 0.45)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.5 : 1.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "airship") {
+        // Volutas de vapor dorado al atardecer y chispas de propulsores de vapor
+        for (let i = 0; i < 16; i++) {
+            const time = (now * 0.0011 + i * 0.22) % 1;
+            const wx = ((i * 32) - cameraX * 0.5 + time * 55) % VIEW_WIDTH;
+            const wy = 50 + (i * 10) + Math.sin(time * 6) * 12;
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(253, 186, 116, 0.4)' : 'rgba(251, 146, 60, 0.35)';
+            ctx.fillRect(drawX, wy, (i % 3 === 0) ? 2.5 : 1.6, (i % 3 === 0) ? 2.5 : 1.6);
+        }
+    } else if (weatherTheme === "lava_castle") {
+        // Ceniza volcánica y brasas incandescentes flotando hacia el cielo
+        for (let i = 0; i < 24; i++) {
+            const time = (now * 0.0014 + i * 0.2) % 1;
+            const wx = ((i * 26) - cameraX * 0.4 + Math.sin(time * 7 + i) * 18) % VIEW_WIDTH;
+            const wy = (1 - time) * VIEW_HEIGHT;
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(254, 240, 138, 0.7)' : ((i % 2 === 0) ? 'rgba(249, 115, 22, 0.65)' : 'rgba(239, 68, 68, 0.55)');
+            ctx.fillRect(drawX, wy, (i % 4 === 0) ? 2.6 : 1.8, (i % 4 === 0) ? 2.6 : 1.8);
+        }
     } else if (weatherTheme === "space") {
-        for (let i = 0; i < 12; i++) {
-            const twinkle = Math.sin(now * 0.004 + i) * 0.5 + 0.5;
-            const sx = (i * 42 + 10) % VIEW_WIDTH;
-            const sy = (i * 24 + 15) % VIEW_HEIGHT;
-            ctx.fillStyle = `rgba(192, 132, 252, ${twinkle * 0.55})`;
-            ctx.fillRect(sx, sy, 2.2, 2.2);
+        // Polvo estelar cósmico y centelleo de micro-estrellas
+        for (let i = 0; i < 18; i++) {
+            const twinkle = Math.sin(now * 0.005 + i * 1.3) * 0.5 + 0.5;
+            const sx = (i * 36 + 8) % VIEW_WIDTH;
+            const sy = (i * 19 + 12) % VIEW_HEIGHT;
+            ctx.fillStyle = (i % 2 === 0) ? `rgba(192, 132, 252, ${twinkle * 0.7})` : `rgba(56, 189, 248, ${twinkle * 0.7})`;
+            ctx.fillRect(sx, sy, (i % 3 === 0) ? 2.2 : 1.4, (i % 3 === 0) ? 2.2 : 1.4);
         }
     }
     ctx.restore();
@@ -1693,174 +1756,690 @@ function renderThemedBackdrop() {
     }
 
     if (theme === "lava_castle") {
-        // === MUNDO 8: FORTALEZA DE FUEGO, LAVA Y MAGMA ===
-        // Cielo ardiente con resplandor volcánico profundo
+        // ==========================================
+        // === MUNDO 8: FORTALEZA DE FUEGO, LAVA Y MAGMA (AAA VOLCANIC APOCALYPSE) ===
+        // ==========================================
+        // 1. Cielo ardiente con resplandor volcánico profundo y ceniza
         const lavaSky = ctx.createLinearGradient(0, 0, 0, 192);
         lavaSky.addColorStop(0, '#150202');
-        lavaSky.addColorStop(0.5, '#450a0a');
-        lavaSky.addColorStop(1, '#7f1d1d');
+        lavaSky.addColorStop(0.45, '#450a0a');
+        lavaSky.addColorStop(0.8, '#7f1d1d');
+        lavaSky.addColorStop(1, '#dc2626');
         ctx.fillStyle = lavaSky;
         ctx.fillRect(0, 0, VIEW_WIDTH, 192);
 
-        // Volcanes colosales lejanos con ríos de magma
+        // 2. Volcanes colosales lejanos con ríos de magma y nubes de piroclastos
         for (let i = 0; i < 4; i++) {
-            const vx = ((i * 170) - bgOffset * 0.5) % (VIEW_WIDTH * 2.2);
-            ctx.fillStyle = '#260404';
+            const vx = ((i * 180 + 30) - bgOffset * 0.3) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#1e0505';
             ctx.beginPath();
-            ctx.moveTo(vx - 85, 192);
-            ctx.lineTo(vx, 55 + (i % 2) * 20);
-            ctx.lineTo(vx + 85, 192);
+            ctx.moveTo(vx - 95, 192);
+            ctx.lineTo(vx, 45 + (i % 2) * 18);
+            ctx.lineTo(vx + 95, 192);
             ctx.fill();
 
             // Cráter ardiente con lava hirviente
-            ctx.fillStyle = '#dc2626';
+            const craterY = 45 + (i % 2) * 18;
+            ctx.fillStyle = '#ef4444';
             ctx.beginPath();
-            ctx.ellipse(vx, 55 + (i % 2) * 20, 18, 5, 0, 0, Math.PI * 2);
+            ctx.ellipse(vx, craterY, 20, 6, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#fef08a';
             ctx.beginPath();
-            ctx.ellipse(vx, 55 + (i % 2) * 20, 10, 3, 0, 0, Math.PI * 2);
+            ctx.ellipse(vx, craterY, 12, 3.5, 0, 0, Math.PI * 2);
             ctx.fill();
 
+            // Penacho de humo y ceniza volcánica
+            const smokeTime = Date.now() * 0.002;
+            for (let s = 0; s < 3; s++) {
+                const sOffset = (smokeTime + s * 0.33) % 1;
+                const smX = vx + Math.sin(smokeTime * 4 + s) * 8;
+                const smY = craterY - sOffset * 35;
+                ctx.fillStyle = 'rgba(69, 10, 10, 0.45)';
+                ctx.beginPath();
+                ctx.arc(smX, smY, 8 + sOffset * 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
             // Cascada de lava bajando por la ladera del volcán
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(vx, 58 + (i % 2) * 20);
-            ctx.quadraticCurveTo(vx + 14, 115, vx + 22, 192);
+            ctx.moveTo(vx, craterY + 3);
+            ctx.quadraticCurveTo(vx + 16, 115, vx + 26, 192);
+            ctx.stroke();
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 1.2;
             ctx.stroke();
         }
 
-        // Volcanes cercanos de relieve
+        // 3. Volcanes cercanos y riscos de basalto negro
         for (let i = 0; i < 3; i++) {
-            const vx = ((i * 220 + 70) - bgOffset * 0.85) % (VIEW_WIDTH * 2.2);
-            ctx.fillStyle = '#3f0707';
+            const vx = ((i * 230 + 80) - bgOffset * 0.65) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#300808';
             ctx.beginPath();
-            ctx.moveTo(vx - 70, 192);
-            ctx.lineTo(vx, 75);
-            ctx.lineTo(vx + 70, 192);
+            ctx.moveTo(vx - 75, 192);
+            ctx.lineTo(vx, 70);
+            ctx.lineTo(vx + 75, 192);
             ctx.fill();
 
             ctx.fillStyle = '#f97316';
             ctx.beginPath();
-            ctx.ellipse(vx, 75, 16, 4, 0, 0, Math.PI * 2);
+            ctx.ellipse(vx, 70, 18, 4.5, 0, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Lago de lava ardiente en el horizonte
-        const lavaGrad = ctx.createLinearGradient(0, 184, 0, 192);
-        lavaGrad.addColorStop(0, '#fbbf24');
-        lavaGrad.addColorStop(0.35, '#ea580c');
+        // 4. Lago de lava ardiente en el horizonte
+        const lavaGrad = ctx.createLinearGradient(0, 182, 0, 192);
+        lavaGrad.addColorStop(0, '#fef08a');
+        lavaGrad.addColorStop(0.35, '#f97316');
+        lavaGrad.addColorStop(0.7, '#ea580c');
         lavaGrad.addColorStop(1, '#7f1d1d');
         ctx.fillStyle = lavaGrad;
-        ctx.fillRect(0, 184, VIEW_WIDTH, 8);
+        ctx.fillRect(0, 182, VIEW_WIDTH, 10);
 
-        // Chispas de fuego y brasas incandescentes flotando en el aire
+        // 5. Chispas de fuego y brasas incandescentes flotando en el aire
         const now = Date.now();
-        for (let i = 0; i < 26; i++) {
+        for (let i = 0; i < 28; i++) {
             const sx = ((i * 37 + Math.sin(now / 500 + i) * 15) - bgOffset * 1.5) % VIEW_WIDTH;
             const drawSx = (sx < 0) ? sx + VIEW_WIDTH : sx;
-            const sy = (VIEW_HEIGHT - 60) - ((now / 18 + i * 26) % (VIEW_HEIGHT - 40));
+            const sy = (VIEW_HEIGHT - 55) - ((now / 16 + i * 26) % (VIEW_HEIGHT - 35));
             ctx.fillStyle = (i % 3 === 0) ? '#fef08a' : ((i % 2 === 0) ? '#f97316' : '#ef4444');
             const sparkSize = (i % 4 === 0) ? 3 : 2;
             ctx.fillRect(drawSx, sy, sparkSize, sparkSize);
         }
 
     } else if (theme === "desert") {
-        // === MUNDO 2: PIRÁMIDES Y DUNAS DORADAS ===
-        ctx.fillStyle = '#fef08a';
+        // ==========================================
+        // === MUNDO 2: PIRÁMIDES Y DUNAS DORADAS (EGIPTO RETRO-FUTURISTA 2026) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Sol ardiente del desierto con halo y rayos solares
+        const sunX = VIEW_WIDTH - 65;
+        const sunY = 42;
+        const sunPulse = Math.sin(Date.now() * 0.002) * 2;
+        const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 38 + sunPulse);
+        sunGrad.addColorStop(0, '#ffffff');
+        sunGrad.addColorStop(0.3, '#fef08a');
+        sunGrad.addColorStop(0.65, '#f59e0b');
+        sunGrad.addColorStop(1, 'rgba(234, 88, 12, 0)');
+        ctx.fillStyle = sunGrad;
         ctx.beginPath();
-        ctx.arc(VIEW_WIDTH - 60, 45, 22, 0, Math.PI * 2);
+        ctx.arc(sunX, sunY, 38 + sunPulse, 0, Math.PI * 2);
         ctx.fill();
 
+        // 2. Capa 1: Pirámides Colosales Lejanas con Piramidión Dorado Brillante
         for (let i = 0; i < 4; i++) {
-            const px = ((i * 200) - bgOffset) % (VIEW_WIDTH * 2.2);
-            ctx.fillStyle = '#b45309';
-            ctx.beginPath();
-            ctx.moveTo(px - 70, 192);
-            ctx.lineTo(px, 85 + (i % 2) * 15);
-            ctx.lineTo(px + 70, 192);
-            ctx.fill();
+            const px = ((i * 220 + 20) - bgOffset * 0.25) % (VIEW_WIDTH * 2.2);
+            const pyrH = 80 + (i % 2) * 22;
+            const pyrW = 105;
 
-            ctx.fillStyle = '#d97706';
+            // Cara iluminada por el sol (dorado ardiente)
+            const lightGrad = ctx.createLinearGradient(px - pyrW, 192, px, 192 - pyrH);
+            lightGrad.addColorStop(0, '#b45309');
+            lightGrad.addColorStop(0.5, '#d97706');
+            lightGrad.addColorStop(1, '#f59e0b');
+            ctx.fillStyle = lightGrad;
             ctx.beginPath();
-            ctx.moveTo(px, 85 + (i % 2) * 15);
-            ctx.lineTo(px + 70, 192);
+            ctx.moveTo(px - pyrW, 192);
+            ctx.lineTo(px, 192 - pyrH);
             ctx.lineTo(px, 192);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cara en sombra (ocre profundo)
+            const shadowGrad = ctx.createLinearGradient(px, 192 - pyrH, px + pyrW, 192);
+            shadowGrad.addColorStop(0, '#78350f');
+            shadowGrad.addColorStop(1, '#451a03');
+            ctx.fillStyle = shadowGrad;
+            ctx.beginPath();
+            ctx.moveTo(px, 192 - pyrH);
+            ctx.lineTo(px + pyrW, 192);
+            ctx.lineTo(px, 192);
+            ctx.closePath();
+            ctx.fill();
+
+            // Piramidión de oro puro en la cúspide con destello
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.moveTo(px - 14, 192 - pyrH + 14);
+            ctx.lineTo(px, 192 - pyrH);
+            ctx.lineTo(px + 14, 192 - pyrH + 14);
+            ctx.closePath();
+            ctx.fill();
+
+            // Destello brillante en la punta del piramidión
+            const gleam = Math.sin(Date.now() * 0.004 + i) > 0.6;
+            if (gleam) {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(px, 192 - pyrH, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 3. Capa 2: Silueta de la Gran Esfinge y Obeliscos con Glifos Neón
+        const sphinxX = ((310) - bgOffset * 0.45) % (VIEW_WIDTH * 2.2);
+        if (sphinxX > -80 && sphinxX < VIEW_WIDTH + 80) {
+            ctx.fillStyle = '#92400e';
+            // Cuerpo de león
+            ctx.beginPath();
+            ctx.ellipse(sphinxX, 178, 38, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Pata delantera extendida
+            ctx.fillRect(sphinxX + 22, 182, 24, 8);
+            // Cabeza y tocado Nemes faraónico
+            ctx.beginPath();
+            ctx.arc(sphinxX + 30, 160, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(sphinxX + 24, 162, 14, 12);
+        }
+
+        // Obeliscos grabados
+        for (let i = 0; i < 3; i++) {
+            const ox = ((i * 260 + 130) - bgOffset * 0.5) % (VIEW_WIDTH * 2.2);
+            ctx.fillStyle = '#78350f';
+            ctx.beginPath();
+            ctx.moveTo(ox - 5, 192);
+            ctx.lineTo(ox - 3, 135);
+            ctx.lineTo(ox, 128); // Punta afilada
+            ctx.lineTo(ox + 3, 135);
+            ctx.lineTo(ox + 5, 192);
+            ctx.closePath();
+            ctx.fill();
+
+            // Glifos misteriosos con tenue resplandor azul celeste
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(ox - 1, 142, 2, 4);
+            ctx.fillRect(ox - 1, 154, 2, 5);
+            ctx.fillRect(ox - 1, 168, 2, 6);
+        }
+
+        // 4. Capa 3: Caravana de camellos en la cresta de la duna
+        const caravanX = ((200) - bgOffset * 0.35) % (VIEW_WIDTH * 2.2);
+        ctx.fillStyle = '#78350f';
+        for (let c = 0; c < 3; c++) {
+            const cx = caravanX + c * 22;
+            const cy = 166;
+            // Cuerpo y joroba
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 6, 4, 0, 0, Math.PI * 2);
+            ctx.arc(cx - 1, cy - 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            // Cuello y cabeza
+            ctx.fillRect(cx + 4, cy - 7, 2.5, 6);
+            ctx.fillRect(cx + 4, cy - 8, 4, 2.5);
+            // Patas
+            ctx.fillRect(cx - 4, cy + 3, 1.5, 6);
+            ctx.fillRect(cx + 3, cy + 3, 1.5, 6);
+        }
+
+        // 5. Capa 4: Dunas de arena dorada ondulantes en primer plano
+        for (let i = 0; i < 5; i++) {
+            const dx = ((i * 155) - bgOffset * 0.8) % (VIEW_WIDTH * 2.1);
+            const duneGrad = ctx.createLinearGradient(dx - 80, 160, dx + 80, 192);
+            duneGrad.addColorStop(0, '#f59e0b');
+            duneGrad.addColorStop(0.5, '#d97706');
+            duneGrad.addColorStop(1, '#92400e');
+            ctx.fillStyle = duneGrad;
+            ctx.beginPath();
+            ctx.moveTo(dx - 90, 192);
+            ctx.quadraticCurveTo(dx, 165 + (i % 2) * 8, dx + 90, 192);
+            ctx.closePath();
             ctx.fill();
         }
 
-        ctx.fillStyle = '#f59e0b';
-        for (let i = 0; i < 5; i++) {
-            const dx = ((i * 150) - bgOffset * 1.4) % (VIEW_WIDTH * 2);
+        // 6. Oasis en el desierto con palmeras y agua turquesa
+        const oasisX = ((140) - bgOffset * 0.75) % (VIEW_WIDTH * 2.2);
+        if (oasisX > -60 && oasisX < VIEW_WIDTH + 60) {
+            // Estanque de agua turquesa
+            ctx.fillStyle = '#06b6d4';
             ctx.beginPath();
-            ctx.arc(dx, 200, 60, Math.PI, 0, false);
+            ctx.ellipse(oasisX, 188, 28, 6, 0, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Palmera del oasis
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(oasisX - 10, 188);
+            ctx.quadraticCurveTo(oasisX - 18, 160, oasisX - 8, 138);
+            ctx.stroke();
+
+            // Hojas verdes de palmera
+            ctx.fillStyle = '#16a34a';
+            for (let a = -1.2; a <= 1.2; a += 0.5) {
+                const lx = oasisX - 8 + Math.cos(a) * 16;
+                const ly = 138 + Math.sin(a) * 12;
+                ctx.beginPath();
+                ctx.moveTo(oasisX - 8, 138);
+                ctx.quadraticCurveTo(oasisX - 8, 130, lx, ly);
+                ctx.stroke();
+            }
         }
+
+        ctx.restore();
 
     } else if (theme === "neon_cave") {
-        // === MUNDO 3: CAVERNA DE CRISTALES NEÓN ===
-        ctx.fillStyle = '#1e1b4b';
-        for (let i = 0; i < 12; i++) {
-            const sx = ((i * 50) - bgOffset * 0.8) % (VIEW_WIDTH * 2);
+        // ==========================================
+        // === MUNDO 3: CAVERNA DE CRISTALES NEÓN Y BIOLUMINISCENCIA (2026 AAA) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Techo rocoso de caverna con estalactitas afiladas y gotas de agua
+        for (let i = 0; i < 15; i++) {
+            const sx = ((i * 44) - bgOffset * 0.4) % (VIEW_WIDTH * 2);
+            const sLen = 28 + (i % 4) * 12;
+
+            // Degradado de roca sombría a punta de cristal fluorescente
+            const stGrad = ctx.createLinearGradient(sx, 0, sx, sLen);
+            stGrad.addColorStop(0, '#0f172a');
+            stGrad.addColorStop(0.7, '#1e1b4b');
+            stGrad.addColorStop(1, (i % 2 === 0) ? '#00f2fe' : '#c084fc');
+            ctx.fillStyle = stGrad;
             ctx.beginPath();
             ctx.moveTo(sx, 0);
-            ctx.lineTo(sx + 15, 35 + (i % 4) * 10);
-            ctx.lineTo(sx + 30, 0);
+            ctx.lineTo(sx + 12, sLen);
+            ctx.lineTo(sx + 24, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            // Gota de agua brillante goteando de la punta de la estalactita
+            if (i % 3 === 0) {
+                const dropTime = (Date.now() * 0.002 + i) % 1;
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(sx + 12, sLen + dropTime * 45, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 2. Cascada subterránea violeta etérea en la pared del fondo
+        const fallX = ((240) - bgOffset * 0.3) % (VIEW_WIDTH * 2.2);
+        if (fallX > -40 && fallX < VIEW_WIDTH + 40) {
+            const fallGrad = ctx.createLinearGradient(fallX, 30, fallX + 26, 192);
+            fallGrad.addColorStop(0, 'rgba(192, 132, 252, 0.45)');
+            fallGrad.addColorStop(0.5, 'rgba(147, 51, 234, 0.6)');
+            fallGrad.addColorStop(1, 'rgba(0, 242, 254, 0.5)');
+            ctx.fillStyle = fallGrad;
+            ctx.fillRect(fallX, 30, 24, 162);
+
+            // Resplandor y bruma mágica en la base
+            ctx.fillStyle = 'rgba(192, 132, 252, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(fallX + 12, 185, 35, 12, 0, 0, Math.PI * 2);
             ctx.fill();
         }
-        for (let i = 0; i < 10; i++) {
-            const cx = ((i * 75) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
-            const cy = 130 + (i % 3) * 15;
-            ctx.fillStyle = (i % 2 === 0) ? '#00f2fe' : '#c084fc';
+
+        // 3. Formaciones colosales de cristales de cuarzo y amatista neón (Geodas AAA)
+        for (let i = 0; i < 9; i++) {
+            const cx = ((i * 85 + 20) - bgOffset * 0.7) % (VIEW_WIDTH * 2.2);
+            const cy = 192;
+            const cColor = (i % 3 === 0) ? '#00f2fe' : ((i % 2 === 0) ? '#c084fc' : '#f43f5e');
+            const cLight = (i % 3 === 0) ? '#e0f2fe' : ((i % 2 === 0) ? '#f3e8ff' : '#ffe4e6');
+
+            // Cristal central gigante
+            ctx.fillStyle = cColor;
+            ctx.beginPath();
+            ctx.moveTo(cx - 8, cy);
+            ctx.lineTo(cx - 6, cy - 36 - (i % 3) * 12);
+            ctx.lineTo(cx, cy - 48 - (i % 3) * 14); // Cúspide
+            ctx.lineTo(cx + 6, cy - 36 - (i % 3) * 12);
+            ctx.lineTo(cx + 8, cy);
+            ctx.closePath();
+            ctx.fill();
+
+            // Faceta biselada brillante
+            ctx.fillStyle = cLight;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + 6, cy - 18);
-            ctx.lineTo(cx + 12, cy);
+            ctx.lineTo(cx, cy - 48 - (i % 3) * 14);
+            ctx.lineTo(cx + 6, cy - 36 - (i % 3) * 12);
+            ctx.lineTo(cx + 8, cy);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cristal lateral oblicuo
+            ctx.fillStyle = cColor;
+            ctx.beginPath();
+            ctx.moveTo(cx + 4, cy);
+            ctx.lineTo(cx + 16, cy - 26);
+            ctx.lineTo(cx + 14, cy);
+            ctx.closePath();
+            ctx.fill();
+
+            // Halo lumínico neón del cristal
+            const glowPulse = Math.sin(Date.now() * 0.004 + i) * 3 + 12;
+            const glowGrad = ctx.createRadialGradient(cx, cy - 25, 2, cx, cy - 25, glowPulse);
+            glowGrad.addColorStop(0, (i % 2 === 0) ? 'rgba(0, 242, 254, 0.45)' : 'rgba(192, 132, 252, 0.45)');
+            glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 25, glowPulse, 0, Math.PI * 2);
             ctx.fill();
         }
+
+        // 4. Setas cavernícolas bioluminiscentes en el suelo
+        for (let i = 0; i < 7; i++) {
+            const mx = ((i * 110 + 60) - bgOffset * 0.85) % (VIEW_WIDTH * 2.2);
+            // Tallo
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(mx + 6, 184, 3, 8);
+            // Sombrero fluorescente
+            ctx.fillStyle = (i % 2 === 0) ? '#38bdf8' : '#ec4899';
+            ctx.beginPath();
+            ctx.arc(mx + 7.5, 184, 6.5, Math.PI, 0);
+            ctx.fill();
+        }
+
+        ctx.restore();
 
     } else if (theme === "ice") {
-        // === MUNDO 5: PICOS NEVADOS Y VENTISCA ===
-        for (let i = 0; i < 5; i++) {
-            const mx = ((i * 170) - bgOffset) % (VIEW_WIDTH * 2.2);
-            ctx.fillStyle = '#93c5fd';
+        // ==========================================
+        // === MUNDO 5: CUMBRES GLACIALES, AURORA BOREAL Y PALACIO HELADO (2026 AAA) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Espectacular Aurora Boreal (Luces del Norte dinámicas y ondulantes)
+        const auroraTime = Date.now() * 0.0012;
+        for (let a = 0; a < 3; a++) {
+            const aGrad = ctx.createLinearGradient(0, 10, 0, 110);
+            if (a === 0) {
+                aGrad.addColorStop(0, 'rgba(74, 222, 128, 0)');
+                aGrad.addColorStop(0.5, 'rgba(74, 222, 128, 0.38)');
+                aGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            } else if (a === 1) {
+                aGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+                aGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.32)');
+                aGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+            } else {
+                aGrad.addColorStop(0, 'rgba(236, 72, 153, 0)');
+                aGrad.addColorStop(0.5, 'rgba(236, 72, 153, 0.25)');
+                aGrad.addColorStop(1, 'rgba(74, 222, 128, 0)');
+            }
+            ctx.fillStyle = aGrad;
             ctx.beginPath();
-            ctx.moveTo(mx - 65, 192);
-            ctx.lineTo(mx, 75);
-            ctx.lineTo(mx + 65, 192);
+            ctx.moveTo(0, 80);
+            for (let x = 0; x <= VIEW_WIDTH; x += 18) {
+                const ay = 45 + Math.sin(auroraTime + x * 0.015 + a * 1.5) * 22 + Math.cos(auroraTime * 0.7 + x * 0.02) * 12;
+                ctx.lineTo(x, ay);
+            }
+            ctx.lineTo(VIEW_WIDTH, 120);
+            ctx.lineTo(0, 120);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 2. Capa 1: Cordillera de montañas de hielo escarpadas y glaciares
+        for (let i = 0; i < 4; i++) {
+            const mx = ((i * 190 + 30) - bgOffset * 0.25) % (VIEW_WIDTH * 2.2);
+            const mH = 95 + (i % 2) * 25;
+            const mW = 90;
+
+            // Cara sombría azul glaciar
+            const iceShadow = ctx.createLinearGradient(mx - mW, 192, mx, 192 - mH);
+            iceShadow.addColorStop(0, '#1e3a8a');
+            iceShadow.addColorStop(0.6, '#2563eb');
+            iceShadow.addColorStop(1, '#93c5fd');
+            ctx.fillStyle = iceShadow;
+            ctx.beginPath();
+            ctx.moveTo(mx - mW, 192);
+            ctx.lineTo(mx, 192 - mH);
+            ctx.lineTo(mx, 192);
+            ctx.closePath();
             ctx.fill();
 
+            // Cara iluminada por el resplandor polar
+            const iceLight = ctx.createLinearGradient(mx, 192 - mH, mx + mW, 192);
+            iceLight.addColorStop(0, '#ffffff');
+            iceLight.addColorStop(0.5, '#dbeafe');
+            iceLight.addColorStop(1, '#60a5fa');
+            ctx.fillStyle = iceLight;
+            ctx.beginPath();
+            ctx.moveTo(mx, 192 - mH);
+            ctx.lineTo(mx + mW, 192);
+            ctx.lineTo(mx, 192);
+            ctx.closePath();
+            ctx.fill();
+
+            // Nieve perpetua en la cima
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.moveTo(mx - 25, 120);
-            ctx.lineTo(mx, 75);
-            ctx.lineTo(mx + 25, 120);
-            ctx.lineTo(mx, 110);
+            ctx.moveTo(mx - 24, 192 - mH + 34);
+            ctx.lineTo(mx, 192 - mH);
+            ctx.lineTo(mx + 24, 192 - mH + 34);
+            ctx.lineTo(mx, 192 - mH + 26);
+            ctx.closePath();
             ctx.fill();
         }
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 20; i++) {
-            const sx = ((i * 35) - bgOffset * 1.5) % (VIEW_WIDTH * 2);
-            const sy = (Date.now() / 20 + i * 25) % VIEW_HEIGHT;
-            ctx.fillRect(sx, sy, 2, 2);
+
+        // 3. Capa 2: Palacio de Hielo de fantasía en la distancia
+        const castleIceX = ((280) - bgOffset * 0.45) % (VIEW_WIDTH * 2.2);
+        if (castleIceX > -50 && castleIceX < VIEW_WIDTH + 50) {
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.85)';
+            // Torre central
+            ctx.fillRect(castleIceX - 8, 120, 16, 72);
+            ctx.beginPath();
+            ctx.moveTo(castleIceX - 12, 120);
+            ctx.lineTo(castleIceX, 90);
+            ctx.lineTo(castleIceX + 12, 120);
+            ctx.fill();
+            // Torres laterales
+            ctx.fillRect(castleIceX - 22, 135, 10, 57);
+            ctx.beginPath();
+            ctx.moveTo(castleIceX - 25, 135);
+            ctx.lineTo(castleIceX - 17, 110);
+            ctx.lineTo(castleIceX - 9, 135);
+            ctx.fill();
+            ctx.fillRect(castleIceX + 12, 135, 10, 57);
+            ctx.beginPath();
+            ctx.moveTo(castleIceX + 9, 135);
+            ctx.lineTo(castleIceX + 17, 110);
+            ctx.lineTo(castleIceX + 25, 135);
+            ctx.fill();
         }
+
+        // 4. Capa 3: Pinos cubiertos de nieve densa
+        for (let i = 0; i < 6; i++) {
+            const px = ((i * 125 + 40) - bgOffset * 0.75) % (VIEW_WIDTH * 2.2);
+            // Tronco
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(px + 8, 140, 6, 52);
+
+            // Capas de ramas nevadas
+            for (let c = 0; c < 3; c++) {
+                const bY = 150 - c * 18;
+                const bW = 22 - c * 5;
+                ctx.fillStyle = '#0284c7';
+                ctx.beginPath();
+                ctx.moveTo(px + 11 - bW, bY);
+                ctx.lineTo(px + 11, bY - 18);
+                ctx.lineTo(px + 11 + bW, bY);
+                ctx.fill();
+                // Nieve blanca acumulada
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(px + 11 - bW, bY);
+                ctx.lineTo(px + 11, bY - 18);
+                ctx.lineTo(px + 11 + bW, bY);
+                ctx.lineTo(px + 11, bY - 10);
+                ctx.fill();
+            }
+        }
+
+        // 5. Carámbanos de hielo cristalinos colgando del cielo
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        for (let ic = 0; ic < 16; ic++) {
+            const icX = (ic * 30 - bgOffset * 0.2) % VIEW_WIDTH;
+            const icLen = 10 + (ic % 4) * 8;
+            ctx.beginPath();
+            ctx.moveTo(icX, 0);
+            ctx.lineTo(icX + 3, icLen);
+            ctx.lineTo(icX + 6, 0);
+            ctx.fill();
+        }
+
+        ctx.restore();
 
     } else if (theme === "spooky_forest") {
-        // === MUNDO 6: BOSQUE NOCTURNO Y LUNA ===
-        ctx.fillStyle = '#f8fafc';
+        // ==========================================
+        // === MUNDO 6: BOSQUE SOMBRÍO, LUNA ROJA Y ESPÍRITUS (2026 AAA) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Colosal Luna Llena Encantada (Blood/Harvest Moon misteriosa con cráteres)
+        const moonX = 75;
+        const moonY = 48;
+        const moonRadius = 26;
+
+        // Halo místico de la luna
+        const moonHalo = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.6, moonX, moonY, moonRadius * 2.2);
+        moonHalo.addColorStop(0, 'rgba(254, 215, 170, 0.45)');
+        moonHalo.addColorStop(0.5, 'rgba(249, 115, 22, 0.2)');
+        moonHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = moonHalo;
         ctx.beginPath();
-        ctx.arc(80, 50, 22, 0, Math.PI * 2);
+        ctx.arc(moonX, moonY, moonRadius * 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = '#0f172a';
-        for (let i = 0; i < 7; i++) {
-            const tx = ((i * 130) - bgOffset) % (VIEW_WIDTH * 2);
-            ctx.fillRect(tx + 20, 120, 10, 72);
+        // Disco de la luna
+        const moonGrad = ctx.createRadialGradient(moonX - 6, moonY - 6, 4, moonX, moonY, moonRadius);
+        moonGrad.addColorStop(0, '#ffffff');
+        moonGrad.addColorStop(0.4, '#fed7aa');
+        moonGrad.addColorStop(0.85, '#fdba74');
+        moonGrad.addColorStop(1, '#ea580c');
+        ctx.fillStyle = moonGrad;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cráteres lunares oscuros
+        ctx.fillStyle = 'rgba(124, 45, 18, 0.28)';
+        ctx.beginPath();
+        ctx.arc(moonX - 8, moonY - 5, 5, 0, Math.PI * 2);
+        ctx.arc(moonX + 6, moonY - 10, 4, 0, Math.PI * 2);
+        ctx.arc(moonX + 8, moonY + 7, 6, 0, Math.PI * 2);
+        ctx.arc(moonX - 4, moonY + 12, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Volutas de niebla gótica pasando por delante de la luna
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+        ctx.beginPath();
+        ctx.ellipse(moonX + 10, moonY + 4, 38, 7, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Castillo gótico siniestro de vampiros en un risco distante
+        const vampCastleX = ((260) - bgOffset * 0.3) % (VIEW_WIDTH * 2.2);
+        if (vampCastleX > -60 && vampCastleX < VIEW_WIDTH + 60) {
+            ctx.fillStyle = '#020617';
+            // Risco de roca
             ctx.beginPath();
-            ctx.arc(tx + 25, 120, 28, 0, Math.PI * 2);
+            ctx.moveTo(vampCastleX - 40, 192);
+            ctx.lineTo(vampCastleX - 10, 115);
+            ctx.lineTo(vampCastleX + 35, 115);
+            ctx.lineTo(vampCastleX + 60, 192);
+            ctx.fill();
+
+            // Torres del castillo
+            ctx.fillRect(vampCastleX - 5, 95, 12, 22);
+            ctx.beginPath();
+            ctx.moveTo(vampCastleX - 8, 95);
+            ctx.lineTo(vampCastleX + 1, 75);
+            ctx.lineTo(vampCastleX + 10, 95);
+            ctx.fill();
+            ctx.fillRect(vampCastleX + 12, 102, 10, 15);
+            ctx.beginPath();
+            ctx.moveTo(vampCastleX + 10, 102);
+            ctx.lineTo(vampCastleX + 17, 85);
+            ctx.lineTo(vampCastleX + 24, 102);
+            ctx.fill();
+
+            // Ventana iluminada en sangre
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(vampCastleX - 1, 100, 3, 5);
+        }
+
+        // 3. Árboles retorcidos y nudosos con ramas de espino
+        for (let i = 0; i < 5; i++) {
+            const tx = ((i * 155 + 30) - bgOffset * 0.7) % (VIEW_WIDTH * 2.2);
+            // Tronco retorcido de roble espectral
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.moveTo(tx + 6, 192);
+            ctx.quadraticCurveTo(tx + 18, 145, tx + 12, 110);
+            ctx.lineTo(tx + 22, 110);
+            ctx.quadraticCurveTo(tx + 28, 145, tx + 34, 192);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ramas afiladas sin hojas
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(tx + 14, 125);
+            ctx.quadraticCurveTo(tx - 10, 105, tx - 18, 85);
+            ctx.moveTo(tx + 20, 120);
+            ctx.quadraticCurveTo(tx + 40, 100, tx + 48, 80);
+            ctx.moveTo(tx + 17, 110);
+            ctx.lineTo(tx + 17, 72);
+            ctx.stroke();
+
+            // OJOS BRILLANTES en los huecos de los árboles que parpadean
+            const eyeBlink = Math.sin(Date.now() * 0.003 + i * 2) > 0.1;
+            if (eyeBlink) {
+                ctx.fillStyle = (i % 2 === 0) ? '#fde047' : '#ef4444';
+                ctx.beginPath();
+                ctx.ellipse(tx + 16, 142, 2.2, 1.4, 0.2, 0, Math.PI * 2);
+                ctx.ellipse(tx + 22, 143, 2.2, 1.4, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 4. Setas fantasma fluorescentes y lápidas con musgo
+        for (let i = 0; i < 6; i++) {
+            const sx = ((i * 120 + 75) - bgOffset * 0.9) % (VIEW_WIDTH * 2.2);
+            // Sombrero fluorescente cian/morado
+            ctx.fillStyle = (i % 2 === 0) ? '#2dd4bf' : '#a855f7';
+            ctx.beginPath();
+            ctx.arc(sx, 185, 7, Math.PI, 0);
+            ctx.fill();
+            // Tallo
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(sx - 1.5, 185, 3, 7);
+
+            // Lápidas góticas
+            if (i % 2 === 0) {
+                ctx.fillStyle = '#334155';
+                ctx.beginPath();
+                ctx.arc(sx + 24, 180, 5, Math.PI, 0);
+                ctx.rect(sx + 19, 180, 10, 12);
+                ctx.fill();
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        // 5. Fuegos Fatuos (Will-o'-the-wisps) flotantes con estela
+        for (let w = 0; w < 4; w++) {
+            const wTime = Date.now() * 0.002 + w * 1.6;
+            const wX = ((w * 130 + 50) - bgOffset * 0.5 + Math.sin(wTime * 2) * 16) % VIEW_WIDTH;
+            const wY = 120 + Math.cos(wTime) * 18;
+            const wGrad = ctx.createRadialGradient(wX, wY, 1, wX, wY, 8);
+            wGrad.addColorStop(0, '#ffffff');
+            wGrad.addColorStop(0.4, '#2dd4bf');
+            wGrad.addColorStop(1, 'rgba(45, 212, 191, 0)');
+            ctx.fillStyle = wGrad;
+            ctx.beginPath();
+            ctx.arc(wX, wY, 8, 0, Math.PI * 2);
             ctx.fill();
         }
+
+        ctx.restore();
 
     } else if (theme === "ocean") {
         // ==========================================
@@ -2041,40 +2620,274 @@ function renderThemedBackdrop() {
         ctx.restore();
 
     } else if (theme === "airship") {
-        // === MUNDO 7: FLOTA CELESTIAL Y NAVES ===
-        ctx.fillStyle = '#ea580c';
-        for (let i = 0; i < 6; i++) {
-            const cx = ((i * 160) - bgOffset * 1.2) % (VIEW_WIDTH * 2);
-            ctx.beginPath();
-            ctx.arc(cx, 160, 45, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.fillStyle = '#7c2d12';
+        // ==========================================
+        // === MUNDO 7: FLOTA CELESTIAL STEAMPUNK EN LAS NUBES (2026 AAA) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Sol poniente cálido al atardecer
+        const sunX = VIEW_WIDTH - 70;
+        const sunY = 55;
+        const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 45);
+        sunGrad.addColorStop(0, '#fef08a');
+        sunGrad.addColorStop(0.4, '#f97316');
+        sunGrad.addColorStop(0.8, '#c2410c');
+        sunGrad.addColorStop(1, 'rgba(194, 65, 12, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 45, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Islas flotantes míticas con ruinas y cascadas hacia el vacío
         for (let i = 0; i < 3; i++) {
-            const ax = ((i * 240) - bgOffset * 0.6) % (VIEW_WIDTH * 2);
+            const isX = ((i * 240 + 60) - bgOffset * 0.3) % (VIEW_WIDTH * 2.2);
+            const isY = 90 + (i % 2) * 25;
+
+            // Bloque de roca flotante
+            ctx.fillStyle = '#451a03';
             ctx.beginPath();
-            ctx.ellipse(ax, 70 + i * 25, 32, 10, 0, 0, Math.PI * 2);
+            ctx.moveTo(isX - 35, isY);
+            ctx.lineTo(isX + 35, isY);
+            ctx.lineTo(isX + 15, isY + 28);
+            ctx.lineTo(isX, isY + 38);
+            ctx.lineTo(isX - 20, isY + 26);
+            ctx.closePath();
+            ctx.fill();
+
+            // Césped dorado superior
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(isX - 35, isY, 70, 5);
+
+            // Cascada de agua cayendo hacia el vacío
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.fillRect(isX - 8, isY + 4, 6, 42);
+        }
+
+        // 3. Gran Armada de Barcos Voladores Steampunk (Airships con hélices)
+        for (let i = 0; i < 4; i++) {
+            const ax = ((i * 180 + 20) - bgOffset * 0.55) % (VIEW_WIDTH * 2.2);
+            const ay = 60 + (i % 3) * 26;
+
+            // Casco de barco de madera con quilla de bronce
+            const hullGrad = ctx.createLinearGradient(ax - 28, ay, ax + 28, ay);
+            hullGrad.addColorStop(0, '#451a03');
+            hullGrad.addColorStop(0.5, '#78350f');
+            hullGrad.addColorStop(1, '#92400e');
+            ctx.fillStyle = hullGrad;
+            ctx.beginPath();
+            ctx.moveTo(ax - 28, ay);
+            ctx.lineTo(ax + 32, ay);
+            ctx.lineTo(ax + 24, ay + 14);
+            ctx.lineTo(ax - 18, ay + 14);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ojo de buey iluminado
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(ax - 6, ay + 6, 2.5, 0, Math.PI * 2);
+            ctx.arc(ax + 8, ay + 6, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Mástil y velas infladas al viento
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(ax - 2, ay - 24, 3, 24);
+            ctx.fillStyle = '#ffedd5';
+            ctx.beginPath();
+            ctx.moveTo(ax - 2, ay - 22);
+            ctx.quadraticCurveTo(ax + 12, ay - 14, ax + 18, ay - 4);
+            ctx.lineTo(ax - 2, ay - 4);
+            ctx.closePath();
+            ctx.fill();
+
+            // Hélice de bronce trasera girando animada
+            const propAngle = Date.now() * 0.02 + i;
+            ctx.save();
+            ctx.translate(ax - 30, ay + 6);
+            ctx.rotate(propAngle);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(-1.5, -8, 3, 16);
+            ctx.restore();
+
+            // Humo de caldera de vapor
+            const smokeTime = (Date.now() * 0.002 + i * 0.5) % 1;
+            ctx.fillStyle = 'rgba(255, 237, 213, 0.4)';
+            ctx.beginPath();
+            ctx.arc(ax - 26 - smokeTime * 20, ay - 2 - smokeTime * 8, 3 + smokeTime * 5, 0, Math.PI * 2);
             ctx.fill();
         }
+
+        // 4. Dirigible / Zepelín gigante con luces de posición
+        const zepX = ((160) - bgOffset * 0.35) % (VIEW_WIDTH * 2.2);
+        if (zepX > -60 && zepX < VIEW_WIDTH + 60) {
+            ctx.fillStyle = '#ea580c';
+            ctx.beginPath();
+            ctx.ellipse(zepX, 42, 38, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fed7aa';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Góndola inferior
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(zepX - 12, 56, 24, 6);
+        }
+
+        // 5. Mar interminable de nubes doradas ondulantes en la base
+        for (let i = 0; i < 7; i++) {
+            const cx = ((i * 120) - bgOffset * 0.8) % (VIEW_WIDTH * 2.1);
+            const cloudGrad = ctx.createRadialGradient(cx, 185, 10, cx, 185, 45);
+            cloudGrad.addColorStop(0, '#fef08a');
+            cloudGrad.addColorStop(0.4, '#fdba74');
+            cloudGrad.addColorStop(1, '#c2410c');
+            ctx.fillStyle = cloudGrad;
+            ctx.beginPath();
+            ctx.arc(cx, 185, 42, 0, Math.PI * 2);
+            ctx.arc(cx - 22, 192, 32, 0, Math.PI * 2);
+            ctx.arc(cx + 22, 192, 32, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
 
     } else if (theme === "space") {
-        // === MUNDO 9: REINO CÓSMICO ESTELAR ===
-        ctx.fillStyle = '#8b5cf6';
+        // ==========================================
+        // === MUNDO 9: REINO CÓSMICO, NEBULOSAS, ANILLOS Y QUASAR (2026 AAA COSMOS) ===
+        // ==========================================
+        ctx.save();
+
+        // 1. Nebulosas interestelares radiantes en el abismo profundo
+        const nebGrad1 = ctx.createRadialGradient(80, 70, 10, 80, 70, 90);
+        nebGrad1.addColorStop(0, 'rgba(168, 85, 247, 0.45)');
+        nebGrad1.addColorStop(0.5, 'rgba(56, 189, 248, 0.25)');
+        nebGrad1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = nebGrad1;
         ctx.beginPath();
-        ctx.arc(VIEW_WIDTH - 70, 60, 22, 0, Math.PI * 2);
+        ctx.arc(80, 70, 90, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#c084fc';
-        ctx.lineWidth = 3;
+
+        const nebGrad2 = ctx.createRadialGradient(VIEW_WIDTH - 90, 110, 15, VIEW_WIDTH - 90, 110, 100);
+        nebGrad2.addColorStop(0, 'rgba(236, 72, 153, 0.35)');
+        nebGrad2.addColorStop(0.6, 'rgba(124, 58, 237, 0.2)');
+        nebGrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = nebGrad2;
         ctx.beginPath();
-        ctx.ellipse(VIEW_WIDTH - 70, 60, 36, 8, -0.4, 0, Math.PI * 2);
+        ctx.arc(VIEW_WIDTH - 90, 110, 100, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Colosal Planeta Gigante Gaseoso con Anillos (Estilo Saturno/Neptuno)
+        const planetX = VIEW_WIDTH - 75;
+        const planetY = 58;
+        const planetR = 24;
+
+        // Anillos traseros del planeta
+        ctx.strokeStyle = 'rgba(192, 132, 252, 0.75)';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.ellipse(planetX, planetY, 46, 10, -0.35, Math.PI, 0); // Mitad trasera
         ctx.stroke();
 
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 35; i++) {
-            const sx = ((i * 37) - bgOffset * 0.4) % (VIEW_WIDTH * 2);
-            const sy = (i * 23) % (VIEW_HEIGHT - 60);
-            ctx.fillRect(sx, sy, (i % 3 === 0) ? 2 : 1, (i % 3 === 0) ? 2 : 1);
+        // Globo planetario con bandas atmosféricas tridimensionales
+        const pGrad = ctx.createRadialGradient(planetX - 7, planetY - 7, 3, planetX, planetY, planetR);
+        pGrad.addColorStop(0, '#c084fc');
+        pGrad.addColorStop(0.4, '#8b5cf6');
+        pGrad.addColorStop(0.8, '#4c1d95');
+        pGrad.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = pGrad;
+        ctx.beginPath();
+        ctx.arc(planetX, planetY, planetR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bandas nubosas del planeta
+        ctx.strokeStyle = 'rgba(233, 213, 255, 0.35)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(planetX, planetY - 4, planetR - 2, 4, -0.35, 0, Math.PI * 2);
+        ctx.ellipse(planetX, planetY + 5, planetR - 3, 4, -0.35, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Anillos delanteros (pasan sobre el planeta)
+        ctx.strokeStyle = '#e9d5ff';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.ellipse(planetX, planetY, 46, 10, -0.35, 0, Math.PI); // Mitad delantera
+        ctx.stroke();
+
+        // 3. Exoplaneta Tierra / Luna Terraforamada orbitando a la izquierda
+        const moonX = 55;
+        const moonY = 85;
+        const mGrad = ctx.createRadialGradient(moonX - 3, moonY - 3, 2, moonX, moonY, 13);
+        mGrad.addColorStop(0, '#67e8f9');
+        mGrad.addColorStop(0.5, '#0284c7');
+        mGrad.addColorStop(1, '#0c4a6e');
+        ctx.fillStyle = mGrad;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 13, 0, Math.PI * 2);
+        ctx.fill();
+        // Atmósfera azul brillante
+        ctx.strokeStyle = '#a5f3fc';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // 4. Quásar / Agujero Negro con Disco de Acreción ardiente
+        const qX = ((VIEW_WIDTH / 2 + 10) - bgOffset * 0.15) % VIEW_WIDTH;
+        const qY = 48;
+        const qGlow = ctx.createRadialGradient(qX, qY, 3, qX, qY, 26);
+        qGlow.addColorStop(0, '#ffffff');
+        qGlow.addColorStop(0.3, '#f59e0b');
+        qGlow.addColorStop(0.7, '#ea580c');
+        qGlow.addColorStop(1, 'rgba(234, 88, 12, 0)');
+        ctx.fillStyle = qGlow;
+        ctx.beginPath();
+        ctx.arc(qX, qY, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Disco de acreción brillante
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(qX, qY, 22, 5, 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Núcleo del agujero negro
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(qX, qY, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 5. Estrellas fugaces / Cometas cruzando el cosmos
+        const meteorTime = (Date.now() * 0.001) % 4;
+        if (meteorTime < 1.2) {
+            const metX = ((meteorTime * 320) % (VIEW_WIDTH + 80)) - 40;
+            const metY = meteorTime * 140;
+            const metGrad = ctx.createLinearGradient(metX, metY, metX - 35, metY - 20);
+            metGrad.addColorStop(0, '#ffffff');
+            metGrad.addColorStop(0.4, '#38bdf8');
+            metGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            ctx.strokeStyle = metGrad;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(metX, metY);
+            ctx.lineTo(metX - 35, metY - 20);
+            ctx.stroke();
         }
+
+        // 6. Campo denso de estrellas brillantes
+        const now = Date.now();
+        for (let i = 0; i < 42; i++) {
+            const sx = ((i * 38) - bgOffset * 0.3) % VIEW_WIDTH;
+            const sy = (i * 22) % (VIEW_HEIGHT - 40);
+            const drawX = sx < 0 ? sx + VIEW_WIDTH : sx;
+            const twinkle = Math.sin(now * 0.004 + i * 1.7) * 0.5 + 0.5;
+
+            ctx.fillStyle = (i % 3 === 0) ? '#38bdf8' : ((i % 2 === 0) ? '#fef08a' : '#ffffff');
+            const sSize = (i % 5 === 0) ? 2.5 : ((i % 3 === 0) ? 1.8 : 1.2);
+            ctx.globalAlpha = 0.4 + twinkle * 0.6;
+            ctx.fillRect(drawX, sy, sSize, sSize);
+        }
+        ctx.globalAlpha = 1.0;
+
+        ctx.restore();
 
     } else {
         // ==========================================
@@ -2094,7 +2907,35 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 2. Capa 2: Bosque lejano con pinos altos y robles en la distancia
+        // 2. Capa 2: Molino de viento lejano en la colina
+        const millX = ((190) - bgOffset * 0.35) % (VIEW_WIDTH * 2.2);
+        if (millX > -40 && millX < VIEW_WIDTH + 40) {
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(millX - 8, 150);
+            ctx.lineTo(millX - 5, 120);
+            ctx.lineTo(millX + 5, 120);
+            ctx.lineTo(millX + 8, 150);
+            ctx.closePath();
+            ctx.fill();
+            // Aspas giratorias del molino
+            const millRot = Date.now() * 0.002;
+            ctx.save();
+            ctx.translate(millX, 122);
+            ctx.rotate(millRot);
+            ctx.strokeStyle = '#f8fafc';
+            ctx.lineWidth = 1.5;
+            for (let b = 0; b < 4; b++) {
+                ctx.rotate(Math.PI / 2);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, 14);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // 3. Capa 3: Bosque lejano con pinos altos y robles en la distancia
         ctx.fillStyle = '#14532d';
         for (let i = 0; i < 7; i++) {
             const tx = ((i * 120 + 30) - bgOffset * 0.45) % (VIEW_WIDTH * 2.2);
@@ -2117,8 +2958,7 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 3. Capa 3: PEQUEÑO PUEBLO EN EL BOSQUE (Casitas con chimenea + Fuente de agua viva)
-        // Se dibuja en un plano de profundidad suave (paralaje bgOffset * 0.6)
+        // 4. Capa 4: PEQUEÑO PUEBLO EN EL BOSQUE (Casitas con chimenea + Fuente de agua viva)
         const villageXBase = ((280) - bgOffset * 0.6) % (VIEW_WIDTH * 2.5);
 
         // --- Casas del Pueblo ---
@@ -2193,7 +3033,6 @@ function renderThemedBackdrop() {
         });
 
         // --- LA FUENTE DE AGUA DEL PUEBLO ---
-        // Situada en la plaza central del pueblo
         const fX = villageXBase + 10;
         const fY = 192;
 
@@ -2260,7 +3099,7 @@ function renderThemedBackdrop() {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(fX - 31.5, fY - 23, 2, 2);
 
-        // 4. Capa 4: Árboles frondosos en plano medio envolviendo el pueblo
+        // 5. Capa 5: Árboles frondosos en plano medio envolviendo el pueblo
         for (let i = 0; i < 5; i++) {
             const fx = ((i * 170 + 70) - bgOffset * 0.85) % (VIEW_WIDTH * 2.2);
             // Tronco de madera con textura
@@ -2297,7 +3136,32 @@ function renderThemedBackdrop() {
             ctx.fill();
         }
 
-        // 5. Nubes suaves de bosque con viento
+        // 6. Hadas de Kokiri (estilo Navi) flotando y brillando en el bosque
+        for (let f = 0; f < 3; f++) {
+            const fTime = Date.now() * 0.003 + f * 2.1;
+            const fX = ((f * 135 + 90) - bgOffset * 0.5 + Math.sin(fTime * 2) * 18) % VIEW_WIDTH;
+            const fY = 85 + Math.cos(fTime) * 15;
+
+            // Halo mágico de la hada
+            const fairyGlow = ctx.createRadialGradient(fX, fY, 1, fX, fY, 9);
+            fairyGlow.addColorStop(0, '#ffffff');
+            fairyGlow.addColorStop(0.4, (f % 2 === 0) ? '#4ade80' : '#38bdf8');
+            fairyGlow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = fairyGlow;
+            ctx.beginPath();
+            ctx.arc(fX, fY, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Alas transparentes de la hada batiendo
+            const wingFlap = Math.sin(Date.now() * 0.03 + f) * 3;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.ellipse(fX - 4, fY - 3, 2, 4 + wingFlap, -0.4, 0, Math.PI * 2);
+            ctx.ellipse(fX + 4, fY - 3, 2, 4 + wingFlap, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 7. Nubes suaves de bosque con viento
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         for (let i = 0; i < 4; i++) {
             const cx = ((i * 210 + 40) - bgOffset * 1.3) % (VIEW_WIDTH * 2.1);
