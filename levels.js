@@ -217,15 +217,15 @@ class LevelBuilder {
                 coins.push({ x: c * 32, y: (groundRow - 4) * 32 });
             });
 
-            // 2. Puerta y muro de entrada a la Arena del Boss (Columna 100)
+            // 2. Entrada monumental y 100% despejada a la Arena del Boss (sin barreras de bloques)
             const arenaStartCol = 102;
-            for (let r = 0; r < groundRow - 2; r++) {
-                grid[r][arenaStartCol - 2] = 12; // Muro superior
-            }
-            grid[groundRow - 1][arenaStartCol - 2] = 12;
-            grid[groundRow - 2][arenaStartCol - 2] = 12;
+            // Techo decorativo en fila 0 para ambientar la entrada al salón del jefe sin bloquear el paso
+            grid[0][arenaStartCol - 2] = 12;
+            grid[0][arenaStartCol - 1] = 12;
+            grid[0][arenaStartCol] = 12;
+            // Las filas 1 a 5 quedan totalmente LIBRES para que Astro pueda entrar, correr y luchar sin ningún obstáculo
 
-            // Pared límite derecha de la arena
+            // Pared límite derecha de la arena para no caer al vacío al final
             for (let r = 0; r < groundRow; r++) {
                 grid[r][mapWidth - 1] = 12;
             }
