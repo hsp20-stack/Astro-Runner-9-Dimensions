@@ -465,6 +465,26 @@ window.StoryManager = {
             ctx.fillRect(0, 0, 480, 270);
         }
 
+        // 5b. Banner cinematográfico de Título de Capítulo (2026 AAA Style)
+        const chapterTitles = [
+            'CAPÍTULO I: EL NÚCLEO SOLAR DE NOVA PRIME',
+            'CAPÍTULO II: LA INVASIÓN DEL EMPERADOR VÓRTICE',
+            'CAPÍTULO III: CATACLISMO EN LAS 9 DIMENSIONES',
+            'CAPÍTULO IV: RUMBO AL HIPERESPACIO',
+            'CAPÍTULO V: DESTINO: ALDEA KOKIRI DEL BOSQUE'
+        ];
+        if (this.sceneTimer < 120) {
+            const chapProgress = Math.sin((this.sceneTimer / 120) * Math.PI);
+            ctx.save();
+            ctx.font = '900 8.5px system-ui, sans-serif';
+            ctx.fillStyle = `rgba(56, 189, 248, ${chapProgress * 0.95})`;
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 10;
+            ctx.fillText(chapterTitles[this.currentScene] || '', 240, 36);
+            ctx.restore();
+        }
+
         // 6. Barras negras cinematográficas (Cinemascope 2.39:1)
         this.renderCinematicBorders(ctx);
 
@@ -797,20 +817,32 @@ window.StoryManager = {
         ctx.arc(cx, cy, 95, 0, Math.PI * 2);
         ctx.fill();
 
-        // Mini portales planetarios en la periferia
+        // Mini portales planetarios en la periferia con etiquetas de los 9 mundos
         const portalThemes = ['#15803d', '#ca8a04', '#9333ea', '#059669', '#2563eb', '#15803d', '#ea580c', '#b91c1c', '#38bdf8'];
+        const portalNames = ['1.KOKIRI', '2.GERUDO', '3.CAVERNA', '4.NEÓN', '5.ATLÁNTIDA', '6.SETAS', '7.NUBES', '8.MAGMA', '9.ASTRAL'];
         for (let i = 0; i < 9; i++) {
             const ang = (i / 9) * Math.PI * 2;
             const px = cx + Math.cos(ang) * 180;
             const py = cy + Math.sin(ang) * 92;
 
+            ctx.save();
+            ctx.shadowColor = portalThemes[i];
+            ctx.shadowBlur = 10;
             ctx.fillStyle = portalThemes[i];
             ctx.beginPath();
-            ctx.ellipse(px, py, 14, 8, ang, 0, Math.PI * 2);
+            ctx.ellipse(px, py, 15, 9, ang, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.2;
             ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Etiqueta del mundo
+            ctx.font = '800 6px system-ui, sans-serif';
+            ctx.fillStyle = '#f8fafc';
+            ctx.textAlign = 'center';
+            ctx.fillText(portalNames[i], px, py + 14);
+            ctx.restore();
         }
 
         // Los 9 Fragmentos Sagrados de colores
@@ -1102,7 +1134,7 @@ window.StoryManager = {
             ctx.save();
             ctx.translate(240, this.astroLandY);
             ctx.scale(1 / this.astroSquash, this.astroSquash);
-            this.drawAstroMini(ctx, 0, 0, 'right');
+            this.drawAstroLandingHero(ctx, 0, 0, this.sceneTimer);
             ctx.restore();
         }
     },
@@ -1267,6 +1299,134 @@ window.StoryManager = {
         ctx.ellipse(2, -10, 6, 4, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        ctx.restore();
+    },
+
+    // DIBUJAR ATERRIZAJE HEROICO Y THUMBS UP 👍 (2026 AAA Animation)
+    drawAstroLandingHero: function(ctx, x, y, timer) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        if (timer < 125) {
+            // FASE 1 (Frames 80-124): Impacto 3 Puntos Superheroico
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, 16, 14, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pierna izquierda en rodilla
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(-8, 8, 8, 8);
+            // Pierna derecha plantada
+            ctx.fillRect(2, 4, 7, 12);
+
+            // Torso arqueado hacia el suelo
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.roundRect(-7, -4, 14, 13, 3);
+            ctx.fill();
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Puño izquierdo chocando contra la tierra
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(-8, 14, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Casco orientado hacia el impacto
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, -9, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.ellipse(2, -8, 5, 3.5, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // FASE 2 (Frames 125+): Astro de pie erguido, respirando, visor con destello y PULGAR ARRIBA 👍
+            const breath = Math.sin(timer * 0.12) * 0.8;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 12, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Piernas
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(-6, 8, 5, 10);
+            ctx.fillRect(2, 8, 5, 10);
+
+            // Botas con suela reforzada
+            ctx.fillStyle = '#0369a1';
+            ctx.fillRect(-7, 16, 6, 3);
+            ctx.fillRect(2, 16, 6, 3);
+
+            // Torso con armadura blanca
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.roundRect(-8, -4 + breath, 16, 13, 3);
+            ctx.fill();
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Reactor central del pecho pulsando
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(0, 1 + breath, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Casco
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, -11 + breath, 9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Visor cian brillante
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.ellipse(2, -11 + breath, 6.5, 4.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.ellipse(3, -11 + breath, 4.5, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Destello de estrella en el visor
+            const starFlash = (Math.sin(timer * 0.18) > 0.3);
+            if (starFlash) {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(5, -12 + breath, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Brazo derecho levantado haciendo THUMBS UP 👍
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(7, 0 + breath);
+            ctx.lineTo(13, -4 + breath);
+            ctx.lineTo(13, -9 + breath);
+            ctx.stroke();
+
+            // Mano con pulgar alzado
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(13, -10 + breath, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Pulgar
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.roundRect(12, -14 + breath, 2.2, 4.5, 1);
+            ctx.fill();
+        }
         ctx.restore();
     },
 

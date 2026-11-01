@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=2026v40">
+    <link rel="stylesheet" href="style.css?v=2026v45">
     <!-- Fallback ultraseguro y purga radical de caché para iOS Safari / Chrome Móvil -->
     <script>
         // Limpiar inmediatamente cualquier caché antiguo del dispositivo
@@ -182,6 +182,9 @@
                 <div class="logo-badge">9 DIMENSIONES</div>
                 <h1 class="game-main-title">ASTRO RUNNER</h1>
                 <p class="game-tagline">Una aventura espacial retro</p>
+                <div id="menuSaveStatus" class="menu-save-badge">
+                    <span>💾</span> <span id="saveStatusText">Partida guardada: <strong>Mundo 1-1</strong></span>
+                </div>
             </div>
 
             <!-- Botones Principales -->
@@ -373,6 +376,12 @@
             <button class="emote-btn" onclick="OnlineManager.sendEmote('🎉')" title="¡Celebrar!">🎉</button>
         </div>
 
+        <!-- Indicador de Auto-Guardado 2026 -->
+        <div id="autoSaveIndicator" class="autosave-toast hidden">
+            <span class="save-icon">💾</span>
+            <span class="save-text">PROGRESO GUARDADO</span>
+        </div>
+
         <!-- Botones de Utilidades pequeños y discretos -->
         <div id="utilityButtons">
             <button id="btnMap" class="mini-btn" title="Mundos">🗺️</button>
@@ -455,16 +464,16 @@
 
     <!-- PeerJS WebRTC P2P para multijugador online sin servidor -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <!-- Scripts con Cache-Buster v2026v40 para Safari iOS y Chrome Móvil -->
-    <script src="audio.js?v=2026v40"></script>
-    <script src="levels.js?v=2026v40"></script>
-    <script src="multiplayer.js?v=2026v40"></script>
-    <script src="story.js?v=2026v40"></script>
-    <script src="game.js?v=2026v40"></script>
+    <!-- Scripts con Cache-Buster v2026v45 para Safari iOS y Chrome Móvil -->
+    <script src="audio.js?v=2026v45"></script>
+    <script src="levels.js?v=2026v45"></script>
+    <script src="multiplayer.js?v=2026v45"></script>
+    <script src="story.js?v=2026v45"></script>
+    <script src="game.js?v=2026v45"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=2026v40').then(function(reg) {
+                navigator.serviceWorker.register('sw.js?v=2026v45').then(function(reg) {
                     reg.update();
                 }).catch(err => {
                     console.log('SW note:', err);

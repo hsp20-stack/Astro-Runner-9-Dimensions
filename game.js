@@ -40,7 +40,20 @@ const SAVE_KEY = 'astro_runner_save_modern_v2';
 function loadProgress() {
     try {
         const data = localStorage.getItem(SAVE_KEY);
-        if (data) return JSON.parse(data);
+        if (data) {
+            const parsed = JSON.parse(data);
+            return {
+                unlockedWorld: parsed.unlockedWorld || 1,
+                unlockedLevel: parsed.unlockedLevel || 1,
+                currentWorld: parsed.currentWorld || 1,
+                currentLevel: parsed.currentLevel || 1,
+                highScore: parsed.highScore || 0,
+                score: parsed.score || 0,
+                crystals: parsed.crystals || 0,
+                lives: (typeof parsed.lives === 'number' && parsed.lives > 0) ? parsed.lives : 3,
+                totalCrystals: parsed.totalCrystals || 0
+            };
+        }
     } catch (e) {
         console.error("Error al cargar partida", e);
     }
@@ -50,17 +63,53 @@ function loadProgress() {
         currentWorld: 1,
         currentLevel: 1,
         highScore: 0,
+        score: 0,
+        crystals: 0,
+        lives: 3,
         totalCrystals: 0
     };
 }
 
-function saveProgress(state) {
+let saveToastTimer = null;
+function triggerAutoSave(reason = "") {
     try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        if (!saveState) saveState = loadProgress();
+        saveState.currentWorld = currentWorldNum;
+        saveState.currentLevel = currentLevelNum;
+        saveState.unlockedWorld = Math.max(saveState.unlockedWorld || 1, currentWorldNum);
+        saveState.unlockedLevel = Math.max(saveState.unlockedLevel || 1, currentLevelNum);
+        saveState.highScore = Math.max(saveState.highScore || 0, score);
+        saveState.score = score;
+        saveState.crystals = crystals;
+        saveState.lives = lives;
+        saveState.timestamp = Date.now();
+        localStorage.setItem(SAVE_KEY, JSON.stringify(saveState));
+
+        // Actualizar badge en menú si está visible
+        const menuTxt = document.getElementById('saveStatusText');
+        if (menuTxt) {
+            menuTxt.innerHTML = `Partida guardada: <strong>Mundo ${saveState.currentWorld}-${saveState.currentLevel}</strong> · 🏆 ${saveState.highScore} pts`;
+        }
+
+        // Mostrar notificación visual HUD de guardado automático (estilo 2026)
+        const toast = document.getElementById('autoSaveIndicator');
+        if (toast) {
+            toast.classList.remove('hidden');
+            toast.classList.add('visible');
+            if (saveToastTimer) clearTimeout(saveToastTimer);
+            saveToastTimer = setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.classList.add('hidden'), 350);
+            }, 1800);
+        }
     } catch (e) {
-        console.error("Error al guardar partida", e);
+        console.error("Error al autoguardar partida:", e);
     }
 }
+function saveProgress(state) {
+    triggerAutoSave();
+}
+window.triggerAutoSave = triggerAutoSave;
 
 let saveState = loadProgress();
 
@@ -69,9 +118,9 @@ let currentWorldNum = saveState.currentWorld || 1;
 let currentLevelNum = saveState.currentLevel || 1;
 let levelData = null;
 let cameraX = 0;
-let score = 0;
-let crystals = 0;
-let lives = 3;
+let score = saveState.score || 0;
+let crystals = saveState.crystals || 0;
+let lives = saveState.lives || 3;
 let energyTime = 300;
 let timeAccumulator = 0;
 let isPaused = false;
@@ -6838,6 +6887,7 @@ function togglePause() {
     isPaused = !isPaused;
     document.getElementById('pauseOverlay').classList.toggle('hidden', !isPaused);
     if (isPaused) {
+        triggerAutoSave("Pausa de partida");
         if (window.sounds && window.sounds.stopMusic) {
             window.sounds.stopMusic();
         }
