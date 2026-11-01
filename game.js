@@ -1331,15 +1331,24 @@ function render() {
         }
     }
 
-    // Partículas
+    // Partículas con Bloom, suavizado y desvanecimiento dinámico
+    ctx.save();
     for (let p of particles) {
         if (p.isCoin) {
             drawGoldCoin(p.x - cameraX, p.y);
         } else {
+            const alpha = Math.min(1, Math.max(0, (p.life !== undefined ? p.life / 22 : 1)));
+            ctx.globalAlpha = alpha;
             ctx.fillStyle = p.color;
-            ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
+            const px = p.x - cameraX;
+            const py = p.y;
+            const sz = p.size || 3.5;
+            ctx.beginPath();
+            ctx.arc(px + sz / 2, py + sz / 2, sz / 2, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
+    ctx.restore();
 
     // Textos flotantes modernos (Juice 2026)
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
@@ -4144,44 +4153,54 @@ function drawAstroModern() {
     ctx.fillStyle = highlightColor;
     ctx.fillRect(chestX + chestW / 2 - 2, chestY + chestH - 3, 4, 3); // Hebilla iluminada
 
-    // REACTOR DE PECHO ARC-CORE RESPLANDECIENTE
+    // REACTOR DE PECHO ARC-CORE RESPLANDECIENTE Y EMBLEMA DE ESTRELLA
     const rcX = chestX + chestW / 2;
     const rcY = chestY + chestH / 2 - 1;
     const rcPulse = Math.sin(Date.now() * 0.008) * 0.5 + 2.8;
-    const rcGrad = ctx.createRadialGradient(rcX, rcY, 0.5, rcX, rcY, rcPulse);
+    const rcGrad = ctx.createRadialGradient(rcX, rcY, 0.5, rcX, rcY, rcPulse + 2);
     rcGrad.addColorStop(0, '#ffffff');
-    rcGrad.addColorStop(0.5, reactorColor);
+    rcGrad.addColorStop(0.4, reactorColor);
     rcGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
     ctx.fillStyle = rcGrad;
     ctx.beginPath();
-    ctx.arc(rcX, rcY, rcPulse, 0, Math.PI * 2);
+    ctx.arc(rcX, rcY, rcPulse + 1.5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Emblema Hugo SP Star en el pecho
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(rcX - 1, rcY - 1, 2, 2);
 
     // 8. BRAZOS Y MANOS CON ARMAS O GUANTES
     if (isPlasma) {
         // CAÑÓN DE PLASMA MONTADO EN EL BRAZO
         const cannonX = px + astro.w - 2;
         const cannonY = py + 12;
-        // Chasis del cañón
+        // Chasis del cañón con bisel metálico
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
-        ctx.roundRect(cannonX, cannonY, 11, 7, 2);
+        ctx.roundRect(cannonX, cannonY, 12, 7.5, 2.5);
         ctx.fill();
         ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.2;
         ctx.stroke();
-        // Bobinas de aceleración de plasma
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(cannonX + 2, cannonY + 1.5, 2, 4);
-        ctx.fillRect(cannonX + 5, cannonY + 1.5, 2, 4);
-        // Boca del cañón con chispa de carga lista
+
+        // Bobinas de aceleración de plasma luminiscentes
+        const coilGlow = Math.sin(Date.now() * 0.02) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(56, 189, 248, ${coilGlow})`;
+        ctx.fillRect(cannonX + 2, cannonY + 1.5, 2.5, 4.5);
+        ctx.fillRect(cannonX + 6, cannonY + 1.5, 2.5, 4.5);
+
+        // Boca del cañón con chispa de carga lista y arco voltaico
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(cannonX + 9, cannonY + 2, 2, 3);
-        const sparkPulse = Math.sin(Date.now() * 0.02) * 1.5 + 2;
+        ctx.fillRect(cannonX + 10, cannonY + 2, 2, 3.5);
+        const sparkPulse = Math.sin(Date.now() * 0.025) * 1.8 + 2.5;
         ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        ctx.arc(cannonX + 11, cannonY + 3.5, sparkPulse, 0, Math.PI * 2);
+        ctx.arc(cannonX + 12, cannonY + 3.8, sparkPulse, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
     } else {
         // Brazo y guantelete espacial clásico oscilante
         const armX = px + astro.w - 4;
@@ -4245,20 +4264,50 @@ function drawAstroModern() {
         ctx.textAlign = 'center';
         ctx.fillText('X', visorCX - 2, visorCY + 2);
         ctx.fillText('X', visorCX + 2.5, visorCY + 2);
+    } else if (astro.invulnerableTimer > 0) {
+        // Ojos mareados en espiral "@ @" tras recibir impacto
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 5px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('@', visorCX - 2, visorCY + 2);
+        ctx.fillText('@', visorCX + 2.5, visorCY + 2);
     } else {
-        // Brillo azul holográfico interior (Ojo HUD cibernético)
-        ctx.fillStyle = visorColor;
-        ctx.beginPath();
-        ctx.ellipse(visorCX + 1, visorCY, visorW * 0.65, visorH * 0.45, 0, 0, Math.PI * 2);
-        ctx.fill();
+        // OJOS EXPRESIVOS DIGITALES CON VIDA (PARPADEO Y EMOCIÓN)
+        const isBlinking = ((Date.now() % 3600) < 140);
+        if (isBlinking) {
+            // Ojos parpadeando (líneas cian dormilonas)
+            ctx.fillStyle = visorColor;
+            ctx.fillRect(visorCX - 3, visorCY, 3, 1);
+            ctx.fillRect(visorCX + 1, visorCY, 3, 1);
+        } else if (Math.abs(astro.vx) > 2.2) {
+            // Ojos entusiastas y alegres en velocidad punta (^ ^)
+            ctx.strokeStyle = visorColor;
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(visorCX - 3, visorCY + 1); ctx.lineTo(visorCX - 1.5, visorCY - 1); ctx.lineTo(visorCX, visorCY + 1);
+            ctx.moveTo(visorCX + 1, visorCY + 1); ctx.lineTo(visorCX + 2.5, visorCY - 1); ctx.lineTo(visorCX + 4, visorCY + 1);
+            ctx.stroke();
+        } else {
+            // Ojos grandes adorables de robot / anime con destello de luz
+            ctx.fillStyle = visorColor;
+            ctx.beginPath();
+            ctx.ellipse(visorCX - 1.8, visorCY, 1.8, 2.6, 0, 0, Math.PI * 2);
+            ctx.ellipse(visorCX + 2.4, visorCY, 1.8, 2.6, 0, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Línea de escaneo HUD dinámica
-        const scanY = visorCY - 1.5 + Math.sin(Date.now() * 0.008) * 1.5;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(visorCX - 2, scanY, 5, 0.8);
+            // Reflejo blanco en las pupilas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(visorCX - 2.5, visorCY - 1.8, 1.2, 1.2);
+            ctx.fillRect(visorCX + 1.7, visorCY - 1.8, 1.2, 1.2);
+
+            // Línea de escaneo HUD dinámica sutil
+            const scanY = visorCY - 1.5 + Math.sin(Date.now() * 0.008) * 1.5;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillRect(visorCX - 2, scanY, 5, 0.6);
+        }
     }
 
-    // Reflejo especular blanco curvado de cristal en la esquina superior
+    // Reflejo especular blanco curvado de cristal en la esquina superior del visor
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     ctx.beginPath();
     ctx.ellipse(visorCX - 2, visorCY - 2, 2.5, 1.2, -0.4, 0, Math.PI * 2);
@@ -4296,10 +4345,16 @@ function drawGoldCoin(x, y) {
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Emblema central de estrella cuando está de frente
+    // Emblema central de estrella cuando está de frente y destello
     if (coinW > 4) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x + 7, y + 6, 2, 4);
+        const glint = (Date.now() * 0.008 + x) % (Math.PI * 2);
+        if (glint < 1.2) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 12, y + 3, 3, 1);
+            ctx.fillRect(x + 13, y + 2, 1, 3);
+        }
     }
     ctx.restore();
 }
@@ -5980,46 +6035,64 @@ function drawPowerUpItem(x, y, type) {
         ctx.fillRect(x + 11, py + 11, 1, 1.5);
 
         // Sombrero redondeado rojo con degradado esférico y volumen 2026
-        const capGrad = ctx.createRadialGradient(x + 8, py + 6, 2, x + 10, py + 9, 10);
-        capGrad.addColorStop(0, '#f87171');
-        capGrad.addColorStop(0.5, '#ef4444');
-        capGrad.addColorStop(1, '#991b1b');
+        const capGrad = ctx.createRadialGradient(x + 8, py + 5, 2, x + 10, py + 9, 10);
+        capGrad.addColorStop(0, '#fca5a5');
+        capGrad.addColorStop(0.35, '#ef4444');
+        capGrad.addColorStop(0.8, '#b91c1c');
+        capGrad.addColorStop(1, '#7f1d1d');
         ctx.fillStyle = capGrad;
         ctx.beginPath();
         ctx.arc(x + 10, py + 9, 9.5, Math.PI, 0, false);
         ctx.fill();
 
+        // Brillo superior curvo en el sombrero (Glossy shine)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(x + 8, py + 3.5, 4.5, 1.8, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
         // Lunares blancos con relieve esférico
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(x + 10, py + 4, 3, 0, Math.PI * 2);
-        ctx.arc(x + 3, py + 8, 2.5, 0, Math.PI * 2);
-        ctx.arc(x + 17, py + 8, 2.5, 0, Math.PI * 2);
+        ctx.arc(x + 10, py + 4.5, 3.2, 0, Math.PI * 2);
+        ctx.arc(x + 3, py + 8.5, 2.6, 0, Math.PI * 2);
+        ctx.arc(x + 17, py + 8.5, 2.6, 0, Math.PI * 2);
         ctx.fill();
+
+        // Destello de estrella flotante mágica
+        const sparkleTime = (Date.now() * 0.005) % (Math.PI * 2);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(x + 10 + Math.cos(sparkleTime) * 11, py + 8 + Math.sin(sparkleTime) * 8, 2, 2);
     } else {
         // === FLOR DE PLASMA VÓRTICE (2026 SCI-FI POWER) ===
-        const coreRot = Date.now() * 0.005;
-        // Pétalos de fuego rotativos
+        const coreRot = Date.now() * 0.006;
+        // Pétalos de fuego de plasma rotativos con halo incandescente
         ctx.save();
         ctx.translate(x + 10, py + 10);
         ctx.rotate(coreRot);
         for (let p = 0; p < 4; p++) {
             ctx.rotate(Math.PI / 2);
-            ctx.fillStyle = '#f97316';
+            const petalGrad = ctx.createLinearGradient(0, 0, 0, 8);
+            petalGrad.addColorStop(0, '#fde047');
+            petalGrad.addColorStop(0.5, '#f97316');
+            petalGrad.addColorStop(1, '#ef4444');
+            ctx.fillStyle = petalGrad;
             ctx.beginPath();
-            ctx.ellipse(0, 6, 3.2, 5.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(0, 6, 3.5, 5.8, 0, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
 
-        // Núcleo brillante incandescente
-        const flowerCore = ctx.createRadialGradient(x + 10, py + 10, 1, x + 10, py + 10, 6);
+        // Núcleo brillante incandescente con pulsación
+        const pulse = Math.sin(Date.now() * 0.01) * 1.2 + 5.5;
+        const flowerCore = ctx.createRadialGradient(x + 10, py + 10, 1, x + 10, py + 10, pulse);
         flowerCore.addColorStop(0, '#ffffff');
         flowerCore.addColorStop(0.4, '#fde047');
-        flowerCore.addColorStop(1, '#ef4444');
+        flowerCore.addColorStop(0.85, '#f97316');
+        flowerCore.addColorStop(1, 'rgba(239, 68, 68, 0)');
         ctx.fillStyle = flowerCore;
         ctx.beginPath();
-        ctx.arc(x + 10, py + 10, 5.5, 0, Math.PI * 2);
+        ctx.arc(x + 10, py + 10, pulse + 1, 0, Math.PI * 2);
         ctx.fill();
     }
     ctx.restore();
@@ -6030,20 +6103,33 @@ function drawPowerUpItem(x, y, type) {
 // ==========================================
 function drawPlasmaBall(x, y) {
     ctx.save();
-    // Halo de plasma cian volumétrico
-    const plasmaGrad = ctx.createRadialGradient(x + 5, y + 5, 1, x + 5, y + 5, 9);
+    // Halo de plasma cian volumétrico con resplandor neón
+    const plasmaGrad = ctx.createRadialGradient(x + 5, y + 5, 1, x + 5, y + 5, 10);
     plasmaGrad.addColorStop(0, '#ffffff');
-    plasmaGrad.addColorStop(0.3, '#38bdf8');
-    plasmaGrad.addColorStop(0.7, '#0284c7');
+    plasmaGrad.addColorStop(0.25, '#67e8f9');
+    plasmaGrad.addColorStop(0.65, '#0284c7');
     plasmaGrad.addColorStop(1, 'rgba(2, 132, 199, 0)');
     ctx.fillStyle = plasmaGrad;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.arc(x + 5, y + 5, 9, 0, Math.PI * 2);
+    ctx.arc(x + 5, y + 5, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Núcleo ultrabrillante
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x + 5, y + 5, 3.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Estela de microchispas
-    ctx.fillStyle = '#e0f2fe';
-    ctx.fillRect(x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5, 2, 2);
+    // Estela de microchispas de plasma que se disipan
+    ctx.fillStyle = '#a5f3fc';
+    for (let sp = 0; sp < 3; sp++) {
+        const sx = x - (sp * 3) + (Math.random() - 0.5) * 3;
+        const sy = y + 5 + (Math.random() - 0.5) * 3;
+        ctx.fillRect(sx, sy, 2, 2);
+    }
     ctx.restore();
 }
 
