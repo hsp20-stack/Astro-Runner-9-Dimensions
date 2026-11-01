@@ -1,5 +1,5 @@
 // story.js - Prólogo Cinemático Animado: La Leyenda del Cristal Cósmico (2026)
-// Cinemática de alta calidad con animaciones avanzadas, voces retro, efectos de sonido y diálogos
+// Cinemática AAA con múltiples animaciones, efectos de sonido y diálogos con voces retro
 
 if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
     CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -16,11 +16,13 @@ window.StoryManager = {
     maxScenes: 5,
     onComplete: null,
 
-    // Variables de animación
+    // Variables de animación avanzadas
     stars: [],
     shards: [],
     particles: [],
     lightningArcs: [],
+    smokePuffs: [],
+    warpLines: [],
     shockwaveRadius: 0,
     shockwaveAlpha: 0,
     cinemaFlash: 0,
@@ -29,11 +31,10 @@ window.StoryManager = {
     crystalAngle: 0,
     shipY: 0,
     shipX: 0,
-    shipVx: 0,
-    shipVy: 0,
     astroLandY: 0,
     astroSquash: 1,
-    fairyFlap: 0,
+    cockpitShake: 0,
+    waterfallOffset: 0,
     ignoreInputTimer: 0,
 
     // Diálogos y personajes
@@ -46,16 +47,30 @@ window.StoryManager = {
     speakerBadgeColor: '#38bdf8',
 
     init: function() {
-        // Campo estelar profundo con diferentes capas de velocidad y color
+        // Campo estelar profundo multicapa
         this.stars = [];
-        for (let i = 0; i < 85; i++) {
+        for (let i = 0; i < 90; i++) {
             this.stars.push({
                 x: Math.random() * 480,
                 y: Math.random() * 270,
-                size: Math.random() * 2.4 + 0.5,
+                size: Math.random() * 2.5 + 0.5,
                 speed: Math.random() * 0.9 + 0.15,
                 twinkle: Math.random() * Math.PI * 2,
                 color: (i % 6 === 0) ? '#38bdf8' : ((i % 7 === 0) ? '#c084fc' : ((i % 9 === 0) ? '#fef08a' : '#ffffff'))
+            });
+        }
+
+        // Líneas de velocidad para el salto al hiperespacio
+        this.warpLines = [];
+        for (let i = 0; i < 45; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 30 + Math.random() * 200;
+            this.warpLines.push({
+                angle: angle,
+                dist: dist,
+                speed: 4 + Math.random() * 8,
+                len: 12 + Math.random() * 28,
+                color: (i % 3 === 0) ? '#38bdf8' : '#818cf8'
             });
         }
     },
@@ -65,7 +80,7 @@ window.StoryManager = {
         this.active = true;
         this.currentScene = 0;
         this.sceneTimer = 0;
-        this.ignoreInputTimer = 35; // Protección para que el toque del botón JUGAR no salte la escena
+        this.ignoreInputTimer = 35; // Previene que el toque al botón JUGAR salte la escena
         this.onComplete = callback;
         this.loadScene(0);
 
@@ -73,7 +88,7 @@ window.StoryManager = {
         const touch = document.getElementById('touchControls');
         if (touch) touch.style.display = 'none';
 
-        // Detener música previa para dar paso al sonido cinemático
+        // Detener música previa para que solo suenen los efectos de la historia
         if (window.sounds && window.sounds.stopMusic) {
             window.sounds.stopMusic();
         }
@@ -112,6 +127,7 @@ window.StoryManager = {
         this.lastBeepChar = 0;
         this.particles = [];
         this.lightningArcs = [];
+        this.smokePuffs = [];
 
         if (sceneIdx === 0) {
             // Escena 0: Estación Nova Prime y el Gran Cristal Cósmico
@@ -136,7 +152,6 @@ window.StoryManager = {
             }
             if (typeof triggerScreenShake === 'function') triggerScreenShake(5);
 
-            // Generar rayos de distorsión dimensional
             for (let i = 0; i < 8; i++) {
                 this.lightningArcs.push({
                     x1: 240 + (Math.random() - 0.5) * 80,
@@ -154,8 +169,8 @@ window.StoryManager = {
             this.speakerBadgeColor = '#f59e0b';
             this.currentFullText = "¡ALERTA CRÍTICA! El Núcleo Solar no resistió y estalló. Sus 9 Fragmentos Sagrados cayeron en las 9 dimensiones: ¡desde la Aldea Kokiri hasta el Castillo de Magma!";
             
-            this.cinemaFlash = 1.0; // Flash blanco cegador
-            this.shockwaveRadius = 5;
+            this.cinemaFlash = 1.0;
+            this.shockwaveRadius = 6;
             this.shockwaveAlpha = 1.0;
 
             if (window.sounds && window.sounds.playStoryShockwave) {
@@ -166,7 +181,7 @@ window.StoryManager = {
             }
             if (typeof triggerScreenShake === 'function') triggerScreenShake(8);
 
-            // Generar los 9 fragmentos de los 9 mundos oficiales
+            // Generar 9 fragmentos con dirección hacia sus portales planetarios
             this.shards = [];
             const shardColors = ['#15803d', '#ca8a04', '#9333ea', '#059669', '#2563eb', '#15803d', '#ea580c', '#b91c1c', '#38bdf8'];
             for (let i = 0; i < 9; i++) {
@@ -179,25 +194,27 @@ window.StoryManager = {
                     vy: Math.sin(angle) * spd,
                     color: shardColors[i],
                     angle: 0,
-                    size: 9
+                    size: 9,
+                    portalX: 240 + Math.cos(angle) * 180,
+                    portalY: 110 + Math.sin(angle) * 95
                 });
             }
         } else if (sceneIdx === 3) {
-            // Escena 3: Astro se prepara para la misión
+            // Escena 3: Astro en la cabina y salto al hiperespacio
             this.currentSpeaker = 'astro';
             this.speakerName = 'ASTRO (EL GUARDIÁN)';
             this.speakerRole = '[MISIÓN DE RESCATE CÓSMICO]';
             this.speakerBadgeColor = '#38bdf8';
-            this.currentFullText = "«¡No permitiré que destruyan la galaxia! Ajustando reactores y nave estelar... ¡Rumbo fijado hacia la Aldea Kokiri del Bosque para recuperar el primer fragmento!»";
+            this.currentFullText = "«¡No permitiré que destruyan la galaxia! Reactores encendidos... ¡Salto al hiperespacio fijado hacia la Aldea Kokiri del Bosque!»";
             
             if (window.sounds && window.sounds.playStoryHeroReady) {
                 window.sounds.playStoryHeroReady();
             }
-            if (window.sounds && window.sounds.playShoot) {
-                setTimeout(() => { if (window.sounds) window.sounds.playShoot(); }, 600);
+            if (window.sounds && window.sounds.playStoryWarp) {
+                setTimeout(() => { if (window.sounds) window.sounds.playStoryWarp(); }, 1200);
             }
         } else if (sceneIdx === 4) {
-            // Escena 4: Entrada y aterrizaje en Aldea Kokiri del Bosque
+            // Escena 4: Entrada atmosférica y aterrizaje en Aldea Kokiri del Bosque
             this.currentSpeaker = 'navi';
             this.speakerName = 'HADA NAVI';
             this.speakerRole = '[GUÍA DEL BOSQUE KOKIRI]';
@@ -213,7 +230,7 @@ window.StoryManager = {
                 window.sounds.playSpaceshipLaunch();
             }
             if (window.sounds && window.sounds.playFairySparkle) {
-                setTimeout(() => { if (window.sounds) window.sounds.playFairySparkle(); }, 1200);
+                setTimeout(() => { if (window.sounds) window.sounds.playFairySparkle(); }, 1100);
             }
         }
     },
@@ -229,7 +246,7 @@ window.StoryManager = {
             this.textCharIndex += 0.85;
             const currentIntChar = Math.floor(this.textCharIndex);
             
-            // Cada 2-3 caracteres reproducir el pitido de voz del personaje que habla
+            // Cada 2 caracteres reproducir el pitido de voz del personaje que habla
             if (currentIntChar > this.lastBeepChar && (currentIntChar % 2 === 0)) {
                 this.lastBeepChar = currentIntChar;
                 const charAt = this.currentFullText.charAt(currentIntChar);
@@ -250,9 +267,9 @@ window.StoryManager = {
 
         // Animaciones cíclicas de elementos
         this.crystalAngle += 0.035;
-        this.vortexAngle += 0.05;
+        this.vortexAngle += 0.055;
         this.redAlertPulse = Math.sin(this.sceneTimer * 0.14) * 0.5 + 0.5;
-        this.fairyFlap = Math.sin(this.sceneTimer * 0.45);
+        this.waterfallOffset = (this.waterfallOffset + 2.5) % 18;
 
         // Atenuación de flash cinematográfico y onda expansiva
         if (this.cinemaFlash > 0) {
@@ -263,9 +280,9 @@ window.StoryManager = {
             this.shockwaveAlpha = Math.max(0, this.shockwaveAlpha - 0.022);
         }
 
-        // Escena 1: Rayos de distorsión
+        // Escena 1: Rayos de distorsión y humo de la nave de Vortex
         if (this.currentScene === 1) {
-            if (this.sceneTimer % 6 === 0) {
+            if (this.sceneTimer % 5 === 0) {
                 this.lightningArcs.push({
                     x1: 240 + (Math.random() - 0.5) * 60,
                     y1: 40 + Math.random() * 30,
@@ -278,15 +295,27 @@ window.StoryManager = {
                 this.lightningArcs[i].life--;
                 if (this.lightningArcs[i].life <= 0) this.lightningArcs.splice(i, 1);
             }
+
+            // Humo de propulsión oscura
+            if (this.sceneTimer % 3 === 0) {
+                this.smokePuffs.push({
+                    x: 240 + (Math.random() - 0.5) * 70,
+                    y: 75,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: -1.2 - Math.random() * 1.2,
+                    size: 3 + Math.random() * 5,
+                    alpha: 0.7,
+                    color: '#9333ea'
+                });
+            }
         }
 
-        // Escena 2: Mover los 9 fragmentos
+        // Escena 2: Mover los 9 fragmentos hacia los portales
         if (this.currentScene === 2) {
             for (let sh of this.shards) {
                 sh.x += sh.vx;
                 sh.y += sh.vy;
                 sh.angle += 0.08;
-                // Dejar estelas brillantes
                 if (this.sceneTimer % 2 === 0) {
                     this.particles.push({
                         x: sh.x,
@@ -301,6 +330,15 @@ window.StoryManager = {
             }
         }
 
+        // Escena 3: Animación de hiperespacio y propulsores
+        if (this.currentScene === 3) {
+            this.cockpitShake = Math.sin(this.sceneTimer * 0.3) * 1.5;
+            for (let w of this.warpLines) {
+                w.dist += w.speed;
+                if (w.dist > 260) w.dist = 20;
+            }
+        }
+
         // Escena 4: Descenso de la nave y aterrizaje heroico de Astro
         if (this.currentScene === 4) {
             if (this.sceneTimer < 80) {
@@ -308,7 +346,7 @@ window.StoryManager = {
             } else if (this.sceneTimer >= 80 && this.sceneTimer < 140) {
                 // Astro salta desde la nave
                 if (this.astroLandY < 185) {
-                    this.astroLandY += 4.5;
+                    this.astroLandY += 4.6;
                 } else {
                     if (this.astroSquash === 1) {
                         this.astroSquash = 1.45;
@@ -317,15 +355,15 @@ window.StoryManager = {
                             window.sounds.playSuperheroThud();
                         }
                         // Anillo de polvo de aterrizaje heroico
-                        for (let i = 0; i < 22; i++) {
-                            const ang = (i / 22) * Math.PI * 2;
+                        for (let i = 0; i < 24; i++) {
+                            const ang = (i / 24) * Math.PI * 2;
                             this.particles.push({
                                 x: 240,
                                 y: 196,
-                                vx: Math.cos(ang) * (2.0 + Math.random() * 2.5),
+                                vx: Math.cos(ang) * (2.2 + Math.random() * 2.5),
                                 vy: Math.sin(ang) * 0.8 - 0.6,
                                 color: (i % 2 === 0) ? '#4ade80' : '#e2e8f0',
-                                life: 22,
+                                life: 24,
                                 size: 3.5
                             });
                         }
@@ -338,13 +376,26 @@ window.StoryManager = {
                 this.shipX += 3.2;
             }
 
-            // Auto-finalizar la historia y comenzar el juego
-            if (this.sceneTimer >= 220) {
+            // Humo de la chimenea de la casa en el árbol Kokiri
+            if (this.sceneTimer % 6 === 0) {
+                this.smokePuffs.push({
+                    x: 35,
+                    y: 135,
+                    vx: 0.4 + Math.random() * 0.3,
+                    vy: -1.0 - Math.random() * 0.6,
+                    size: 2.5 + Math.random() * 3.5,
+                    alpha: 0.65,
+                    color: '#e2e8f0'
+                });
+            }
+
+            // Finalizar cinemática tras completar la animación
+            if (this.sceneTimer >= 225) {
                 this.finishStory();
             }
         } else {
-            // Auto-avanzar al leer si pasa suficiente tiempo (aprox 7 segundos por escena)
-            if (this.sceneTimer > 310) {
+            // Auto-avanzar al leer si pasa suficiente tiempo (aprox 7.5 segundos por escena)
+            if (this.sceneTimer > 320) {
                 this.nextScene();
             }
         }
@@ -356,6 +407,16 @@ window.StoryManager = {
             p.y += p.vy;
             p.life--;
             if (p.life <= 0) this.particles.splice(i, 1);
+        }
+
+        // Actualizar humo
+        for (let i = this.smokePuffs.length - 1; i >= 0; i--) {
+            const sm = this.smokePuffs[i];
+            sm.x += sm.vx;
+            sm.y += sm.vy;
+            sm.alpha -= 0.02;
+            sm.size += 0.15;
+            if (sm.alpha <= 0) this.smokePuffs.splice(i, 1);
         }
     },
 
@@ -380,7 +441,17 @@ window.StoryManager = {
             this.renderScene4(ctx);
         }
 
-        // 3. Partículas
+        // 3. Humo
+        for (let sm of this.smokePuffs) {
+            ctx.fillStyle = sm.color;
+            ctx.globalAlpha = Math.max(0, sm.alpha);
+            ctx.beginPath();
+            ctx.arc(sm.x, sm.y, sm.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+        // 4. Partículas
         for (let p of this.particles) {
             ctx.fillStyle = p.color;
             ctx.beginPath();
@@ -388,19 +459,19 @@ window.StoryManager = {
             ctx.fill();
         }
 
-        // 4. Flash blanco cinematográfico de explosión
+        // 5. Flash blanco cinematográfico de explosión
         if (this.cinemaFlash > 0) {
             ctx.fillStyle = `rgba(255, 255, 255, ${this.cinemaFlash})`;
             ctx.fillRect(0, 0, 480, 270);
         }
 
-        // 5. Barras negras cinematográficas (Cinemascope 2.39:1)
+        // 6. Barras negras cinematográficas (Cinemascope 2.39:1)
         this.renderCinematicBorders(ctx);
 
-        // 6. Cuadro de diálogo RPG con avatar animado del personaje
+        // 7. Cuadro de diálogo RPG con avatar animado del personaje
         this.renderDialogueBoxWithAvatar(ctx);
 
-        // 7. Botón de saltar cinemática y pista de toque
+        // 8. Botón de saltar cinemática y pista de toque
         this.renderSkipHint(ctx);
 
         ctx.restore();
@@ -421,7 +492,7 @@ window.StoryManager = {
         const bgGrad = ctx.createRadialGradient(240, 110, 10, 240, 135, 270);
         if (this.currentScene === 1) {
             // Invasión: Alarma carmesí pulsante
-            bgGrad.addColorStop(0, `rgba(90, 10, 30, ${0.45 + this.redAlertPulse * 0.35})`);
+            bgGrad.addColorStop(0, `rgba(95, 10, 32, ${0.45 + this.redAlertPulse * 0.35})`);
             bgGrad.addColorStop(0.6, '#0f051d');
             bgGrad.addColorStop(1, '#020005');
         } else {
@@ -445,7 +516,7 @@ window.StoryManager = {
         ctx.globalAlpha = 1.0;
     },
 
-    // ESCENA 0: EL GRAN CRISTAL SOLAR Y BASE NOVA PRIME
+    // ESCENA 0: ESTACIÓN NOVA PRIME Y GRAN CRISTAL SOLAR
     renderScene0: function(ctx) {
         const cx = 240;
         const cy = 105;
@@ -455,39 +526,101 @@ window.StoryManager = {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(130, 172, 220, 22, 6);
+        ctx.roundRect(120, 170, 240, 24, 6);
         ctx.fill();
         ctx.stroke();
 
-        // Luces de navegación de la base
-        for (let b = 0; b < 6; b++) {
-            ctx.fillStyle = (this.sceneTimer % 20 < 10) ? '#38bdf8' : '#0284c7';
-            ctx.fillRect(145 + b * 32, 178, 4, 4);
+        // Panel solar izquierdo
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(50, 174, 65, 16);
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(50, 174, 65, 16);
+        // Celdas solares hexagonales
+        ctx.fillStyle = '#0284c7';
+        for (let px = 54; px < 110; px += 10) {
+            ctx.fillRect(px, 177, 7, 10);
         }
 
-        // Anillos orbitales holográficos de contención de energía
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
-        ctx.lineWidth = 2;
+        // Panel solar derecho
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(365, 174, 65, 16);
+        ctx.strokeStyle = '#0284c7';
+        ctx.strokeRect(365, 174, 65, 16);
+        ctx.fillStyle = '#0284c7';
+        for (let px = 369; px < 425; px += 10) {
+            ctx.fillRect(px, 177, 7, 10);
+        }
+
+        // Antena de radar giratoria en la torre superior
+        const radarAngle = this.sceneTimer * 0.06;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.ellipse(0, 0, 88, 28, this.crystalAngle * 0.7, 0, Math.PI * 2);
+        ctx.moveTo(240, 170);
+        ctx.lineTo(240, 155);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(240, 153, 10, 4, radarAngle, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+        // Luces de navegación de la pista de la estación
+        for (let b = 0; b < 7; b++) {
+            const lit = (Math.floor(this.sceneTimer / 6) % 7 === b);
+            ctx.fillStyle = lit ? '#38bdf8' : '#0369a1';
+            ctx.fillRect(135 + b * 32, 179, 5, 5);
+        }
+
+        // Dron de carga espacial cruzando al fondo
+        const droneX = ((this.sceneTimer * 0.8) % 520) - 20;
+        ctx.fillStyle = '#475569';
         ctx.beginPath();
-        ctx.ellipse(0, 0, 78, 24, -this.crystalAngle * 0.9, 0, Math.PI * 2);
+        ctx.roundRect(droneX, 55, 16, 7, 2);
+        ctx.fill();
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(droneX - 3, 57, 3, 3); // Propulsor
+
+        // Anillos orbitales giratorios de contención de energía
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 92, 28, this.crystalAngle * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 8 esferas de plasma orbitales que giran
+        for (let o = 0; o < 8; o++) {
+            const orbAng = this.crystalAngle * 0.7 + (o * Math.PI) / 4;
+            const ox = Math.cos(orbAng) * 92;
+            const oy = Math.sin(orbAng) * 28;
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(ox, oy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 80, 24, -this.crystalAngle * 0.9, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
 
+        // Haz vertical de contención desde la base
+        const beam = ctx.createLinearGradient(cx, 170, cx, cy);
+        beam.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+        beam.addColorStop(1, 'rgba(254, 240, 138, 0.2)');
+        ctx.fillStyle = beam;
+        ctx.fillRect(cx - 8, cy + 20, 16, 150 - cy);
+
         // Gran resplandor aureal del Cristal Solar
-        const glow = ctx.createRadialGradient(cx, cy, 5, cx, cy, 70);
+        const glow = ctx.createRadialGradient(cx, cy, 5, cx, cy, 75);
         glow.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
         glow.addColorStop(0.35, 'rgba(56, 189, 248, 0.65)');
         glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(cx, cy, 70, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 75, 0, Math.PI * 2);
         ctx.fill();
 
         // Gran Cristal Octaédrico 3D
@@ -498,27 +631,27 @@ window.StoryManager = {
         // Faceta izquierda
         ctx.fillStyle = '#fde047';
         ctx.beginPath();
-        ctx.moveTo(0, -40);
-        ctx.lineTo(-25, 0);
-        ctx.lineTo(0, 40);
+        ctx.moveTo(0, -42);
+        ctx.lineTo(-26, 0);
+        ctx.lineTo(0, 42);
         ctx.closePath();
         ctx.fill();
 
         // Faceta derecha
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.moveTo(0, -40);
-        ctx.lineTo(25, 0);
-        ctx.lineTo(0, 40);
+        ctx.moveTo(0, -42);
+        ctx.lineTo(26, 0);
+        ctx.lineTo(0, 42);
         ctx.closePath();
         ctx.fill();
 
-        // Núcleo resplandeciente blanco
+        // Centro blanco brillante
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.moveTo(0, -40);
+        ctx.moveTo(0, -42);
         ctx.lineTo(5, 0);
-        ctx.lineTo(0, 40);
+        ctx.lineTo(0, 42);
         ctx.lineTo(-5, 0);
         ctx.closePath();
         ctx.fill();
@@ -528,8 +661,9 @@ window.StoryManager = {
         ctx.stroke();
         ctx.restore();
 
-        // Astro de pie contemplando el cristal a la izquierda
-        this.drawAstroMini(ctx, 155, 148, 'right');
+        // Astro flotando en gravedad cero vigilando el cristal
+        const astroFloatY = 146 + Math.sin(this.sceneTimer * 0.05) * 4;
+        this.drawAstroMini(ctx, 150, astroFloatY, 'right');
     },
 
     // ESCENA 1: LA INVASIÓN DE DARK VORTEX
@@ -542,10 +676,10 @@ window.StoryManager = {
         ctx.translate(cx, cy - 10);
         ctx.rotate(this.vortexAngle);
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 7; i++) {
             ctx.fillStyle = (i % 2 === 0) ? 'rgba(220, 38, 38, 0.45)' : 'rgba(147, 51, 234, 0.45)';
             ctx.beginPath();
-            ctx.ellipse(0, 0, 115, 42, (i * Math.PI) / 3, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, 120, 44, (i * Math.PI) / 3.5, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
@@ -553,7 +687,7 @@ window.StoryManager = {
         // Centro negro del agujero de gusano
         ctx.fillStyle = '#05000a';
         ctx.beginPath();
-        ctx.arc(cx, cy - 10, 34, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 10, 36, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 2.5;
@@ -578,22 +712,22 @@ window.StoryManager = {
 
         ctx.fillStyle = '#1e1b4b';
         ctx.beginPath();
-        ctx.moveTo(0, -32);
-        ctx.lineTo(70, 15);
-        ctx.lineTo(32, 26);
+        ctx.moveTo(0, -34);
+        ctx.lineTo(75, 16);
+        ctx.lineTo(34, 28);
         ctx.lineTo(0, 18);
-        ctx.lineTo(-32, 26);
-        ctx.lineTo(-70, 15);
+        ctx.lineTo(-34, 28);
+        ctx.lineTo(-75, 16);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = '#dc2626';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Ojos mecánicos rojos amenazantes del emperador
+        // Ojos mecánicos rojos amenazantes
         ctx.fillStyle = '#ef4444';
         ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.ellipse(-14, 0, 7, 3, -0.2, 0, Math.PI * 2);
         ctx.ellipse(14, 0, 7, 3, 0.2, 0, Math.PI * 2);
@@ -601,16 +735,28 @@ window.StoryManager = {
         ctx.shadowBlur = 0;
         ctx.restore();
 
+        // Rayos láser de fijación de blanco
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(cx - 25, cy + 5);
+        ctx.lineTo(cx - 10, 160);
+        ctx.moveTo(cx + 25, cy + 5);
+        ctx.lineTo(cx + 10, 160);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
         // Rayo tractor de plasma oscuro
         const tractor = ctx.createLinearGradient(cx, cy - 5, cx, 175);
-        tractor.addColorStop(0, 'rgba(239, 68, 68, 0.75)');
-        tractor.addColorStop(1, 'rgba(147, 51, 234, 0.2)');
+        tractor.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
+        tractor.addColorStop(1, 'rgba(147, 51, 234, 0.25)');
         ctx.fillStyle = tractor;
         ctx.beginPath();
-        ctx.moveTo(cx - 15, cy + 10);
-        ctx.lineTo(cx + 15, cy + 10);
-        ctx.lineTo(cx + 45, 175);
-        ctx.lineTo(cx - 45, 175);
+        ctx.moveTo(cx - 18, cy + 10);
+        ctx.lineTo(cx + 18, cy + 10);
+        ctx.lineTo(cx + 48, 175);
+        ctx.lineTo(cx - 48, 175);
         ctx.closePath();
         ctx.fill();
 
@@ -624,13 +770,19 @@ window.StoryManager = {
         const cx = 240;
         const cy = 105;
 
-        // Onda expansiva de impacto
+        // Doble onda expansiva
         if (this.shockwaveAlpha > 0) {
             ctx.save();
             ctx.strokeStyle = `rgba(255, 255, 255, ${this.shockwaveAlpha})`;
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.arc(cx, cy, this.shockwaveRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = `rgba(244, 63, 94, ${this.shockwaveAlpha * 0.7})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, this.shockwaveRadius * 0.75, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
         }
@@ -644,6 +796,22 @@ window.StoryManager = {
         ctx.beginPath();
         ctx.arc(cx, cy, 95, 0, Math.PI * 2);
         ctx.fill();
+
+        // Mini portales planetarios en la periferia
+        const portalThemes = ['#15803d', '#ca8a04', '#9333ea', '#059669', '#2563eb', '#15803d', '#ea580c', '#b91c1c', '#38bdf8'];
+        for (let i = 0; i < 9; i++) {
+            const ang = (i / 9) * Math.PI * 2;
+            const px = cx + Math.cos(ang) * 180;
+            const py = cy + Math.sin(ang) * 92;
+
+            ctx.fillStyle = portalThemes[i];
+            ctx.beginPath();
+            ctx.ellipse(px, py, 14, 8, ang, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
 
         // Los 9 Fragmentos Sagrados de colores
         for (let sh of this.shards) {
@@ -662,7 +830,7 @@ window.StoryManager = {
             ctx.closePath();
             ctx.fill();
 
-            // Centro blanco brillante
+            // Centro blanco
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(0, 0, sh.size * 0.35, 0, Math.PI * 2);
@@ -673,38 +841,79 @@ window.StoryManager = {
         }
     },
 
-    // ESCENA 3: ASTRO DETERMINADO CON SU NAVE
+    // ESCENA 3: CABINA DE COMBATE Y SALTO AL HIPERESPACIO
     renderScene3: function(ctx) {
-        // Nave de Asalto Estelar a la derecha
-        this.drawHeroSpaceship(ctx, 335, 90);
-
-        // Primer plano heroico de Astro a la izquierda
-        this.drawAstroHeroCloseUp(ctx, 145, 130);
-
-        // HUD Holográfico táctico
+        // Líneas de hiperespacio pasando a alta velocidad
         ctx.save();
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-        ctx.lineWidth = 1.2;
+        ctx.translate(240, 110);
+        ctx.lineWidth = 2;
+        for (let w of this.warpLines) {
+            const x1 = Math.cos(w.angle) * w.dist;
+            const y1 = Math.sin(w.angle) * w.dist;
+            const x2 = Math.cos(w.angle) * (w.dist + w.len);
+            const y2 = Math.sin(w.angle) * (w.dist + w.len);
+            ctx.strokeStyle = w.color;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Nave de Astro en primer plano en vuelo
+        const shipFlightY = 95 + this.cockpitShake;
+        this.drawHeroSpaceship(ctx, 330, shipFlightY);
+
+        // Primer plano de Astro con casco heroico
+        this.drawAstroHeroCloseUp(ctx, 145, 130 + this.cockpitShake * 0.5);
+
+        // HUD Holográfico táctico con gráficos animados
+        ctx.save();
+        ctx.translate(185, 45);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.roundRect(185, 48, 96, 58, 6);
+        ctx.roundRect(0, 0, 105, 62, 6);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
         ctx.fill();
 
+        // Visualizador de onda de audio del comunicador
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let wx = 8; wx < 95; wx += 4) {
+            const wy = 15 + Math.sin(this.sceneTimer * 0.3 + wx) * 3;
+            if (wx === 8) ctx.moveTo(wx, wy);
+            else ctx.lineTo(wx, wy);
+        }
+        ctx.stroke();
+
         ctx.fillStyle = '#38bdf8';
-        ctx.font = '800 8px monospace';
+        ctx.font = '800 7.5px monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('MISIÓN: 9 MUNDOS', 193, 62);
-        ctx.fillText('DESTINO: ALDEA KOKIRI', 193, 74);
-        ctx.fillText('BOSS: MECHA-KOOPA', 193, 86);
-        ctx.fillText('ESTADO: EN RUTA ▶', 193, 98);
+        ctx.fillText('HIPERIMPULSO: ACTIVO', 8, 28);
+        ctx.fillText('DESTINO: ALDEA KOKIRI', 8, 39);
+        ctx.fillText('DISTANCIA: EN REENTRADA', 8, 50);
+
+        // Radar giratorio
+        ctx.strokeStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(92, 48, 6, 0, Math.PI * 2);
+        ctx.stroke();
+        const radSweep = this.sceneTimer * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(92, 48);
+        ctx.lineTo(92 + Math.cos(radSweep) * 6, 48 + Math.sin(radSweep) * 6);
+        ctx.stroke();
+
         ctx.restore();
     },
 
-    // ESCENA 4: ALDEA KOKIRI DEL BOSQUE
+    // ESCENA 4: REENTRADA ATMOSFÉRICA Y ALDEA KOKIRI DEL BOSQUE
     renderScene4: function(ctx) {
-        // 1. Siluetas lejanas del bosque Kokiri
+        // 1. Siluetas de montañas lejanas
         ctx.fillStyle = '#0f4024';
         for (let i = 0; i < 7; i++) {
             const bx = i * 75 - 20;
@@ -713,7 +922,21 @@ window.StoryManager = {
             ctx.fill();
         }
 
-        // 2. Bruma y niebla mística del bosque
+        // 2. Cascada de agua en el acantilado del fondo
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(350, 120, 18, 76);
+        ctx.fillStyle = '#ffffff';
+        // Líneas de espuma de la cascada que caen
+        for (let wy = 122 + this.waterfallOffset; wy < 192; wy += 9) {
+            ctx.fillRect(352, wy, 14, 2);
+        }
+        // Bruma en la base de la cascada
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(359, 194, 18, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Bruma mística del bosque
         const mist = ctx.createLinearGradient(0, 135, 0, 205);
         mist.addColorStop(0, 'rgba(147, 197, 253, 0.08)');
         mist.addColorStop(0.5, 'rgba(219, 234, 254, 0.28)');
@@ -721,7 +944,7 @@ window.StoryManager = {
         ctx.fillStyle = mist;
         ctx.fillRect(0, 125, 480, 80);
 
-        // 3. Gran Árbol Kokiri Ancestral
+        // 4. Gran Árbol Kokiri Ancestral
         ctx.fillStyle = '#3f2108';
         ctx.beginPath();
         ctx.moveTo(0, 50);
@@ -738,36 +961,54 @@ window.StoryManager = {
         ctx.closePath();
         ctx.fill();
 
-        // Ventana en el árbol con luz
+        // Chimenea en la casa del árbol
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(32, 128, 6, 10);
+
+        // Ventana en el árbol con luz cálida
         ctx.fillStyle = '#1c0d02';
         ctx.beginPath();
-        ctx.ellipse(35, 145, 10, 15, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(35, 148, 10, 15, 0.1, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#fef08a';
         ctx.beginPath();
-        ctx.ellipse(35, 145, 6, 9, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(35, 148, 6, 9, 0.1, 0, Math.PI * 2);
         ctx.fill();
 
-        // Copas de follaje verde del árbol Kokiri
+        // Farolillo colgando de una rama que se balancea
+        const lanternSwing = Math.sin(this.sceneTimer * 0.05) * 4;
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(65, 100);
+        ctx.lineTo(65 + lanternSwing, 118);
+        ctx.stroke();
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(65 + lanternSwing, 121, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Copas de hojas del gran árbol que ondean
+        const leafWind = Math.sin(this.sceneTimer * 0.04) * 2;
         ctx.fillStyle = '#14532d';
         ctx.beginPath();
-        ctx.arc(30, 35, 55, 0, Math.PI * 2);
-        ctx.arc(95, 40, 45, 0, Math.PI * 2);
+        ctx.arc(30 + leafWind, 35, 55, 0, Math.PI * 2);
+        ctx.arc(95 - leafWind, 40, 45, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#15803d';
         ctx.beginPath();
-        ctx.arc(40, 30, 42, 0, Math.PI * 2);
-        ctx.arc(90, 35, 35, 0, Math.PI * 2);
+        ctx.arc(40 + leafWind, 30, 42, 0, Math.PI * 2);
+        ctx.arc(90 - leafWind, 35, 35, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#4ade80';
         ctx.beginPath();
-        ctx.arc(45, 25, 25, 0, Math.PI * 2);
-        ctx.arc(85, 28, 20, 0, Math.PI * 2);
+        ctx.arc(45 + leafWind, 25, 25, 0, Math.PI * 2);
+        ctx.arc(85 - leafWind, 28, 20, 0, Math.PI * 2);
         ctx.fill();
 
-        // 4. Árbol Kokiri secundario
+        // 5. Árbol Kokiri secundario derecho
         ctx.fillStyle = '#3f2108';
         ctx.beginPath();
         ctx.moveTo(480, 75);
@@ -781,7 +1022,7 @@ window.StoryManager = {
         ctx.arc(440, 55, 48, 0, Math.PI * 2);
         ctx.fill();
 
-        // 5. Hadas del Bosque Kokiri flotantes
+        // 6. 4 Hadas del Bosque Kokiri flotantes (Navi y amigas)
         for (let f = 0; f < 4; f++) {
             const fx = 120 + f * 75 + Math.sin(this.sceneTimer * 0.06 + f * 1.5) * 14;
             const fy = 95 + (f % 2) * 35 + Math.cos(this.sceneTimer * 0.08 + f * 1.8) * 10;
@@ -809,7 +1050,7 @@ window.StoryManager = {
             ctx.fill();
         }
 
-        // 6. Suelo de la Aldea Kokiri (colores Mundo 1)
+        // 7. Suelo de la Aldea Kokiri
         ctx.fillStyle = '#582f0e';
         ctx.fillRect(0, 210, 480, 60);
 
@@ -829,7 +1070,7 @@ window.StoryManager = {
             ctx.fillRect(gx + 3, 192, 2, 2);
         }
 
-        // Cartel Kokiri
+        // Cartel de madera Kokiri
         ctx.fillStyle = '#78350f';
         ctx.fillRect(145, 178, 6, 18);
         ctx.fillStyle = '#b45309';
@@ -844,12 +1085,19 @@ window.StoryManager = {
         ctx.textAlign = 'center';
         ctx.fillText('🌳 ALDEA KOKIRI 1-1', 148, 172);
 
-        // 7. Nave descendiendo
+        // 8. Nave descendiendo con calor de reentrada
         if (this.shipY > -45) {
             this.drawHeroSpaceship(ctx, this.shipX, this.shipY);
+            // Llamaradas de reentrada en la punta de la nave
+            if (this.sceneTimer < 80) {
+                ctx.fillStyle = 'rgba(251, 146, 60, 0.55)';
+                ctx.beginPath();
+                ctx.arc(this.shipX + 38, this.shipY, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
-        // 8. Astro aterrizando heroicamente
+        // 9. Astro aterrizando heroicamente
         if (this.sceneTimer >= 80) {
             ctx.save();
             ctx.translate(240, this.astroLandY);
@@ -864,7 +1112,7 @@ window.StoryManager = {
         ctx.save();
         ctx.translate(x, y);
 
-        // Fuego del reactor propulsor
+        // Fuego del reactor propulsor con destello
         const flameLen = 14 + Math.random() * 8;
         const flameGrad = ctx.createLinearGradient(-35, 0, -35 - flameLen, 0);
         flameGrad.addColorStop(0, '#ffffff');
@@ -1036,7 +1284,6 @@ window.StoryManager = {
         const boxW = 440;
         const boxH = 54;
 
-        // Fondo estilizado glassmorphism
         ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
         ctx.beginPath();
         ctx.roundRect(boxX, boxY, boxW, boxH, 8);
@@ -1046,7 +1293,7 @@ window.StoryManager = {
         ctx.lineWidth = 1.6;
         ctx.stroke();
 
-        // 1. Marco del Avatar del personaje
+        // Marco del Avatar del personaje
         const avX = boxX + 6;
         const avY = boxY + 6;
         const avSize = 42;
@@ -1059,10 +1306,10 @@ window.StoryManager = {
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
-        // Dibujar el rostro/avatar animado según el personaje
+        // Dibujar el rostro animado según el personaje
         this.drawCharacterAvatar(ctx, avX + avSize / 2, avY + avSize / 2, this.currentSpeaker);
 
-        // 2. Nombre y Rol del personaje
+        // Nombre y Rol del personaje
         const textX = avX + avSize + 10;
         ctx.font = '900 9.5px system-ui, sans-serif';
         ctx.fillStyle = this.speakerBadgeColor;
@@ -1073,7 +1320,7 @@ window.StoryManager = {
         ctx.fillStyle = '#94a3b8';
         ctx.fillText(this.speakerRole, textX + ctx.measureText(this.speakerName).width + 8, boxY + 14);
 
-        // 3. Texto del diálogo tecleado
+        // Texto del diálogo
         const visibleText = this.currentFullText.substring(0, Math.floor(this.textCharIndex));
         ctx.font = '500 9px system-ui, sans-serif';
         ctx.fillStyle = '#f8fafc';
@@ -1084,7 +1331,6 @@ window.StoryManager = {
     drawCharacterAvatar: function(ctx, cx, cy, speaker) {
         ctx.save();
         if (speaker === 'vortex') {
-            // Avatar de Dark Vortex: casco cibernético negro con ojos rojos incandescentes
             ctx.fillStyle = '#0f0b1e';
             ctx.beginPath();
             ctx.roundRect(cx - 15, cy - 15, 30, 30, 4);
@@ -1106,7 +1352,7 @@ window.StoryManager = {
             ctx.lineTo(cx + 8, cy - 14);
             ctx.fill();
 
-            // Ojos rojos que parpadean malévolamente
+            // Ojos rojos parpadeantes
             const eyeGlow = Math.sin(this.sceneTimer * 0.2) * 0.4 + 0.6;
             ctx.fillStyle = `rgba(239, 68, 68, ${eyeGlow})`;
             ctx.beginPath();
@@ -1114,7 +1360,6 @@ window.StoryManager = {
             ctx.ellipse(cx + 7, cy - 3, 5, 2.5, 0.2, 0, Math.PI * 2);
             ctx.fill();
         } else if (speaker === 'astro') {
-            // Avatar de Astro: casco de titanio con visor azul cian animado
             ctx.fillStyle = '#f8fafc';
             ctx.beginPath();
             ctx.arc(cx, cy, 15, 0, Math.PI * 2);
@@ -1123,7 +1368,7 @@ window.StoryManager = {
             ctx.lineWidth = 1.2;
             ctx.stroke();
 
-            // Visor panorámico cian
+            // Visor cian animado
             ctx.fillStyle = '#0284c7';
             ctx.beginPath();
             ctx.ellipse(cx, cy - 1, 11, 7, 0, 0, Math.PI * 2);
@@ -1134,14 +1379,13 @@ window.StoryManager = {
             ctx.ellipse(cx, cy - 2, 8, 4.5, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Reflejo animado de la luz
+            // Reflejo animado
             const rX = Math.sin(this.sceneTimer * 0.08) * 3;
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.ellipse(cx + rX, cy - 3, 3, 1.5, -0.3, 0, Math.PI * 2);
             ctx.fill();
         } else if (speaker === 'navi') {
-            // Avatar del Hada Navi: esfera de luz verde con alas aleteando
             const wingFlap = Math.sin(this.sceneTimer * 0.5) * 6;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
             ctx.beginPath();
@@ -1149,7 +1393,6 @@ window.StoryManager = {
             ctx.ellipse(cx + 7, cy - 4, 6, 3 + Math.abs(wingFlap), 0.5, 0, Math.PI * 2);
             ctx.fill();
 
-            // Núcleo resplandeciente esmeralda
             const fGlow = ctx.createRadialGradient(cx, cy, 1, cx, cy, 12);
             fGlow.addColorStop(0, '#ffffff');
             fGlow.addColorStop(0.45, '#4ade80');
@@ -1159,7 +1402,6 @@ window.StoryManager = {
             ctx.arc(cx, cy, 12, 0, Math.PI * 2);
             ctx.fill();
         } else if (speaker === 'alert') {
-            // Icono de Alerta de Emergencia: triángulo parpadeante
             const aPulse = (this.sceneTimer % 16 < 8);
             ctx.fillStyle = aPulse ? '#ef4444' : '#b91c1c';
             ctx.beginPath();
@@ -1174,7 +1416,6 @@ window.StoryManager = {
             ctx.textAlign = 'center';
             ctx.fillText('!', cx, cy + 8);
         } else {
-            // Avatar de la IA Nova Prime: radar atómico giratorio
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 1.4;
             ctx.beginPath();
@@ -1216,7 +1457,6 @@ window.StoryManager = {
 
     renderSkipHint: function(ctx) {
         ctx.save();
-        // Botón elegante "SALTAR HISTORIA ▶"
         ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
         ctx.beginPath();
         ctx.roundRect(355, 6, 115, 18, 9);
@@ -1230,7 +1470,6 @@ window.StoryManager = {
         ctx.textAlign = 'center';
         ctx.fillText('SALTAR HISTORIA ▶', 412, 18);
 
-        // Pista de toque inferior
         ctx.font = '600 7.5px system-ui, sans-serif';
         ctx.fillStyle = '#94a3b8';
         ctx.fillText('TOCA O PULSA CUALQUIER TECLA PARA AVANZAR ▶', 240, 258);
@@ -1238,7 +1477,6 @@ window.StoryManager = {
     }
 };
 
-// Escuchador de clics y toques para avanzar o saltar la historia
 window.addEventListener('keydown', (e) => {
     if (window.StoryManager && window.StoryManager.active) {
         if (e.key === 'Escape') {
@@ -1253,7 +1491,6 @@ window.addEventListener('pointerdown', (e) => {
     if (window.StoryManager && window.StoryManager.active) {
         if (window.StoryManager.ignoreInputTimer > 0) return;
 
-        // Si hace clic en la esquina superior derecha (botón saltar)
         const canvas = document.getElementById('gameCanvas');
         if (canvas) {
             const rect = canvas.getBoundingClientRect();

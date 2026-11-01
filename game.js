@@ -6837,6 +6837,15 @@ function setupControls() {
 function togglePause() {
     isPaused = !isPaused;
     document.getElementById('pauseOverlay').classList.toggle('hidden', !isPaused);
+    if (isPaused) {
+        if (window.sounds && window.sounds.stopMusic) {
+            window.sounds.stopMusic();
+        }
+    } else {
+        if (window.sounds && window.sounds.startMusic && !window.sounds.muted) {
+            window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+        }
+    }
 }
 
 function toggleFullscreen() {
@@ -6869,6 +6878,11 @@ function startGameDirectly(forceSkipStory = false) {
     gameStartedFromMenu = true;
     isPaused = false;
 
+    // DETENER CUALQUIER MÚSICA INMEDIATAMENTE AL ENTRAR EN LA HISTORIA
+    if (window.sounds && window.sounds.stopMusic) {
+        window.sounds.stopMusic();
+    }
+
     try {
         window.sounds.init();
         if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
@@ -6880,8 +6894,11 @@ function startGameDirectly(forceSkipStory = false) {
     const shouldSkip = (forceSkipStory === true);
     if (!shouldSkip && window.StoryManager) {
         window.StoryManager.startIntroStory(() => {
+            // La música arranca ÚNICAMENTE cuando Astro ya aterriza en el Mundo 1
             try {
-                window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+                if (window.sounds && window.sounds.startMusic) {
+                    window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+                }
             } catch (e) {}
         });
         return;
@@ -6899,10 +6916,15 @@ function playStoryPrologue() {
     if (menu) menu.classList.add('hidden');
     gameStartedFromMenu = true;
     isPaused = false;
+    if (window.sounds && window.sounds.stopMusic) {
+        window.sounds.stopMusic();
+    }
     if (window.StoryManager) {
         window.StoryManager.startIntroStory(() => {
             try {
-                window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+                if (window.sounds && window.sounds.startMusic) {
+                    window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+                }
             } catch (e) {}
         });
     }
