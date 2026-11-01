@@ -220,6 +220,29 @@ class SoundManager {
         osc.stop(now + 0.3);
     }
 
+    playSpaceshipLaunch() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(95, now);
+        osc.frequency.exponentialRampToValueAtTime(920, now + 1.2);
+
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.linearRampToValueAtTime(0.28, now + 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 1.4);
+    }
+
     playStageClear() {
         if (this.muted) return;
         try {
@@ -870,6 +893,233 @@ class SoundManager {
             clearTimeout(this.musicTimeout);
             this.musicTimeout = null;
         }
+    }
+
+    // ==========================================
+    // EFECTOS DE SONIDO CINEMÁTICOS PARA LA HISTORIA (2026 PROLOGUE)
+    // ==========================================
+    playStoryAlarm() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(560, now);
+            osc.frequency.setValueAtTime(420, now + 0.16);
+            osc.frequency.setValueAtTime(560, now + 0.32);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.48);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.49);
+        } catch (e) {}
+    }
+
+    playStoryWarp() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(680, now);
+            osc.frequency.exponentialRampToValueAtTime(90, now + 0.7);
+            gain.gain.setValueAtTime(0.24, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.72);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.73);
+        } catch (e) {}
+    }
+
+    playStoryShatter() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            // Ruido de impacto + tintineo de fragmentos de cristal
+            const freqs = [1200, 1650, 2100, 2600, 3100];
+            freqs.forEach((f, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + idx * 0.04);
+                gain.gain.setValueAtTime(0.15, now + idx * 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.6 + idx * 0.06);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.04);
+                osc.stop(now + 0.65 + idx * 0.06);
+            });
+        } catch (e) {}
+    }
+
+    playStoryHeroReady() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const notes = [
+                { f: 261.63, t: 0.0 },  // C4
+                { f: 329.63, t: 0.12 }, // E4
+                { f: 392.00, t: 0.24 }, // G4
+                { f: 523.25, t: 0.36 }  // C5
+            ];
+            notes.forEach((n) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, now + n.t);
+                gain.gain.setValueAtTime(0.25, now + n.t);
+                gain.gain.linearRampToValueAtTime(0.01, now + n.t + 0.32);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + n.t);
+                osc.stop(now + n.t + 0.34);
+            });
+        } catch (e) {}
+    }
+
+    // Voces retro estilo Star Fox / Banjo-Kazooie al teclear los diálogos
+    playTextBeep(speaker = 'narrator') {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            if (speaker === 'vortex') {
+                // Voz siniestra y robótica grave de Dark Vortex
+                osc.type = 'sawtooth';
+                const f = 110 + (Math.random() - 0.5) * 20;
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+            } else if (speaker === 'astro') {
+                // Voz heroica y alegre de Astro
+                osc.type = 'sine';
+                const f = 640 + (Math.random() - 0.5) * 80;
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.045);
+            } else if (speaker === 'ai') {
+                // Comunicador holográfico de la base
+                osc.type = 'triangle';
+                const f = 880 + (Math.random() - 0.5) * 60;
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+            } else {
+                // Narrador espacial clásico
+                osc.type = 'sine';
+                const f = 460 + (Math.random() - 0.5) * 40;
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.09, now);
+                gain.gain.linearRampToValueAtTime(0.005, now + 0.035);
+            }
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.055);
+        } catch (e) {}
+    }
+
+    // Sub-Bass y onda expansiva de la explosión cósmica
+    playStoryShockwave() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(95, now);
+            osc.frequency.exponentialRampToValueAtTime(24, now + 0.9);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.95);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.96);
+        } catch (e) {}
+    }
+
+    // Tintineo místico de hadas de la Aldea Kokiri
+    playFairySparkle() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const notes = [1318.51, 1567.98, 1975.53, 2637.02]; // E6, G6, B6, E7
+            notes.forEach((f, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, now + i * 0.05);
+                gain.gain.setValueAtTime(0.12, now + i * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.4 + i * 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + i * 0.05);
+                osc.stop(now + 0.42 + i * 0.05);
+            });
+        } catch (e) {}
+    }
+
+    // Impacto contundente de aterrizaje de superhéroe
+    playSuperheroThud() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+            gain.gain.setValueAtTime(0.38, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.38);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.39);
+        } catch (e) {}
+    }
+
+    // Carga de láser / fijación de blanco
+    playLaserCharge() {
+        if (this.muted) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(320, now);
+            osc.frequency.exponentialRampToValueAtTime(1100, now + 0.32);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.34);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (e) {}
     }
 }
 
