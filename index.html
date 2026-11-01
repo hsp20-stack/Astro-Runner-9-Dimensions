@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=2026v28">
+    <link rel="stylesheet" href="style.css?v=2026v30">
     <!-- Fallback ultraseguro para evitar pantalla negra en Safari -->
     <script>
         window.sounds = window.sounds || {
@@ -185,6 +185,9 @@
                 </button>
                 <button id="btnOpenControls" class="menu-btn secondary-btn" onclick="openControlsModal()">
                     <span class="btn-icon">🕹️</span> CONTROLES
+                </button>
+                <button id="btnWatchStory" class="menu-btn secondary-btn" onclick="playStoryPrologue()">
+                    <span class="btn-icon">🎬</span> HISTORIA (PRÓLOGO)
                 </button>
                 <button id="btnOpenSettings" class="menu-btn secondary-btn" onclick="openSettingsModal()">
                     <span class="btn-icon">⚙️</span> AJUSTES
@@ -447,14 +450,15 @@
     <!-- PeerJS WebRTC P2P para multijugador online sin servidor -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <!-- Scripts con Cache-Buster para Safari iOS -->
-    <script src="audio.js?v=2026v28"></script>
-    <script src="levels.js?v=2026v28"></script>
-    <script src="multiplayer.js?v=2026v28"></script>
-    <script src="game.js?v=2026v28"></script>
+    <script src="audio.js?v=2026v30"></script>
+    <script src="levels.js?v=2026v30"></script>
+    <script src="multiplayer.js?v=2026v30"></script>
+    <script src="story.js?v=2026v30"></script>
+    <script src="game.js?v=2026v30"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=2026v28').then(function(reg) {
+                navigator.serviceWorker.register('sw.js?v=2026v30').then(function(reg) {
                     reg.update();
                 }).catch(err => {
                     console.log('SW note:', err);
