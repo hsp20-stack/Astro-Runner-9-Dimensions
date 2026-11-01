@@ -1,6 +1,14 @@
 // story.js - Prólogo Cinemático Animado: La Leyenda del Cristal Cósmico (2026)
 // Cuenta la historia del robo de las 9 Dimensiones antes de comenzar la partida
 
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (!r) r = 0;
+        this.rect(x, y, w, h);
+        return this;
+    };
+}
+
 window.StoryManager = {
     active: false,
     currentScene: 0,

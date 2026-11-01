@@ -236,6 +236,12 @@ function updateUI() {
 // FÍSICAS Y ACTUALIZACIÓN
 // ==========================================
 function updateGame(dt) {
+    // 1. Prólogo Cinemático / Historia Animada (2026 Animated Story)
+    if (window.StoryManager && window.StoryManager.active) {
+        window.StoryManager.update(dt);
+        return;
+    }
+
     const menu = document.getElementById('mainMenuScreen');
     if (menu && (menu.classList.contains('hidden') || menu.style.display === 'none')) {
         gameStartedFromMenu = true;
@@ -1241,6 +1247,13 @@ function render() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.scale(RENDER_SCALE, RENDER_SCALE);
+
+    // Renderizado del Prólogo Cinemático / Historia Animada (2026 Animated Story)
+    if (window.StoryManager && window.StoryManager.active) {
+        window.StoryManager.render(ctx);
+        ctx.restore();
+        return;
+    }
 
     // Fondo base infalible para asegurar que la pantalla NUNCA quede en negro
     const defaultSkyTop = (levelData && levelData.world && levelData.world.skyTop) ? levelData.world.skyTop : '#38bdf8';
@@ -6841,7 +6854,7 @@ let gameStartedFromMenu = false;
 let vibrationEnabled = true;
 let sfxEnabled = true;
 
-function startGameDirectly() {
+function startGameDirectly(forceSkipStory = false) {
     const splash = document.getElementById('studioSplashScreen');
     if (splash) {
         splash.classList.add('fade-out');
@@ -6861,11 +6874,40 @@ function startGameDirectly() {
         if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
             window.sounds.ctx.resume();
         }
+    } catch (err) {}
+
+    // Cinemática animada de historia antes de comenzar la partida
+    const shouldSkip = (forceSkipStory === true);
+    if (!shouldSkip && window.StoryManager) {
+        window.StoryManager.startIntroStory(() => {
+            try {
+                window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+            } catch (e) {}
+        });
+        return;
+    }
+
+    try {
         window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
     } catch (err) {
         console.error("Audio error on start:", err);
     }
 }
+
+function playStoryPrologue() {
+    const menu = document.getElementById('mainMenuScreen');
+    if (menu) menu.classList.add('hidden');
+    gameStartedFromMenu = true;
+    isPaused = false;
+    if (window.StoryManager) {
+        window.StoryManager.startIntroStory(() => {
+            try {
+                window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
+            } catch (e) {}
+        });
+    }
+}
+window.playStoryPrologue = playStoryPrologue;
 window.startGameDirectly = startGameDirectly;
 window.startGameFromMenu = startGameDirectly;
 window.playGameAction = startGameDirectly;
@@ -6910,8 +6952,8 @@ function setupGameFlow() {
 
     const btnPlay = document.getElementById('btnPlayGame');
     if (btnPlay) {
-        btnPlay.addEventListener('click', startGameDirectly);
-        btnPlay.addEventListener('pointerdown', startGameDirectly, { passive: true });
+        btnPlay.addEventListener('click', () => startGameDirectly(false));
+        btnPlay.addEventListener('pointerdown', () => startGameDirectly(false), { passive: true });
     }
 
     const btnWorldMenu = document.getElementById('btnOpenWorldSelectMenu');
