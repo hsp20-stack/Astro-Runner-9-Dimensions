@@ -1376,65 +1376,148 @@ function render() {
 }
 
 function renderModernLightingAndPostProcess() {
-    // 1. RAYOS DE SOL / LUZ VOLUMÉTRICOS (GOD RAYS 2026)
+    const weatherTheme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
+    const now = Date.now();
+
+    // 1. RAYOS VOLUMÉTRICOS DE LUZ TEMÁTICOS (RTX VOLUMETRIC GOD RAYS)
     ctx.save();
-    const rayBreath = Math.sin(Date.now() * 0.0015) * 0.025 + 0.055;
+    let godRayColor1 = 'rgba(255, 255, 255, ';
+    let godRayColor2 = 'rgba(254, 240, 138, ';
+    if (weatherTheme === 'desert' || weatherTheme === 'ocean') {
+        godRayColor1 = 'rgba(254, 240, 138, ';
+        godRayColor2 = 'rgba(251, 191, 36, ';
+    } else if (weatherTheme === 'neon_cave') {
+        godRayColor1 = 'rgba(0, 242, 254, ';
+        godRayColor2 = 'rgba(192, 132, 252, ';
+    } else if (weatherTheme === 'ice') {
+        godRayColor1 = 'rgba(224, 242, 254, ';
+        godRayColor2 = 'rgba(56, 189, 248, ';
+    } else if (weatherTheme === 'spooky_forest') {
+        godRayColor1 = 'rgba(168, 85, 247, ';
+        godRayColor2 = 'rgba(244, 63, 94, ';
+    } else if (weatherTheme === 'airship') {
+        godRayColor1 = 'rgba(253, 186, 116, ';
+        godRayColor2 = 'rgba(249, 115, 22, ';
+    } else if (weatherTheme === 'lava_castle') {
+        godRayColor1 = 'rgba(249, 115, 22, ';
+        godRayColor2 = 'rgba(239, 68, 68, ';
+    } else if (weatherTheme === 'space') {
+        godRayColor1 = 'rgba(129, 140, 248, ';
+        godRayColor2 = 'rgba(192, 132, 252, ';
+    }
+
+    const rayBreath = Math.sin(now * 0.0016) * 0.02 + 0.055;
     const rayGrad = ctx.createLinearGradient(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-    rayGrad.addColorStop(0, `rgba(255, 255, 255, ${rayBreath + 0.04})`);
-    rayGrad.addColorStop(0.35, `rgba(255, 255, 255, ${rayBreath})`);
-    rayGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    rayGrad.addColorStop(0, godRayColor1 + (rayBreath + 0.05) + ')');
+    rayGrad.addColorStop(0.35, godRayColor2 + rayBreath + ')');
+    rayGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = rayGrad;
-    for (let r = 0; r < 4; r++) {
-        const rx = ((r * 130 + 30) - (cameraX * 0.15)) % (VIEW_WIDTH + 100);
+    for (let r = 0; r < 5; r++) {
+        const rx = ((r * 110 + 20) - (cameraX * 0.15)) % (VIEW_WIDTH + 120);
         ctx.beginPath();
         ctx.moveTo(rx, 0);
-        ctx.lineTo(rx + 50, 0);
-        ctx.lineTo(rx + 150, VIEW_HEIGHT);
-        ctx.lineTo(rx + 80, VIEW_HEIGHT);
+        ctx.lineTo(rx + 45, 0);
+        ctx.lineTo(rx + 155, VIEW_HEIGHT);
+        ctx.lineTo(rx + 90, VIEW_HEIGHT);
         ctx.closePath();
         ctx.fill();
     }
     ctx.restore();
 
-    // 2. ILUMINACIÓN DINÁMICA DE PUNTOS DE LUZ (POINT LIGHTS CON BLOOM)
+    // 2. ILUMINACIÓN DINÁMICA DE PUNTOS DE LUZ EN TIEMPO REAL (RTX POINT LIGHTS & SCREEN PASS)
     ctx.save();
-    ctx.globalCompositeOperation = 'screen'; // Mezcla lumínica vibrante
+    ctx.globalCompositeOperation = 'screen'; // Iluminación aditiva realista
 
-    // Luz del jugador (Astro emite una suave aura lumínica moderna)
-    const playerLightRadius = 50;
+    // Luz de Astro: halo envolvente con destellos según estado
     const plx = Math.floor(astro.x - cameraX + astro.w / 2);
     const ply = Math.floor(astro.y + astro.h / 2);
-    const playerLight = ctx.createRadialGradient(plx, ply, 3, plx, ply, playerLightRadius);
-    const auraColor = (astro.state === 'plasma') ? 'rgba(56, 189, 248, 0.32)' : (astro.state === 'super' ? 'rgba(251, 191, 36, 0.32)' : 'rgba(255, 255, 255, 0.22)');
-    playerLight.addColorStop(0, auraColor);
-    playerLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = playerLight;
-    ctx.beginPath();
-    ctx.arc(plx, ply, playerLightRadius, 0, Math.PI * 2);
-    ctx.fill();
+    if (plx > -50 && plx < VIEW_WIDTH + 50) {
+        let playerRadius = 58;
+        let pColorCore = 'rgba(255, 255, 255, 0.45)';
+        let pColorOuter = 'rgba(56, 189, 248, 0.28)';
 
-    // Luces de los cristales/monedas en pantalla
-    for (let c of activeCrystals) {
-        const cx = c.x - cameraX + 8;
-        if (cx > -20 && cx < VIEW_WIDTH + 20) {
-            const coinLight = ctx.createRadialGradient(cx, c.y + 8, 2, cx, c.y + 8, 22);
-            coinLight.addColorStop(0, 'rgba(253, 224, 71, 0.28)');
-            coinLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = coinLight;
+        if (astro.state === 'plasma') {
+            playerRadius = 72;
+            pColorCore = 'rgba(254, 202, 202, 0.55)';
+            pColorOuter = 'rgba(56, 189, 248, 0.38)';
+        } else if (astro.state === 'super') {
+            playerRadius = 80;
+            pColorCore = 'rgba(254, 240, 138, 0.6)';
+            pColorOuter = 'rgba(245, 158, 11, 0.35)';
+        }
+
+        const playerLight = ctx.createRadialGradient(plx, ply, 2, plx, ply, playerRadius);
+        playerLight.addColorStop(0, pColorCore);
+        playerLight.addColorStop(0.4, pColorOuter);
+        playerLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = playerLight;
+        ctx.beginPath();
+        ctx.arc(plx, ply, playerRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Destello de propulsión inferior del jetpack
+        if (Math.abs(astro.vx) > 1.8 || !astro.isGrounded) {
+            const jpLight = ctx.createRadialGradient(plx, ply + 16, 1, plx, ply + 16, 32);
+            jpLight.addColorStop(0, astro.state === 'plasma' ? 'rgba(249, 115, 22, 0.5)' : 'rgba(56, 189, 248, 0.5)');
+            jpLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = jpLight;
             ctx.beginPath();
-            ctx.arc(cx, c.y + 8, 22, 0, Math.PI * 2);
+            ctx.arc(plx, ply + 16, 32, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
-    // Luz térmica ardiente del Boss si está activo
+    // Luces de los disparos de plasma en vuelo (iluminan el mapa a su paso)
+    for (let ps of activePlasmaShots) {
+        const psx = ps.x - cameraX;
+        if (psx > -40 && psx < VIEW_WIDTH + 40) {
+            const shotLight = ctx.createRadialGradient(psx + 6, ps.y + 6, 1, psx + 6, ps.y + 6, 36);
+            shotLight.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+            shotLight.addColorStop(0.3, 'rgba(56, 189, 248, 0.5)');
+            shotLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = shotLight;
+            ctx.beginPath();
+            ctx.arc(psx + 6, ps.y + 6, 36, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Luces de las monedas y potenciadores en pantalla
+    for (let c of activeCrystals) {
+        const cx = c.x - cameraX + 8;
+        if (cx > -20 && cx < VIEW_WIDTH + 20) {
+            const coinLight = ctx.createRadialGradient(cx, c.y + 8, 1, cx, c.y + 8, 24);
+            coinLight.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+            coinLight.addColorStop(0.5, 'rgba(245, 158, 11, 0.22)');
+            coinLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = coinLight;
+            ctx.beginPath();
+            ctx.arc(cx, c.y + 8, 24, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    for (let p of activePowerUps) {
+        const px = p.x - cameraX + 10;
+        if (px > -25 && px < VIEW_WIDTH + 25) {
+            const pLight = ctx.createRadialGradient(px, p.y + 10, 2, px, p.y + 10, 32);
+            pLight.addColorStop(0, p.type === 'battery' ? 'rgba(239, 68, 68, 0.45)' : 'rgba(249, 115, 22, 0.5)');
+            pLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = pLight;
+            ctx.beginPath();
+            ctx.arc(px, p.y + 10, 32, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Luz cinematográfica del Boss
     if (bossEntity && bossEntity.alive) {
         const bx = bossEntity.x - cameraX + bossEntity.w / 2;
         const by = bossEntity.y + bossEntity.h / 2;
-        const bossPulse = Math.sin(Date.now() * 0.006) * 12 + 70;
+        const bossPulse = Math.sin(now * 0.007) * 16 + 85;
         const bossLight = ctx.createRadialGradient(bx, by, 10, bx, by, bossPulse);
-        bossLight.addColorStop(0, 'rgba(239, 68, 68, 0.38)');
-        bossLight.addColorStop(0.5, 'rgba(249, 115, 22, 0.2)');
+        bossLight.addColorStop(0, 'rgba(254, 202, 202, 0.5)');
+        bossLight.addColorStop(0.45, 'rgba(239, 68, 68, 0.3)');
         bossLight.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = bossLight;
         ctx.beginPath();
@@ -1443,121 +1526,148 @@ function renderModernLightingAndPostProcess() {
     }
     ctx.restore();
 
-    // 3. PARTÍCULAS AMBIENTALES DINÁMICAS SEGÚN EL MUNDO (2026 ATMOSPHERIC JUICE)
+    // 3. PARTÍCULAS AMBIENTALES DINÁMICAS SEGÚN EL MUNDO (HIGH-DENSITY WEATHER FX)
     ctx.save();
-    const weatherTheme = (levelData && levelData.world) ? (levelData.world.theme || "grassland") : "grassland";
-    const now = Date.now();
-
     if (weatherTheme === "grassland") {
-        // Hadas Kokiri y briznas de hierba mágicas flotantes
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 14; i++) {
             const time = (now * 0.0006 + i * 0.28) % 1;
             const wx = ((i * 42) - cameraX * 0.35 + Math.sin(time * 6 + i) * 16) % VIEW_WIDTH;
             const wy = (time * VIEW_HEIGHT);
             const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 3 === 0) ? 'rgba(74, 222, 128, 0.55)' : ((i % 2 === 0) ? 'rgba(254, 240, 138, 0.5)' : 'rgba(56, 189, 248, 0.45)');
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(74, 222, 128, 0.6)' : ((i % 2 === 0) ? 'rgba(254, 240, 138, 0.55)' : 'rgba(56, 189, 248, 0.5)');
             ctx.beginPath();
-            ctx.ellipse(drawX, wy, 2.5, 1.5, Math.sin(time * 4), 0, Math.PI * 2);
+            ctx.arc(drawX, wy, 2.2, 0, Math.PI * 2);
             ctx.fill();
         }
     } else if (weatherTheme === "desert") {
-        // Arena dorada y polvo del desierto volando con el viento cálido
-        for (let i = 0; i < 18; i++) {
-            const time = (now * 0.0012 + i * 0.2) % 1;
-            const wx = ((i * 32) - cameraX * 0.55 + time * 70) % VIEW_WIDTH;
-            const wy = 30 + (i * 12) + Math.sin(time * 8 + i) * 10;
+        for (let i = 0; i < 24; i++) {
+            const time = (now * 0.0014 + i * 0.18) % 1;
+            const wx = ((i * 28) - cameraX * 0.55 + time * 85) % VIEW_WIDTH;
+            const wy = 20 + (i * 10) + Math.sin(time * 8 + i) * 12;
             const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(251, 191, 36, 0.45)' : 'rgba(245, 158, 11, 0.35)';
-            ctx.fillRect(drawX, wy, (i % 3 === 0) ? 2.5 : 1.8, (i % 3 === 0) ? 2.5 : 1.8);
-        }
-    } else if (weatherTheme === "neon_cave") {
-        // Esporas bioluminiscentes y polvillo de cristal flotando hacia arriba
-        for (let i = 0; i < 16; i++) {
-            const time = (now * 0.0007 + i * 0.22) % 1;
-            const wx = ((i * 34) - cameraX * 0.3 + Math.sin(time * 5 + i) * 12) % VIEW_WIDTH;
-            const wy = (1 - time) * VIEW_HEIGHT; // Asciende suavemente
-            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(0, 242, 254, 0.5)' : 'rgba(192, 132, 252, 0.5)';
-            ctx.beginPath();
-            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.2 : 1.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    } else if (weatherTheme === "ocean") {
-        // Brisa marina, rocío y destellos de sol en la atmósfera tropical
-        for (let i = 0; i < 14; i++) {
-            const time = (now * 0.0009 + i * 0.25) % 1;
-            const wx = ((i * 40) - cameraX * 0.4 + time * 45) % VIEW_WIDTH;
-            const wy = 80 + Math.sin(time * 6 + i) * 25 + (i * 8);
-            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(255, 255, 255, 0.6)' : 'rgba(56, 189, 248, 0.4)';
-            ctx.beginPath();
-            ctx.arc(drawX, wy, 1.8, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    } else if (weatherTheme === "ice") {
-        // Copos de nieve cristalinos flotando y arremolinándose
-        for (let i = 0; i < 22; i++) {
-            const time = (now * 0.0009 + i * 0.18) % 1;
-            const wx = ((i * 28) - cameraX * 0.35 + Math.sin(time * 5 + i) * 15 + time * 25) % VIEW_WIDTH;
-            const wy = (time * VIEW_HEIGHT);
-            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 3 === 0) ? 'rgba(255, 255, 255, 0.85)' : 'rgba(224, 242, 254, 0.6)';
-            ctx.beginPath();
-            ctx.arc(drawX, wy, (i % 4 === 0) ? 2.2 : 1.4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    } else if (weatherTheme === "spooky_forest") {
-        // Fuego fatuo espectral y esporas moradas flotantes
-        for (let i = 0; i < 14; i++) {
-            const time = (now * 0.0005 + i * 0.3) % 1;
-            const wx = ((i * 38) - cameraX * 0.35 + Math.sin(time * 7 + i) * 20) % VIEW_WIDTH;
-            const wy = 40 + Math.cos(time * 5 + i) * 35 + (i * 12);
-            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(168, 85, 247, 0.45)' : 'rgba(45, 212, 191, 0.45)';
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(251, 191, 36, 0.55)' : 'rgba(245, 158, 11, 0.45)';
             ctx.beginPath();
             ctx.arc(drawX, wy, (i % 3 === 0) ? 2.5 : 1.6, 0, Math.PI * 2);
             ctx.fill();
         }
-    } else if (weatherTheme === "airship") {
-        // Volutas de vapor dorado al atardecer y chispas de propulsores de vapor
-        for (let i = 0; i < 16; i++) {
-            const time = (now * 0.0011 + i * 0.22) % 1;
-            const wx = ((i * 32) - cameraX * 0.5 + time * 55) % VIEW_WIDTH;
-            const wy = 50 + (i * 10) + Math.sin(time * 6) * 12;
-            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 2 === 0) ? 'rgba(253, 186, 116, 0.4)' : 'rgba(251, 146, 60, 0.35)';
-            ctx.fillRect(drawX, wy, (i % 3 === 0) ? 2.5 : 1.6, (i % 3 === 0) ? 2.5 : 1.6);
-        }
-    } else if (weatherTheme === "lava_castle") {
-        // Ceniza volcánica y brasas incandescentes flotando hacia el cielo
-        for (let i = 0; i < 24; i++) {
-            const time = (now * 0.0014 + i * 0.2) % 1;
-            const wx = ((i * 26) - cameraX * 0.4 + Math.sin(time * 7 + i) * 18) % VIEW_WIDTH;
+    } else if (weatherTheme === "neon_cave") {
+        for (let i = 0; i < 20; i++) {
+            const time = (now * 0.0008 + i * 0.2) % 1;
+            const wx = ((i * 30) - cameraX * 0.3 + Math.sin(time * 5 + i) * 14) % VIEW_WIDTH;
             const wy = (1 - time) * VIEW_HEIGHT;
             const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
-            ctx.fillStyle = (i % 3 === 0) ? 'rgba(254, 240, 138, 0.7)' : ((i % 2 === 0) ? 'rgba(249, 115, 22, 0.65)' : 'rgba(239, 68, 68, 0.55)');
-            ctx.fillRect(drawX, wy, (i % 4 === 0) ? 2.6 : 1.8, (i % 4 === 0) ? 2.6 : 1.8);
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(0, 242, 254, 0.65)' : 'rgba(192, 132, 252, 0.65)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.4 : 1.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "ocean") {
+        for (let i = 0; i < 18; i++) {
+            const time = (now * 0.001 + i * 0.22) % 1;
+            const wx = ((i * 36) - cameraX * 0.4 + time * 50) % VIEW_WIDTH;
+            const wy = 60 + Math.sin(time * 6 + i) * 25 + (i * 8);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(255, 255, 255, 0.65)' : 'rgba(56, 189, 248, 0.45)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "ice") {
+        for (let i = 0; i < 28; i++) {
+            const time = (now * 0.001 + i * 0.16) % 1;
+            const wx = ((i * 24) - cameraX * 0.35 + Math.sin(time * 5 + i) * 18 + time * 30) % VIEW_WIDTH;
+            const wy = (time * VIEW_HEIGHT);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(255, 255, 255, 0.9)' : 'rgba(224, 242, 254, 0.7)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 4 === 0) ? 2.4 : 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "spooky_forest") {
+        for (let i = 0; i < 18; i++) {
+            const time = (now * 0.0006 + i * 0.26) % 1;
+            const wx = ((i * 34) - cameraX * 0.35 + Math.sin(time * 7 + i) * 22) % VIEW_WIDTH;
+            const wy = 30 + Math.cos(time * 5 + i) * 35 + (i * 12);
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(168, 85, 247, 0.55)' : 'rgba(45, 212, 191, 0.55)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.8 : 1.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "airship") {
+        for (let i = 0; i < 20; i++) {
+            const time = (now * 0.0012 + i * 0.2) % 1;
+            const wx = ((i * 30) - cameraX * 0.5 + time * 65) % VIEW_WIDTH;
+            const wy = 40 + (i * 10) + Math.sin(time * 6) * 14;
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 2 === 0) ? 'rgba(253, 186, 116, 0.5)' : 'rgba(251, 146, 60, 0.42)';
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 3 === 0) ? 2.6 : 1.7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (weatherTheme === "lava_castle") {
+        for (let i = 0; i < 30; i++) {
+            const time = (now * 0.0016 + i * 0.17) % 1;
+            const wx = ((i * 22) - cameraX * 0.4 + Math.sin(time * 7 + i) * 20) % VIEW_WIDTH;
+            const wy = (1 - time) * VIEW_HEIGHT;
+            const drawX = wx < 0 ? wx + VIEW_WIDTH : wx;
+            ctx.fillStyle = (i % 3 === 0) ? 'rgba(254, 240, 138, 0.8)' : ((i % 2 === 0) ? 'rgba(249, 115, 22, 0.7)' : 'rgba(239, 68, 68, 0.6)');
+            ctx.beginPath();
+            ctx.arc(drawX, wy, (i % 4 === 0) ? 2.8 : 1.9, 0, Math.PI * 2);
+            ctx.fill();
         }
     } else if (weatherTheme === "space") {
-        // Polvo estelar cósmico y centelleo de micro-estrellas
-        for (let i = 0; i < 18; i++) {
-            const twinkle = Math.sin(now * 0.005 + i * 1.3) * 0.5 + 0.5;
-            const sx = (i * 36 + 8) % VIEW_WIDTH;
-            const sy = (i * 19 + 12) % VIEW_HEIGHT;
-            ctx.fillStyle = (i % 2 === 0) ? `rgba(192, 132, 252, ${twinkle * 0.7})` : `rgba(56, 189, 248, ${twinkle * 0.7})`;
-            ctx.fillRect(sx, sy, (i % 3 === 0) ? 2.2 : 1.4, (i % 3 === 0) ? 2.2 : 1.4);
+        for (let i = 0; i < 22; i++) {
+            const twinkle = Math.sin(now * 0.006 + i * 1.3) * 0.5 + 0.5;
+            const sx = (i * 34 + 6) % VIEW_WIDTH;
+            const sy = (i * 18 + 10) % VIEW_HEIGHT;
+            ctx.fillStyle = (i % 2 === 0) ? `rgba(192, 132, 252, ${twinkle * 0.85})` : `rgba(56, 189, 248, ${twinkle * 0.85})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (i % 3 === 0) ? 2.4 : 1.5, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
     ctx.restore();
 
-    // 4. VIÑETA CINEMATOGRÁFICA Y GRADIENTE DE PROFUNDIDAD
+    // 4. CAPA DE NIEBLA DE PROFUNDIDAD PARALLAX (ATMOSPHERIC DEPTH HAZE)
+    ctx.save();
+    const fogGrad = ctx.createLinearGradient(0, VIEW_HEIGHT - 60, 0, VIEW_HEIGHT);
+    fogGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    let fogColor = 'rgba(15, 23, 42, 0.18)';
+    if (weatherTheme === 'ice') fogColor = 'rgba(224, 242, 254, 0.14)';
+    else if (weatherTheme === 'lava_castle') fogColor = 'rgba(69, 10, 10, 0.22)';
+    else if (weatherTheme === 'desert') fogColor = 'rgba(120, 53, 15, 0.16)';
+    else if (weatherTheme === 'neon_cave') fogColor = 'rgba(59, 7, 100, 0.2)';
+    fogGrad.addColorStop(1, fogColor);
+    ctx.fillStyle = fogGrad;
+    ctx.fillRect(0, VIEW_HEIGHT - 60, VIEW_WIDTH, 60);
+    ctx.restore();
+
+    // 5. COLOR GRADING CINEMATOGRÁFICO Y CORRECCIÓN DE COLOR (LUT TINT)
+    ctx.save();
+    let lutTint = 'rgba(255, 255, 255, 0.0)';
+    if (weatherTheme === 'desert') lutTint = 'rgba(245, 158, 11, 0.04)';
+    else if (weatherTheme === 'neon_cave') lutTint = 'rgba(168, 85, 247, 0.05)';
+    else if (weatherTheme === 'ice') lutTint = 'rgba(56, 189, 248, 0.04)';
+    else if (weatherTheme === 'spooky_forest') lutTint = 'rgba(76, 29, 149, 0.06)';
+    else if (weatherTheme === 'airship') lutTint = 'rgba(249, 115, 22, 0.05)';
+    else if (weatherTheme === 'lava_castle') lutTint = 'rgba(220, 38, 38, 0.06)';
+    else if (weatherTheme === 'space') lutTint = 'rgba(99, 102, 241, 0.05)';
+    if (lutTint !== 'rgba(255, 255, 255, 0.0)') {
+        ctx.fillStyle = lutTint;
+        ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    }
+    ctx.restore();
+
+    // 6. VIÑETA CINEMATOGRÁFICA DE ALTA DEFINICIÓN (RTX LENS VIGNETTE)
     ctx.save();
     const vignette = ctx.createRadialGradient(
-        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.36,
-        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.72
+        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.38,
+        VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH * 0.74
     );
     vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vignette.addColorStop(1, 'rgba(2, 6, 23, 0.45)');
+    vignette.addColorStop(0.7, 'rgba(2, 6, 23, 0.22)');
+    vignette.addColorStop(1, 'rgba(2, 6, 23, 0.52)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
     ctx.restore();
@@ -4098,6 +4208,32 @@ function drawAstroModern() {
         ctx.lineTo(jpX + 3, jpY + astro.h - 10 + flameLen);
         ctx.closePath();
         ctx.fill();
+
+        // Emisión de micro-chispas de propulsión estilo RTX
+        if (particles.length < 120 && Math.random() < 0.4) {
+            particles.push({
+                x: jpX + cameraX + 3,
+                y: jpY + astro.h - 10 + flameLen,
+                vx: (Math.random() - 0.5) * 1.6 - (astro.vx * 0.2),
+                vy: Math.random() * 2 + 1.2,
+                color: isPlasma ? '#f97316' : '#38bdf8',
+                life: 14,
+                size: 2.4
+            });
+        }
+    }
+
+    // Polvo cinemático en las botas al correr a gran velocidad
+    if (isMoving && Math.random() < 0.25 && particles.length < 120) {
+        particles.push({
+            x: px + cameraX + (astro.facing === 'left' ? astro.w : 0),
+            y: py + astro.h - 2,
+            vx: (astro.facing === 'left' ? 1 : -1) * (Math.random() * 1.6 + 0.4),
+            vy: -Math.random() * 1.2,
+            color: 'rgba(255, 255, 255, 0.6)',
+            life: 14,
+            size: 3
+        });
     }
 
     // 6. PIERNAS Y BOTAS CIBERNÉTICAS ARTICULADAS (PASO NATURAL)

@@ -99,7 +99,7 @@ body, html {
     align-items: center;
     z-index: 999999;
     opacity: 1;
-    transition: opacity 0.8s ease-out, visibility 0.8s;
+    transition: opacity 0.3s ease-out, visibility 0.3s;
     cursor: pointer;
 }
 
@@ -605,7 +605,7 @@ body, html {
     overflow: hidden;
 }
 
-/* El Canvas ocupa el 100% absoluto de la pantalla con renderizado HD ultra suave */
+/* El Canvas ocupa el 100% absoluto de la pantalla con renderizado HD ultra suave estilo RTX */
 #gameCanvas {
     position: absolute;
     top: 0;
@@ -615,6 +615,9 @@ body, html {
     display: block;
     image-rendering: auto;
     object-fit: fill;
+    filter: contrast(106%) saturate(116%) brightness(102%);
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 /* =======================================================
