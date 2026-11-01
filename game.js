@@ -6972,10 +6972,21 @@ function setupGameFlow() {
         }, 1400);
     }
 
+    let startingInProgress = false;
+    const triggerStart = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (startingInProgress) return;
+        startingInProgress = true;
+        setTimeout(() => { startingInProgress = false; }, 800);
+        startGameDirectly(false);
+    };
+
     const btnPlay = document.getElementById('btnPlayGame');
     if (btnPlay) {
-        btnPlay.addEventListener('click', () => startGameDirectly(false));
-        btnPlay.addEventListener('pointerdown', () => startGameDirectly(false), { passive: true });
+        btnPlay.onclick = triggerStart;
     }
 
     const btnWorldMenu = document.getElementById('btnOpenWorldSelectMenu');
@@ -7079,13 +7090,18 @@ function initGame() {
     try { loadLevel(saveState.currentWorld || 1, saveState.currentLevel || 1); } catch (e) { console.error("loadLevel note:", e); }
     try { setupGameFlow(); } catch (e) { console.error("setupGameFlow note:", e); }
 
-    // La música suena SIEMPRE: se activa con cualquier interacción inicial y no para
+    // La música suena con interacción solo durante gameplay activo (no en historia ni en pausa ni en menú)
     const ensureMusicAlways = () => {
         try {
             window.sounds.init();
             if (window.sounds.ctx && window.sounds.ctx.state === 'suspended') {
                 window.sounds.ctx.resume();
             }
+            // NO iniciar música si la historia está activa, si está en pausa o si no ha iniciado el juego
+            if (window.StoryManager && window.StoryManager.active) return;
+            if (isPaused) return;
+            if (!gameStartedFromMenu) return;
+
             if (!window.sounds.musicPlaying && !window.sounds.muted) {
                 window.sounds.startMusic(currentWorldNum, levelData ? levelData.isBossLevel : false);
             }
