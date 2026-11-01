@@ -55,6 +55,7 @@ window.StoryManager = {
         this.active = true;
         this.currentScene = 0;
         this.sceneTimer = 0;
+        this.ignoreInputTimer = 30; // Previene que el toque o clic en el botón JUGAR salte la escena inmediatamente
         this.onComplete = callback;
         this.letterboxProgress = 0;
         this.loadScene(0);
@@ -85,6 +86,8 @@ window.StoryManager = {
     },
 
     nextScene: function() {
+        if (this.ignoreInputTimer > 0) return;
+        this.ignoreInputTimer = 18; // Pausa breve entre toques para evitar saltar todas las escenas de golpe
         if (this.currentScene < this.maxScenes - 1) {
             this.currentScene++;
             this.loadScene(this.currentScene);
@@ -161,6 +164,7 @@ window.StoryManager = {
         if (!this.active) return;
 
         this.sceneTimer++;
+        if (this.ignoreInputTimer > 0) this.ignoreInputTimer--;
 
         // Avance suave del efecto máquina de escribir para los textos
         if (this.textCharIndex < this.currentFullText.length) {
@@ -999,7 +1003,7 @@ window.addEventListener('keydown', (e) => {
     if (window.StoryManager && window.StoryManager.active) {
         if (e.key === 'Escape') {
             window.StoryManager.skipStory();
-        } else {
+        } else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
             window.StoryManager.nextScene();
         }
     }
@@ -1007,13 +1011,15 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('pointerdown', (e) => {
     if (window.StoryManager && window.StoryManager.active) {
+        if (window.StoryManager.ignoreInputTimer > 0) return;
+
         // Si hace clic en la esquina superior derecha (botón saltar)
         const canvas = document.getElementById('gameCanvas');
         if (canvas) {
             const rect = canvas.getBoundingClientRect();
             const clickX = ((e.clientX - rect.left) / rect.width) * 480;
             const clickY = ((e.clientY - rect.top) / rect.height) * 270;
-            if (clickX > 340 && clickY < 32) {
+            if (clickX > 340 && clickY < 38) {
                 window.StoryManager.skipStory();
                 return;
             }
